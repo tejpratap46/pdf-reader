@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, FC, ChangeEvent, DragEvent } from "react";
+import { useState, useEffect, useRef, useCallback, FC, ChangeEvent, DragEvent, ReactNode } from "react";
 
 // ─── PDF.js bootstrap ───────────────────────────────────────────────────────
 const PDFJS_URL    = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
@@ -139,7 +139,7 @@ const HFBlock: FC<HFBlockProps> = ({ label, text, checked, onToggle, badgeColor 
 interface KeepAlive { ctx: AudioContext; src: AudioBufferSourceNode; }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function PDFReader(): JSX.Element {
+export default function PDFReader(): ReactNode {
   const pdfReady      = usePdfJs();
   const canvasRef     = useRef<HTMLCanvasElement>(null);
   const fileInputRef  = useRef<HTMLInputElement>(null);
