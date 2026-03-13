@@ -107,11 +107,6 @@ const SectionTitle: FC<{ children: React.ReactNode }> = ({ children }) => (
   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-500 mb-0.5">{children}</p>
 );
 
-const Badge: FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
-  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${className}`}>
-    {children}
-  </span>
-);
 
 const IconBtn: FC<{ onClick: () => void; disabled?: boolean; title?: string; children: React.ReactNode }> = ({ onClick, disabled, title, children }) => {
   const d = useDark();
