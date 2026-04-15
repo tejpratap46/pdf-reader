@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, FC, ChangeEvent, DragEvent, createContext, useContext, KeyboardEvent } from "react";
+import { useState, useEffect, useRef, useCallback, FC, ChangeEvent, DragEvent, createContext, useContext, KeyboardEvent, ReactElement } from "react";
 
 /* ── PDF.js ─────────────────────────────────────────────────────────── */
 const PDFJS_URL    = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
@@ -98,12 +98,12 @@ const extractTextFromHtml = (html: string): { title: string; paragraphs: string[
   // Try to find main content
   const main = doc.querySelector("main, article, [role='main'], .content, .post, .article, #content, #main")
     ?? doc.body;
-  const rawText = (main?.innerText ?? main?.textContent ?? "")
+  const rawText: string = (main?.textContent ?? "")
     .replace(/\n{3,}/g, "\n\n")
     .replace(/\t+/g, " ")
     .trim();
   // Split on double newlines to get natural paragraphs, then further split long ones
-  const rawParas = rawText.split(/\n\n+/).map(p => p.replace(/\s+/g, " ").trim()).filter(p => p.length > 30);
+  const rawParas = rawText.split(/\n\n+/).map((p: string) => p.replace(/\s+/g, " ").trim()).filter((p: string) => p.length > 30);
   const result: string[] = [];
   for (const rp of rawParas) {
     const sentences = rp.match(/[^.!?]+[.!?]+["']?\s*/g) ?? [rp];
@@ -327,7 +327,7 @@ interface KeepAlive { ctx: AudioContext; src: AudioBufferSourceNode; }
 /* ══════════════════════════════════════════════════════════════════════
    Main component
 ══════════════════════════════════════════════════════════════════════ */
-export default function PDFReader(): JSX.Element {
+export default function PDFReader(): ReactElement {
   const pdfReady = usePdfJs();
   const [isDark, theme, setTheme] = useTheme();
   const d = isDark;
