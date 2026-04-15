@@ -845,7 +845,7 @@ export default function PDFReader(): ReactElement {
               {sourceMode === "web" && webLoading && (
                 <div className="flex flex-col items-center justify-center gap-4 flex-1">
                   <div className="text-amber-500 animate-spin"><IcoLoader /></div>
-                  <p className="text-sm font-medium text-amber-500">Fetching page…</p>
+                  <p className="text-sm font-medium text-amber-500">Fetching pages…</p>
                   <p className="text-xs" style={{ color: textMut }}>{webUrl}</p>
                 </div>
               )}
