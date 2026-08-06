@@ -68,7 +68,171 @@ const IcoGlobe   = () => <Ico d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM2 12h2
 const IcoLoader  = () => <Ico d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />;
 const IcoX       = () => <Ico size={14} d="M18 6L6 18M6 6l12 12" />;
 
-/* ── Helpers ────────────────────────────────────────────────────────── */
+type ViewMode = "scroll" | "single";
+interface PageSize { width: number; height: number; aspectRatio: number; }
+
+const IcoScrollMode = () => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <rect x="6" y="3" width="12" height="5" rx="1" />
+    <rect x="6" y="10" width="12" height="5" rx="1" />
+    <rect x="6" y="17" width="12" height="4" rx="1" />
+  </svg>
+);
+const IcoSingleMode = () => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="3" width="14" height="18" rx="2" />
+    <line x1="9" y1="7" x2="15" y2="7" />
+    <line x1="9" y1="11" x2="15" y2="11" />
+  </svg>
+);
+
+interface PdfPageCardProps {
+  doc: any;
+  pageNum: number;
+  totalPages: number;
+  scale: number;
+  isActive: boolean;
+  pageSize?: PageSize;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  onPageClick: (pageNum: number) => void;
+  dark: boolean;
+}
+
+const PdfPageCard: FC<PdfPageCardProps> = ({
+  doc,
+  pageNum,
+  totalPages,
+  scale,
+  isActive,
+  pageSize,
+  scrollContainerRef,
+  onPageClick,
+  dark
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isNearViewport, setIsNearViewport] = useState(false);
+  const [rendering, setRendering] = useState(false);
+
+  const aspectRatio = pageSize?.aspectRatio || (612 / 792);
+  const baseWidth = Math.min(850, pageSize?.width || 612);
+  const scaledWidth = baseWidth * scale;
+  const scaledHeight = scaledWidth / aspectRatio;
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    const el = containerRef.current;
+    if (!container || !el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setIsNearViewport(true);
+        }
+      },
+      {
+        root: container,
+        rootMargin: "800px 0px 800px 0px",
+        threshold: 0
+      }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [scrollContainerRef]);
+
+  useEffect(() => {
+    if (!isNearViewport || !doc || !canvasRef.current) return;
+    let active = true;
+    setRendering(true);
+
+    doc.getPage(pageNum).then((page: any) => {
+      if (!active || !canvasRef.current) return;
+      const targetScale = scaledWidth / page.getViewport({ scale: 1 }).width;
+      const vp = page.getViewport({ scale: targetScale });
+      const canvas = canvasRef.current;
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      page.render({ canvasContext: ctx, viewport: vp }).promise
+        .then(() => { if (active) setRendering(false); })
+        .catch(() => { if (active) setRendering(false); });
+    }).catch(() => {
+      if (active) setRendering(false);
+    });
+
+    return () => { active = false; };
+  }, [doc, pageNum, scaledWidth, isNearViewport]);
+
+  return (
+    <div
+      ref={containerRef}
+      data-page-num={pageNum}
+      onClick={() => onPageClick(pageNum)}
+      className={`relative flex flex-col items-center group transition-all duration-200 rounded-xl overflow-hidden ${
+        isActive
+          ? "ring-2 ring-amber-500 shadow-2xl"
+          : "shadow-lg hover:shadow-xl opacity-95 hover:opacity-100"
+      }`}
+      style={{
+        width: scaledWidth,
+        minHeight: scaledHeight,
+        background: dark ? "#1e293b" : "#ffffff",
+        border: `1px solid ${isActive ? "#f59e0b" : dark ? "#334155" : "#e2e8f0"}`
+      }}
+    >
+      {/* Top Header Badge */}
+      <div className="w-full flex items-center justify-between px-4 py-2 border-b select-none transition-colors"
+        style={{
+          borderColor: dark ? "#334155" : "#f1f5f9",
+          background: isActive
+            ? (dark ? "rgba(245,158,11,0.12)" : "rgba(254,243,199,0.7)")
+            : (dark ? "rgba(15,23,42,0.6)" : "rgba(248,250,252,0.8)")
+        }}>
+        <div className="flex items-center gap-2">
+          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+            isActive ? "bg-amber-500 text-white" : (dark ? "bg-slate-800 text-slate-400" : "bg-slate-200 text-slate-600")
+          }`}>
+            Page {pageNum}
+          </span>
+          {isActive && (
+            <span className="text-[10px] text-amber-500 font-semibold tracking-wider uppercase">Active</span>
+          )}
+        </div>
+        <span className="text-[11px] font-mono" style={{ color: dark ? "#94a3b8" : "#64748b" }}>
+          {pageNum} / {totalPages}
+        </span>
+      </div>
+
+      {/* Canvas view or Loading placeholder */}
+      <div className="relative flex-1 w-full flex items-center justify-center overflow-hidden">
+        {!isNearViewport && (
+          <div className="flex flex-col items-center justify-center gap-2 py-12">
+            <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs text-amber-500/80 font-medium">Page {pageNum}</span>
+          </div>
+        )}
+
+        {isNearViewport && (
+          <>
+            {rendering && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-[1px]"
+                style={{ background: dark ? "rgba(15,23,42,0.3)" : "rgba(255,255,255,0.3)" }}>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-medium shadow-lg">
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Rendering page {pageNum}...
+                </div>
+              </div>
+            )}
+            <canvas ref={canvasRef} className="block transition-opacity duration-150" style={{ opacity: rendering ? 0.6 : 1 }} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 const splitParagraphs = (text: string): string[] => {
   const sentences = text.match(/[^.!?]+[.!?]+["']?\s*/g) ?? [text];
   const chunks: string[] = [];
@@ -335,13 +499,17 @@ export default function PDFReader(): ReactElement {
   const canvasRef       = useRef<HTMLCanvasElement>(null);
   const fileInputRef    = useRef<HTMLInputElement>(null);
   const paraListRef     = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const pageRefs        = useRef<Record<number, HTMLDivElement | null>>({});
   const keepAliveRef    = useRef<KeepAlive | null>(null);
   const autoNextRef     = useRef(false);
   const pendingAutoPlay = useRef(false);
   const dragCounterRef  = useRef(0);
+  const isProgrammaticScrollingRef = useRef(false);
 
-  /* Source mode */
+  /* Source mode & View Mode */
   const [sourceMode,   setSourceMode]   = useState<SourceMode>("pdf");
+  const [viewMode,     setViewMode]     = useState<ViewMode>("scroll");
   const [webUrl,       setWebUrl]       = useState("");
   const [webTitle,     setWebTitle]     = useState("");
   const [webLoading,   setWebLoading]   = useState(false);
@@ -353,6 +521,7 @@ export default function PDFReader(): ReactElement {
   const [pageNum,      setPageNum]       = useState(1);
   const [totalPages,   setTotalPages]    = useState(0);
   const [scale,        setScale]         = useState(1.4);
+  const [pageSizes,    setPageSizes]     = useState<PageSize[]>([]);
   const [fileName,     setFileName]      = useState("");
   const [headerText,   setHeaderText]    = useState("");
   const [footerText,   setFooterText]    = useState("");
@@ -427,20 +596,85 @@ export default function PDFReader(): ReactElement {
     return { header: hI.join(" ").trim(), footer: fI.join(" ").trim(), body: bI.join(" ").trim() };
   }, []);
 
-  const renderPage = useCallback(async (doc: any, num: number, sc: number, hPct: number, fPct: number) => {
+  const loadPageText = useCallback(async (doc: any, num: number, hPct: number, fPct: number) => {
+    if (!doc || num < 1 || num > doc.numPages) return;
+    try {
+      const page = await doc.getPage(num);
+      const { header, footer, body } = await extractPageText(page, hPct, fPct);
+      setHeaderText(header); setFooterText(footer); setParagraphs(splitParagraphs(body));
+    } catch (_) {}
+  }, [extractPageText]);
+
+  useEffect(() => {
+    if (pdfDoc && sourceMode === "pdf") {
+      loadPageText(pdfDoc, pageNum, headerPct, footerPct);
+    }
+  }, [pdfDoc, pageNum, headerPct, footerPct, loadPageText, sourceMode]);
+
+  /* Single page canvas rendering (for Single page view mode) */
+  const renderSinglePage = useCallback(async (doc: any, num: number, sc: number) => {
     if (!doc || !canvasRef.current) return;
     setRendering(true);
     try {
       const page = await doc.getPage(num); const vp = page.getViewport({ scale: sc });
       const canvas = canvasRef.current; canvas.height = vp.height; canvas.width = vp.width;
       await page.render({ canvasContext: canvas.getContext("2d")!, viewport: vp }).promise;
-      const { header, footer, body } = await extractPageText(page, hPct, fPct);
-      setHeaderText(header); setFooterText(footer); setParagraphs(splitParagraphs(body));
     } finally { setRendering(false); }
-  }, [extractPageText]);
+  }, []);
 
-  useEffect(() => { if (pdfDoc && sourceMode === "pdf") renderPage(pdfDoc, pageNum, scale, headerPct, footerPct); },
-    [pdfDoc, pageNum, scale, headerPct, footerPct, renderPage, sourceMode]);
+  useEffect(() => {
+    if (pdfDoc && sourceMode === "pdf" && viewMode === "single") {
+      renderSinglePage(pdfDoc, pageNum, scale);
+    }
+  }, [pdfDoc, pageNum, scale, viewMode, sourceMode, renderSinglePage]);
+
+  /* Smooth scroll to specific page in vertical scroll mode */
+  const scrollToPage = useCallback((num: number) => {
+    const el = pageRefs.current[num];
+    if (!el || !scrollContainerRef.current) return;
+    isProgrammaticScrollingRef.current = true;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => {
+      isProgrammaticScrollingRef.current = false;
+    }, 600);
+  }, []);
+
+  /* Continuous Scroll Observer */
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || viewMode !== "scroll" || sourceMode !== "pdf" || !totalPages) return;
+
+    const onScroll = () => {
+      if (isProgrammaticScrollingRef.current) return;
+      const containerRect = container.getBoundingClientRect();
+      const targetY = containerRect.top + containerRect.height * 0.35;
+
+      let closestPage = pageNum;
+      let minDistance = Infinity;
+
+      for (let i = 1; i <= totalPages; i++) {
+        const el = pageRefs.current[i];
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        const pageCenter = rect.top + rect.height / 2;
+        const dist = Math.abs(pageCenter - targetY);
+
+        if (rect.bottom > containerRect.top && rect.top < containerRect.bottom) {
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestPage = i;
+          }
+        }
+      }
+
+      if (closestPage !== pageNum && closestPage >= 1 && closestPage <= totalPages) {
+        setPageNum(closestPage);
+      }
+    };
+
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => container.removeEventListener("scroll", onScroll);
+  }, [viewMode, sourceMode, totalPages, pageNum]);
 
   /* PDF load */
   const loadPdf = async (file: File) => {
@@ -450,6 +684,18 @@ export default function PDFReader(): ReactElement {
       const doc = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
       setPdfDoc(doc); setTotalPages(doc.numPages); setPageNum(1); setFileName(file.name);
       setSourceMode("pdf"); setWebLoaded(false); setWebTitle(""); setWebError("");
+
+      const sizes: PageSize[] = [];
+      for (let i = 1; i <= doc.numPages; i++) {
+        try {
+          const p = await doc.getPage(i);
+          const vp = p.getViewport({ scale: 1 });
+          sizes.push({ width: vp.width, height: vp.height, aspectRatio: vp.width / vp.height });
+        } catch {
+          sizes.push({ width: 612, height: 792, aspectRatio: 612 / 792 });
+        }
+      }
+      setPageSizes(sizes);
     } finally { setPdfLoading(false); }
   };
   const handleFile = (file?: File) => { if (file?.type === "application/pdf") loadPdf(file); };
@@ -517,13 +763,32 @@ export default function PDFReader(): ReactElement {
     const t = paragraphs[pi] ?? ""; buildAndSpeak(pi, snapToWord(t, Math.floor(ratio * t.length)));
   }, [paragraphs, buildAndSpeak]);
 
-  const doAutoNext = useCallback(() => { setPageNum(p => { pendingAutoPlay.current = true; return p + 1; }); }, []);
+  const changePage = useCallback((num: number) => {
+    if (num >= 1 && num <= totalPages) {
+      stopTts();
+      setPageNum(num);
+      if (viewMode === "scroll") {
+        scrollToPage(num);
+      }
+    }
+  }, [totalPages, viewMode, scrollToPage]);
+
+  const doAutoNext = useCallback(() => {
+    setPageNum(p => {
+      const next = p + 1;
+      pendingAutoPlay.current = true;
+      if (viewMode === "scroll") {
+        scrollToPage(next);
+      }
+      return next;
+    });
+  }, [viewMode, scrollToPage]);
   useEffect(() => { if (pendingAutoPlay.current && paragraphs.length > 0) { pendingAutoPlay.current = false; startReading(0); } }, [paragraphs, startReading]);
 
   const stopTts = (u = true) => { if (u) autoNextRef.current = false; window.speechSynthesis.cancel(); stopKeepAlive(); setTtsState("idle"); setActivePara(-1); setParaProgress(0); };
   const pauseTts = () => { if (ttsState==="playing") { window.speechSynthesis.pause(); setTtsState("paused"); } else if (ttsState==="paused") { window.speechSynthesis.resume(); setTtsState("playing"); } };
-  const prevPage = () => { if (pageNum > 1)          { stopTts(); setPageNum(p => p - 1); } };
-  const nextPage = () => { if (pageNum < totalPages) { stopTts(); setPageNum(p => p + 1); } };
+  const prevPage = () => changePage(pageNum - 1);
+  const nextPage = () => changePage(pageNum + 1);
 
   /* Colour tokens */
   const bg       = d?"#030712":"#ffffff";
@@ -756,20 +1021,54 @@ export default function PDFReader(): ReactElement {
         <main className="flex flex-col flex-1 overflow-hidden">
           {/* PDF toolbar */}
           {showPdfView && !pdfLoading && (
-            <div className="flex items-center justify-center gap-2 px-5 py-2 shrink-0 flex-wrap" style={{ borderBottom:`1px solid ${border}`, background: bgCard }}>
+            <div className="flex items-center justify-center gap-2.5 px-5 py-2 shrink-0 flex-wrap select-none" style={{ borderBottom:`1px solid ${border}`, background: bgCard }}>
               <IconBtn onClick={prevPage} disabled={pageNum<=1} title="Previous page"><IcoChevL /></IconBtn>
               <div className="flex items-center gap-1.5 text-sm" style={{ color: textMut }}>
                 <input type="number" min={1} max={totalPages} value={pageNum}
                   className="w-12 rounded-md text-center text-sm py-1 focus:outline-none"
                   style={{ border:`1px solid ${border}`, background: bgInput, color: textMain }}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => { const v=parseInt(e.target.value); if (v>=1&&v<=totalPages) { stopTts(); setPageNum(v); } }} />
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => { const v=parseInt(e.target.value); if (v>=1&&v<=totalPages) changePage(v); }} />
                 <span>/ {totalPages}</span>
               </div>
               <IconBtn onClick={nextPage} disabled={pageNum>=totalPages} title="Next page"><IcoChevR /></IconBtn>
+
               <div className="w-px h-5 mx-1" style={{ background: border }} />
+
+              {/* View Mode Segment Switch */}
+              <div className="flex items-center gap-0.5 border rounded-md p-0.5" style={{ borderColor: border, background: bgInput }}>
+                <button
+                  onClick={() => setViewMode("scroll")}
+                  title="Continuous Vertical Scroll Mode"
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded transition-colors ${
+                    viewMode === "scroll"
+                      ? "bg-amber-500 text-white shadow-sm"
+                      : dk("text-gray-400 hover:text-gray-200", "text-gray-600 hover:text-gray-900", d)
+                  }`}
+                >
+                  <IcoScrollMode />
+                  <span className="hidden sm:inline">Continuous</span>
+                </button>
+                <button
+                  onClick={() => setViewMode("single")}
+                  title="Single Page View Mode"
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded transition-colors ${
+                    viewMode === "single"
+                      ? "bg-amber-500 text-white shadow-sm"
+                      : dk("text-gray-400 hover:text-gray-200", "text-gray-600 hover:text-gray-900", d)
+                  }`}
+                >
+                  <IcoSingleMode />
+                  <span className="hidden sm:inline">Single</span>
+                </button>
+              </div>
+
+              <div className="w-px h-5 mx-1" style={{ background: border }} />
+
+              {/* Zoom Controls */}
               <IconBtn onClick={() => setScale(s=>Math.min(s+0.2,3))} title="Zoom in"><IcoZoomIn /></IconBtn>
               <span className="text-xs font-mono tabular-nums w-12 text-center" style={{ color: textMut }}>{Math.round(scale*100)}%</span>
               <IconBtn onClick={() => setScale(s=>Math.max(s-0.2,0.5))} title="Zoom out"><IcoZoomOut /></IconBtn>
+
               {autoNextPage && (
                 <span className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border"
                   style={{ color:"#818cf8", borderColor:"rgba(129,140,248,0.3)", background: d?"rgba(99,102,241,0.1)":"rgba(238,242,255,1)" }}>
@@ -779,101 +1078,158 @@ export default function PDFReader(): ReactElement {
             </div>
           )}
 
-          <div className="flex-1 overflow-auto" style={{ background: bgCanvas }}>
-            <div className="flex justify-center p-8 min-h-full">
-
-              {/* PDF loading spinner */}
-              {pdfLoading && (
-                <div className="flex flex-col items-center justify-center gap-6 flex-1">
-                  <div className="relative w-16 h-16">
-                    {[0,1,2,3].map(i => (
-                      <div key={i} className="absolute rounded-full spin border-2 border-transparent"
-                        style={{ borderTopColor:`rgba(245,158,11,${1-i*0.22})`, width:64-i*14, height:64-i*14, top:i*7, left:i*7, animationDuration:`${0.9+i*0.15}s`, animationDirection:i%2===0?"normal":"reverse" }} />
-                    ))}
-                  </div>
-                  <p className="text-sm font-semibold text-amber-500 uppercase tracking-widest">Loading document</p>
+          <div ref={scrollContainerRef} className="relative flex-1 overflow-auto" style={{ background: bgCanvas }}>
+            {/* PDF loading spinner */}
+            {pdfLoading && (
+              <div className="flex flex-col items-center justify-center gap-6 min-h-full py-16">
+                <div className="relative w-16 h-16">
+                  {[0,1,2,3].map(i => (
+                    <div key={i} className="absolute rounded-full spin border-2 border-transparent"
+                      style={{ borderTopColor:`rgba(245,158,11,${1-i*0.22})`, width:64-i*14, height:64-i*14, top:i*7, left:i*7, animationDuration:`${0.9+i*0.15}s`, animationDirection:i%2===0?"normal":"reverse" }} />
+                  ))}
                 </div>
-              )}
+                <p className="text-sm font-semibold text-amber-500 uppercase tracking-widest">Loading document</p>
+              </div>
+            )}
 
-              {/* PDF canvas */}
-              {!pdfLoading && showPdfView && (
-                <div className={`shadow-2xl transition-opacity duration-150 ${rendering?"opacity-50":"opacity-100"}`}>
-                  <canvas ref={canvasRef} className="block" />
-                </div>
-              )}
-
-              {/* Web mode: article view */}
-              {!pdfLoading && sourceMode === "web" && webLoaded && (
-                <div className="w-full max-w-2xl flex flex-col gap-0">
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-amber-500"><IcoGlobe /></span>
-                      <a href={webUrl} target="_blank" rel="noreferrer"
-                        className="text-xs truncate underline underline-offset-2" style={{ color: textMut }}>{webUrl}</a>
+            {/* Continuous Vertical Scroll View Mode */}
+            {!pdfLoading && showPdfView && viewMode === "scroll" && (
+              <div className="flex flex-col items-center gap-8 py-8 px-4 w-full min-h-full">
+                {Array.from({ length: totalPages }, (_, idx) => {
+                  const pNum = idx + 1;
+                  return (
+                    <div
+                      key={pNum}
+                      ref={el => { pageRefs.current[pNum] = el; }}
+                      className="w-full flex justify-center"
+                    >
+                      <PdfPageCard
+                        doc={pdfDoc}
+                        pageNum={pNum}
+                        totalPages={totalPages}
+                        scale={scale}
+                        isActive={pageNum === pNum}
+                        pageSize={pageSizes[idx]}
+                        scrollContainerRef={scrollContainerRef}
+                        onPageClick={changePage}
+                        dark={d}
+                      />
                     </div>
-                    <h2 className="text-xl font-bold leading-snug" style={{ color: textMain }}>{webTitle}</h2>
-                  </div>
-                  {paragraphs.map((p, i) => {
-                    const active = activePara === i;
-                    return (
-                      <div key={i}
-                        className="py-3 px-4 rounded-lg mb-1.5 text-sm leading-relaxed transition-all duration-150 cursor-pointer border-l-2"
-                        style={{ borderLeftColor: active?"#f59e0b":"transparent",
-                          background: active?(d?"rgba(245,158,11,0.08)":"rgba(254,243,199,0.5)"):
-                            (d?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.8)"),
-                          color: active?textMain:textMut }}
-                        onClick={() => !active && startReading(i)}
-                        onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = d?"rgba(255,255,255,0.04)":bgHover; }}
-                        onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = d?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.8)"; }}>
-                        {active && (
-                          <span className="flex items-center gap-2 mb-2">
-                            <Waveform paused={ttsState==="paused"} />
-                            <span className="text-[9px] text-amber-500 font-semibold tracking-widest uppercase">
-                              {ttsState==="paused"?"Paused":"Now Reading"}
-                            </span>
-                          </span>
-                        )}
-                        {p}
-                        {active && <SeekBar progress={paraProgress} ttsState={ttsState} onSeek={r => seekTo(i, r)} />}
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Floating Jumper / Indicator overlay for Continuous Scroll Mode */}
+            {!pdfLoading && showPdfView && viewMode === "scroll" && totalPages > 1 && (
+              <div className="sticky bottom-6 flex justify-end px-8 pointer-events-none z-20">
+                <div className="pointer-events-auto flex items-center gap-2.5 px-3 py-1.5 rounded-full border backdrop-blur-md transition-all duration-200"
+                  style={{
+                    background: d ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.9)",
+                    borderColor: d ? "rgba(245,158,11,0.4)" : "#fde68a",
+                    boxShadow: d ? "0 10px 25px -5px rgba(0, 0, 0, 0.5)" : "0 10px 25px -5px rgba(0, 0, 0, 0.1)"
+                  }}>
+                  <span className="text-xs font-mono font-semibold text-amber-500">
+                    Page {pageNum} <span className="opacity-50">/</span> {totalPages}
+                  </span>
+                  <div className="w-px h-3.5" style={{ background: d ? "#334155" : "#e2e8f0" }} />
+                  <button
+                    onClick={() => changePage(1)}
+                    title="Scroll to top"
+                    className="text-xs font-medium flex items-center gap-1 transition-colors hover:text-amber-500"
+                    style={{ color: textMut }}
+                  >
+                    ↑ Top
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Single Page View Mode */}
+            {!pdfLoading && showPdfView && viewMode === "single" && (
+              <div className="flex justify-center p-8 min-h-full items-center">
+                <div className={`shadow-2xl transition-opacity duration-150 ${rendering?"opacity-50":"opacity-100"}`}>
+                  <canvas ref={canvasRef} className="block rounded-lg overflow-hidden" style={{ border: `1px solid ${border}` }} />
+                </div>
+              </div>
+            )}
+
+            {/* Web mode or empty state */}
+            {(!showPdfView || sourceMode === "web") && !pdfLoading && (
+              <div className="flex justify-center p-8 min-h-full">
+                {/* Web mode: article view */}
+                {sourceMode === "web" && webLoaded && (
+                  <div className="w-full max-w-2xl flex flex-col gap-0">
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-amber-500"><IcoGlobe /></span>
+                        <a href={webUrl} target="_blank" rel="noreferrer"
+                          className="text-xs truncate underline underline-offset-2" style={{ color: textMut }}>{webUrl}</a>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Web mode: loading */}
-              {sourceMode === "web" && webLoading && (
-                <div className="flex flex-col items-center justify-center gap-4 flex-1">
-                  <div className="text-amber-500 animate-spin"><IcoLoader /></div>
-                  <p className="text-sm font-medium text-amber-500">Fetching pages…</p>
-                  <p className="text-xs" style={{ color: textMut }}>{webUrl}</p>
-                </div>
-              )}
-
-              {/* Empty state */}
-              {!pdfLoading && !webLoading && !showPdfView && !(sourceMode==="web"&&webLoaded) && (
-                <div className="flex flex-col items-center justify-center gap-4 flex-1">
-                  <span className="text-7xl select-none" style={{ opacity:0.12 }}>📖</span>
-                  <div className="text-center">
-                    <p className="text-xl font-semibold" style={{ color: textMut }}>Nothing to read yet</p>
-                    <p className="text-sm mt-1" style={{ color: textMut }}>
-                      {sourceMode==="pdf" ? "Upload a PDF from the sidebar" : "Enter a URL in the sidebar to fetch a web page"}
-                    </p>
+                      <h2 className="text-xl font-bold leading-snug" style={{ color: textMain }}>{webTitle}</h2>
+                    </div>
+                    {paragraphs.map((p, i) => {
+                      const active = activePara === i;
+                      return (
+                        <div key={i}
+                          className="py-3 px-4 rounded-lg mb-1.5 text-sm leading-relaxed transition-all duration-150 cursor-pointer border-l-2"
+                          style={{ borderLeftColor: active?"#f59e0b":"transparent",
+                            background: active?(d?"rgba(245,158,11,0.08)":"rgba(254,243,199,0.5)"):
+                              (d?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.8)"),
+                            color: active?textMain:textMut }}
+                          onClick={() => !active && startReading(i)}
+                          onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = d?"rgba(255,255,255,0.04)":bgHover; }}
+                          onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = d?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.8)"; }}>
+                          {active && (
+                            <span className="flex items-center gap-2 mb-2">
+                              <Waveform paused={ttsState==="paused"} />
+                              <span className="text-[9px] text-amber-500 font-semibold tracking-widest uppercase">
+                                {ttsState==="paused"?"Paused":"Now Reading"}
+                              </span>
+                            </span>
+                          )}
+                          {p}
+                          {active && <SeekBar progress={paraProgress} ttsState={ttsState} onSeek={r => seekTo(i, r)} />}
+                        </div>
+                      );
+                    })}
                   </div>
-                  {sourceMode==="pdf" && (
-                    <button onClick={() => fileInputRef.current?.click()}
-                      className="mt-2 flex items-center gap-2 rounded-md px-4 py-2 text-sm transition-colors"
-                      style={{ border:`1px solid ${border}`, background: bgCard, color: textMain }}
-                      onMouseEnter={e => (e.currentTarget.style.background=bgHover)}
-                      onMouseLeave={e => (e.currentTarget.style.background=bgCard)}>
-                      <IcoUpload />Browse for PDF
-                    </button>
-                  )}
-                  <input ref={fileInputRef} type="file" accept=".pdf" className="hidden"
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => handleFile(e.target.files?.[0])} />
-                </div>
-              )}
-            </div>
+                )}
+
+                {/* Web mode: loading */}
+                {sourceMode === "web" && webLoading && (
+                  <div className="flex flex-col items-center justify-center gap-4 flex-1">
+                    <div className="text-amber-500 animate-spin"><IcoLoader /></div>
+                    <p className="text-sm font-medium text-amber-500">Fetching pages…</p>
+                    <p className="text-xs" style={{ color: textMut }}>{webUrl}</p>
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {!webLoading && !showPdfView && !(sourceMode==="web"&&webLoaded) && (
+                  <div className="flex flex-col items-center justify-center gap-4 flex-1">
+                    <span className="text-7xl select-none" style={{ opacity:0.12 }}>📖</span>
+                    <div className="text-center">
+                      <p className="text-xl font-semibold" style={{ color: textMut }}>Nothing to read yet</p>
+                      <p className="text-sm mt-1" style={{ color: textMut }}>
+                        {sourceMode==="pdf" ? "Upload a PDF from the sidebar" : "Enter a URL in the sidebar to fetch a web page"}
+                      </p>
+                    </div>
+                    {sourceMode==="pdf" && (
+                      <button onClick={() => fileInputRef.current?.click()}
+                        className="mt-2 flex items-center gap-2 rounded-md px-4 py-2 text-sm transition-colors"
+                        style={{ border:`1px solid ${border}`, background: bgCard, color: textMain }}
+                        onMouseEnter={e => (e.currentTarget.style.background=bgHover)}
+                        onMouseLeave={e => (e.currentTarget.style.background=bgCard)}>
+                        <IcoUpload />Browse for PDF
+                      </button>
+                    )}
+                    <input ref={fileInputRef} type="file" accept=".pdf" className="hidden"
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleFile(e.target.files?.[0])} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>
