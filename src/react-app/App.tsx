@@ -3,7 +3,15 @@ import { useState, useEffect, useRef, useCallback, FC, ChangeEvent, DragEvent, c
 /* ── PDF.js ─────────────────────────────────────────────────────────── */
 const PDFJS_URL    = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
 const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-declare global { interface Window { pdfjsLib: any; webkitAudioContext: typeof AudioContext; } }
+declare global {
+  interface Window {
+    pdfjsLib: any;
+    webkitAudioContext: typeof AudioContext;
+    launchQueue?: {
+      setConsumer: (consumer: (launchParams: { files: any[] }) => void) => void;
+    };
+  }
+}
 
 function usePdfJs(): boolean {
   const [ready, setReady] = useState(false);
@@ -67,6 +75,8 @@ const IcoCheck   = () => <Ico size={14} d="M20 6L9 17l-5-5" />;
 const IcoGlobe   = () => <Ico d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />;
 const IcoLoader  = () => <Ico d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />;
 const IcoX       = () => <Ico size={14} d="M18 6L6 18M6 6l12 12" />;
+const IcoDownload = () => <Ico size={14} d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />;
+
 
 type ViewMode = "scroll" | "single";
 interface PageSize { width: number; height: number; aspectRatio: number; }
@@ -487,6 +497,10 @@ const WebPanel: FC<WebPanelProps> = ({ onLoad, loading, loaded, title, error, on
 
 /* ── Keep-alive ─────────────────────────────────────────────────────── */
 interface KeepAlive { ctx: AudioContext; src: AudioBufferSourceNode; }
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
 
 /* ══════════════════════════════════════════════════════════════════════
    Main component
@@ -506,6 +520,12 @@ export default function PDFReader(): ReactElement {
   const pendingAutoPlay = useRef(false);
   const dragCounterRef  = useRef(0);
   const isProgrammaticScrollingRef = useRef(false);
+  const pendingFileRef  = useRef<File | null>(null);
+
+  /* PWA state */
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isStandalone,  setIsStandalone]  = useState(false);
+
 
   /* Source mode & View Mode */
   const [sourceMode,   setSourceMode]   = useState<SourceMode>("pdf");
@@ -677,8 +697,11 @@ export default function PDFReader(): ReactElement {
   }, [viewMode, sourceMode, totalPages, pageNum]);
 
   /* PDF load */
-  const loadPdf = async (file: File) => {
-    if (!pdfReady) return;
+  const loadPdf = useCallback(async (file: File) => {
+    if (!window.pdfjsLib) {
+      pendingFileRef.current = file;
+      return;
+    }
     stopTts(false); setPdfLoading(true);
     try {
       const doc = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
@@ -697,8 +720,59 @@ export default function PDFReader(): ReactElement {
       }
       setPageSizes(sizes);
     } finally { setPdfLoading(false); }
+  }, []);
+  const handleFile = (file?: File) => {
+    if (file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) {
+      loadPdf(file);
+    }
   };
-  const handleFile = (file?: File) => { if (file?.type === "application/pdf") loadPdf(file); };
+
+  /* PWA launch handling & install prompt */
+  useEffect(() => {
+    if (pdfReady && pendingFileRef.current) {
+      const f = pendingFileRef.current;
+      pendingFileRef.current = null;
+      loadPdf(f);
+    }
+  }, [pdfReady, loadPdf]);
+
+  useEffect(() => {
+    if (window.matchMedia("(display-mode: standalone)").matches || (navigator as unknown as { standalone?: boolean }).standalone) {
+      setIsStandalone(true);
+    }
+
+    const handleInstall = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", handleInstall);
+
+    if ("launchQueue" in window && window.launchQueue) {
+      window.launchQueue.setConsumer(async (launchParams) => {
+        if (!launchParams.files || !launchParams.files.length) return;
+        for (const handle of launchParams.files) {
+          if (handle.kind === "file") {
+            try {
+              const file = await handle.getFile();
+              if (file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) {
+                if (window.pdfjsLib) {
+                  loadPdf(file);
+                } else {
+                  pendingFileRef.current = file;
+                }
+              }
+            } catch (err) {
+              console.error("Error loading launched file from OS:", err);
+            }
+          }
+        }
+      });
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleInstall);
+    };
+  }, [loadPdf]);
 
   /* Web page fetch */
   const fetchWebPage = async (url: string) => {
@@ -869,6 +943,30 @@ export default function PDFReader(): ReactElement {
             : <span className="text-xs" style={{ color: textMut }}>No document open</span>}
         </div>
         <div className="flex items-center gap-2.5">
+          {installPrompt && (
+            <button
+              onClick={async () => {
+                installPrompt.prompt();
+                const choice = await installPrompt.userChoice;
+                if (choice?.outcome === "accepted") {
+                  setInstallPrompt(null);
+                }
+              }}
+              title="Install Folio App on your OS"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 hover:scale-105 cursor-pointer"
+              style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#ffffff" }}
+            >
+              <IcoDownload /> Install App
+            </button>
+          )}
+          {isStandalone && (
+            <span
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border"
+              style={{ color: "#34d399", borderColor: "rgba(52,211,153,0.3)", background: d ? "rgba(16,185,129,0.1)" : "rgba(236,253,245,1)" }}
+            >
+              ✓ PWA App
+            </span>
+          )}
           {autoNextPage && ttsState !== "idle" && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border"
               style={{ color:"#818cf8", borderColor:"rgba(129,140,248,0.3)", background: d?"rgba(99,102,241,0.1)":"rgba(238,242,255,1)" }}>
@@ -1155,7 +1253,7 @@ export default function PDFReader(): ReactElement {
             )}
 
             {/* Web mode or empty state */}
-            {(!showPdfView || sourceMode === "web") && !pdfLoading && (
+            {!showPdfView && !pdfLoading && (
               <div className="flex justify-center p-8 min-h-full">
                 {/* Web mode: article view */}
                 {sourceMode === "web" && webLoaded && (
