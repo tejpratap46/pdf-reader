@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, FC, ChangeEvent, DragEvent, createContext, useContext, KeyboardEvent, ReactElement } from "react";
+import { PdfEditor } from "./PdfEditor";
 
 /* ── PDF.js ─────────────────────────────────────────────────────────── */
 const PDFJS_URL    = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
@@ -76,6 +77,7 @@ const IcoGlobe   = () => <Ico d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM2 12h2
 const IcoLoader  = () => <Ico d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />;
 const IcoX       = () => <Ico size={14} d="M18 6L6 18M6 6l12 12" />;
 const IcoDownload = () => <Ico size={14} d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />;
+const IcoEdit     = () => <Ico size={14} d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />;
 
 
 type ViewMode = "scroll" | "single";
@@ -553,6 +555,8 @@ export default function PDFReader(): ReactElement {
   const [globalDrag,   setGlobalDrag]    = useState(false);
   const [rendering,    setRendering]     = useState(false);
   const [pdfLoading,   setPdfLoading]    = useState(false);
+  const [pdfBytes,     setPdfBytes]      = useState<Uint8Array | null>(null);
+  const [isEditorOpen, setIsEditorOpen]  = useState(false);
 
   /* Shared */
   const [paragraphs,   setParagraphs]    = useState<string[]>([]);
@@ -704,7 +708,11 @@ export default function PDFReader(): ReactElement {
     }
     stopTts(false); setPdfLoading(true);
     try {
-      const doc = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      setPdfBytes(bytes);
+
+      const doc = await window.pdfjsLib.getDocument({ data: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) }).promise;
       setPdfDoc(doc); setTotalPages(doc.numPages); setPageNum(1); setFileName(file.name);
       setSourceMode("pdf"); setWebLoaded(false); setWebTitle(""); setWebError("");
 
@@ -721,6 +729,15 @@ export default function PDFReader(): ReactElement {
       setPageSizes(sizes);
     } finally { setPdfLoading(false); }
   }, []);
+
+  const handleSaveEditedPdf = (newBytes: Uint8Array, newName?: string) => {
+    setPdfBytes(newBytes);
+    const blob = new Blob([newBytes], { type: "application/pdf" });
+    const nameToUse = newName || fileName || "edited.pdf";
+    const file = new File([blob], nameToUse, { type: "application/pdf" });
+    setIsEditorOpen(false);
+    loadPdf(file);
+  };
   const handleFile = (file?: File) => {
     if (file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) {
       loadPdf(file);
@@ -1016,6 +1033,14 @@ export default function PDFReader(): ReactElement {
                       {pdfReady ? "Drop a PDF here or click to browse" : "Loading PDF engine…"}
                     </p>
                   </div>
+                  {pdfDoc && pdfBytes && (
+                    <button
+                      onClick={() => setIsEditorOpen(true)}
+                      className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+                    >
+                      <IcoEdit /> Open Fullscreen PDF Editor
+                    </button>
+                  )}
                   <input ref={fileInputRef} type="file" accept=".pdf" className="hidden"
                     onChange={(e: ChangeEvent<HTMLInputElement>) => handleFile(e.target.files?.[0])} />
                 </div>
@@ -1166,6 +1191,20 @@ export default function PDFReader(): ReactElement {
               <IconBtn onClick={() => setScale(s=>Math.min(s+0.2,3))} title="Zoom in"><IcoZoomIn /></IconBtn>
               <span className="text-xs font-mono tabular-nums w-12 text-center" style={{ color: textMut }}>{Math.round(scale*100)}%</span>
               <IconBtn onClick={() => setScale(s=>Math.max(s-0.2,0.5))} title="Zoom out"><IcoZoomOut /></IconBtn>
+
+              <div className="w-px h-5 mx-1" style={{ background: border }} />
+
+              {/* Edit PDF Button */}
+              {pdfBytes && (
+                <button
+                  onClick={() => setIsEditorOpen(true)}
+                  title="Edit PDF (Fullscreen Editor Mode)"
+                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-md bg-amber-500 hover:bg-amber-600 text-white shadow-md transition-all duration-150 cursor-pointer"
+                >
+                  <IcoEdit />
+                  <span>Edit PDF</span>
+                </button>
+              )}
 
               {autoNextPage && (
                 <span className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border"
@@ -1332,6 +1371,15 @@ export default function PDFReader(): ReactElement {
         </main>
       </div>
     </div>
+    {isEditorOpen && pdfBytes && (
+      <PdfEditor
+        pdfFileBytes={pdfBytes}
+        fileName={fileName}
+        onClose={() => setIsEditorOpen(false)}
+        onSave={handleSaveEditedPdf}
+        isDark={isDark}
+      />
+    )}
     </DarkCtx.Provider>
   );
 }
