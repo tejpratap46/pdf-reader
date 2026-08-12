@@ -1,6 +1,6 @@
 {
-  "name": "Folio – PDF Reader and Editor",
-  "short_name": "Folio",
+  "name": "PDF Reader",
+  "short_name": "PDF Reader",
   "description": "Read any PDF aloud with text-to-speech, continuous vertical scroll, and auto-page advance — directly in your browser or OS.",
   "start_url": "/",
   "scope": "/",
