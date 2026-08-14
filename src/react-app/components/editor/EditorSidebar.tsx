@@ -1,5 +1,5 @@
 import { FC, RefObject, ChangeEvent } from "react";
-import { TabMode, PageState, TextItem } from "../../types/editor";
+import { TabMode, PageState, TextItem, ImageItem } from "../../types/editor";
 import { IcoPages, IcoPen, IcoText, IcoStamp, IcoImage, IcoChevL } from "../common/Icons";
 import { SidebarResizer } from "../reader/SidebarResizer";
 import { PagesTab } from "./tabs/PagesTab";
@@ -71,6 +71,10 @@ interface EditorSidebarProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
   handleImageUpload: (e: ChangeEvent<HTMLInputElement>) => void;
   setShowSigModal: (v: boolean) => void;
+  selectedImageId: string | null;
+  setSelectedImageId: (id: string | null) => void;
+  updateImage: (imgId: string, updates: Partial<ImageItem>, pushToHistory?: boolean) => void;
+  duplicateImage: (imgId: string) => void;
   removeImage: (imgId: string) => void;
 
   // Style tokens
@@ -135,6 +139,10 @@ export const EditorSidebar: FC<EditorSidebarProps> = ({
   fileInputRef,
   handleImageUpload,
   setShowSigModal,
+  selectedImageId,
+  setSelectedImageId,
+  updateImage,
+  duplicateImage,
   removeImage,
   isDark,
   border,
@@ -280,7 +288,16 @@ export const EditorSidebar: FC<EditorSidebarProps> = ({
             handleImageUpload={handleImageUpload}
             setShowSigModal={setShowSigModal}
             activePage={activePage}
+            selectedImageId={selectedImageId}
+            setSelectedImageId={setSelectedImageId}
+            updateImage={updateImage}
+            duplicateImage={duplicateImage}
             removeImage={removeImage}
+            border={border}
+            bgInput={bgInput}
+            bgSide={bgSide}
+            textMain={textMain}
+            textMut={textMut}
           />
         )}
         </div>

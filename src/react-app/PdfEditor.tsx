@@ -13,6 +13,7 @@ import { exportPdfHelper } from "./utils/pdfExport";
 import { EditorHeader } from "./components/editor/EditorHeader";
 import { EditorSidebar } from "./components/editor/EditorSidebar";
 import { EditorCanvas } from "./components/editor/canvas/EditorCanvas";
+import { ResizeHandleType } from "./components/editor/canvas/ImageOverlays";
 import { SignatureModal } from "./components/editor/SignatureModal";
 import { useResizableSidebar } from "./hooks/useResizableSidebar";
 import { IcoChevR } from "./components/common/Icons";
@@ -92,7 +93,6 @@ export const PdfEditor: FC<PdfEditorProps> = ({
   const drawOverlayRef = useRef<HTMLCanvasElement | null>(null);
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [showSigModal, setShowSigModal] = useState<boolean>(false);
 
   // Overlay Dragging State
@@ -141,6 +141,83 @@ export const PdfEditor: FC<PdfEditorProps> = ({
       mouseY: e.clientY,
       initialSize: currentFontSize,
     });
+  };
+
+  // Image Selection, Resizing & Rotation State
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [resizingImage, setResizingImage] = useState<{
+    id: string;
+    handle: ResizeHandleType;
+    startX: number;
+    startY: number;
+    initialX: number;
+    initialY: number;
+    initialW: number;
+    initialH: number;
+    lockAspect: boolean;
+    aspectRatio: number;
+  } | null>(null);
+  const [rotatingImage, setRotatingImage] = useState<{
+    id: string;
+    centerX: number;
+    centerY: number;
+    startMouseAngle: number;
+    initialRotation: number;
+  } | null>(null);
+  const [currentRotateAngle, setCurrentRotateAngle] = useState<number | null>(null);
+
+  const startResizeImage = (
+    e: React.MouseEvent,
+    id: string,
+    handle: ResizeHandleType,
+    img: ImageItem
+  ) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setSelectedImageId(id);
+    setResizingImage({
+      id,
+      handle,
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: img.x,
+      initialY: img.y,
+      initialW: img.width,
+      initialH: img.height,
+      lockAspect: img.lockAspectRatio !== false,
+      aspectRatio: (img.width || 30) / (img.height || 20),
+    });
+  };
+
+  const startRotateImage = (
+    e: React.MouseEvent,
+    id: string,
+    initialRotation: number
+  ) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return;
+    const targetImg = activePage?.images.find((img) => img.id === id);
+    if (!targetImg) return;
+
+    setSelectedImageId(id);
+    const rect = canvasEl.getBoundingClientRect();
+    const cx = rect.left + ((targetImg.x + targetImg.width / 2) / 100) * rect.width;
+    const cy = rect.top + ((targetImg.y + targetImg.height / 2) / 100) * rect.height;
+
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const mouseAngle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+
+    setRotatingImage({
+      id,
+      centerX: cx,
+      centerY: cy,
+      startMouseAngle: mouseAngle,
+      initialRotation: initialRotation || 0,
+    });
+    setCurrentRotateAngle(initialRotation || 0);
   };
 
   // History for undo
@@ -446,6 +523,228 @@ export const PdfEditor: FC<PdfEditorProps> = ({
     };
   }, [resizingTextId, resizeStart, activePageIndex, pages]);
 
+  // Resizing Effect for Image Overlays
+  useEffect(() => {
+    if (!resizingImage) return;
+
+    const handleResizeMouseMove = (e: MouseEvent) => {
+      const bgCanvas = canvasRef.current;
+      if (!bgCanvas) return;
+      const rect = bgCanvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      const deltaXPct = ((e.clientX - resizingImage.startX) / rect.width) * 100;
+      const deltaYPct = ((e.clientY - resizingImage.startY) / rect.height) * 100;
+
+      let newX = resizingImage.initialX;
+      let newY = resizingImage.initialY;
+      let newW = resizingImage.initialW;
+      let newH = resizingImage.initialH;
+      const isLocked = resizingImage.lockAspect || e.shiftKey;
+      const ratio = resizingImage.aspectRatio;
+
+      switch (resizingImage.handle) {
+        case "se": {
+          newW = Math.max(5, Math.min(100 - resizingImage.initialX, resizingImage.initialW + deltaXPct));
+          newH = Math.max(5, Math.min(100 - resizingImage.initialY, resizingImage.initialH + deltaYPct));
+          if (isLocked) {
+            newH = Math.max(5, Math.min(100 - resizingImage.initialY, newW / ratio));
+            newW = newH * ratio;
+          }
+          break;
+        }
+        case "sw": {
+          const rawW = resizingImage.initialW - deltaXPct;
+          newW = Math.max(5, Math.min(resizingImage.initialX + resizingImage.initialW, rawW));
+          newX = resizingImage.initialX + (resizingImage.initialW - newW);
+          newH = Math.max(5, Math.min(100 - resizingImage.initialY, resizingImage.initialH + deltaYPct));
+          if (isLocked) {
+            newH = Math.max(5, Math.min(100 - resizingImage.initialY, newW / ratio));
+          }
+          break;
+        }
+        case "ne": {
+          newW = Math.max(5, Math.min(100 - resizingImage.initialX, resizingImage.initialW + deltaXPct));
+          const rawH = resizingImage.initialH - deltaYPct;
+          newH = Math.max(5, Math.min(resizingImage.initialY + resizingImage.initialH, rawH));
+          newY = resizingImage.initialY + (resizingImage.initialH - newH);
+          if (isLocked) {
+            newW = Math.max(5, Math.min(100 - resizingImage.initialX, newH * ratio));
+          }
+          break;
+        }
+        case "nw": {
+          const rawW = resizingImage.initialW - deltaXPct;
+          newW = Math.max(5, Math.min(resizingImage.initialX + resizingImage.initialW, rawW));
+          newX = resizingImage.initialX + (resizingImage.initialW - newW);
+          const rawH = resizingImage.initialH - deltaYPct;
+          newH = Math.max(5, Math.min(resizingImage.initialY + resizingImage.initialH, rawH));
+          newY = resizingImage.initialY + (resizingImage.initialH - newH);
+          if (isLocked) {
+            newW = Math.max(5, newH * ratio);
+            newX = resizingImage.initialX + resizingImage.initialW - newW;
+          }
+          break;
+        }
+        case "e": {
+          newW = Math.max(5, Math.min(100 - resizingImage.initialX, resizingImage.initialW + deltaXPct));
+          break;
+        }
+        case "w": {
+          const rawW = resizingImage.initialW - deltaXPct;
+          newW = Math.max(5, Math.min(resizingImage.initialX + resizingImage.initialW, rawW));
+          newX = resizingImage.initialX + (resizingImage.initialW - newW);
+          break;
+        }
+        case "s": {
+          newH = Math.max(5, Math.min(100 - resizingImage.initialY, resizingImage.initialH + deltaYPct));
+          break;
+        }
+        case "n": {
+          const rawH = resizingImage.initialH - deltaYPct;
+          newH = Math.max(5, Math.min(resizingImage.initialY + resizingImage.initialH, rawH));
+          newY = resizingImage.initialY + (resizingImage.initialH - newH);
+          break;
+        }
+      }
+
+      setPages((prevPages) =>
+        prevPages.map((pg, i) => {
+          if (i !== activePageIndex) return pg;
+          return {
+            ...pg,
+            images: pg.images.map((img) =>
+              img.id === resizingImage.id
+                ? {
+                    ...img,
+                    x: Math.round(newX * 10) / 10,
+                    y: Math.round(newY * 10) / 10,
+                    width: Math.round(newW * 10) / 10,
+                    height: Math.round(newH * 10) / 10,
+                  }
+                : img
+            ),
+          };
+        })
+      );
+    };
+
+    const handleResizeMouseUp = () => {
+      setResizingImage(null);
+      pushHistory(pages);
+    };
+
+    window.addEventListener("mousemove", handleResizeMouseMove);
+    window.addEventListener("mouseup", handleResizeMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleResizeMouseMove);
+      window.removeEventListener("mouseup", handleResizeMouseUp);
+    };
+  }, [resizingImage, activePageIndex, pages]);
+
+  // Rotating Effect for Image Overlays
+  useEffect(() => {
+    if (!rotatingImage) return;
+
+    const handleRotateMouseMove = (e: MouseEvent) => {
+      const dx = e.clientX - rotatingImage.centerX;
+      const dy = e.clientY - rotatingImage.centerY;
+      const currentMouseAngle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+      const deltaAngle = currentMouseAngle - rotatingImage.startMouseAngle;
+      const rawRot = rotatingImage.initialRotation + deltaAngle;
+      let normalized = ((rawRot % 360) + 360) % 360;
+
+      // Snapping to standard angles
+      const snapAngles = [0, 45, 90, 135, 180, 225, 270, 315, 360];
+      const snapThreshold = e.shiftKey ? 12 : 4;
+      for (const sa of snapAngles) {
+        if (Math.abs(normalized - sa) <= snapThreshold || Math.abs(normalized - (sa - 360)) <= snapThreshold) {
+          normalized = sa % 360;
+          break;
+        }
+      }
+
+      setCurrentRotateAngle(Math.round(normalized));
+
+      setPages((prevPages) =>
+        prevPages.map((pg, i) => {
+          if (i !== activePageIndex) return pg;
+          return {
+            ...pg,
+            images: pg.images.map((img) =>
+              img.id === rotatingImage.id
+                ? { ...img, rotation: Math.round(normalized) }
+                : img
+            ),
+          };
+        })
+      );
+    };
+
+    const handleRotateMouseUp = () => {
+      setRotatingImage(null);
+      setCurrentRotateAngle(null);
+      pushHistory(pages);
+    };
+
+    window.addEventListener("mousemove", handleRotateMouseMove);
+    window.addEventListener("mouseup", handleRotateMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleRotateMouseMove);
+      window.removeEventListener("mouseup", handleRotateMouseUp);
+    };
+  }, [rotatingImage, activePageIndex, pages]);
+
+  // Keyboard Shortcuts (Delete, Nudge, Rotate, Escape)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+
+      if (selectedImageId && activePage) {
+        const curImg = activePage.images.find((img) => img.id === selectedImageId);
+        if (!curImg) return;
+
+        if (e.key === "Delete" || e.key === "Backspace") {
+          e.preventDefault();
+          removeImage(selectedImageId);
+          setSelectedImageId(null);
+        } else if (e.key === "Escape") {
+          setSelectedImageId(null);
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          const step = e.shiftKey ? 5 : 1;
+          updateImage(selectedImageId, { x: Math.max(0, curImg.x - step) });
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault();
+          const step = e.shiftKey ? 5 : 1;
+          updateImage(selectedImageId, { x: Math.min(100 - curImg.width, curImg.x + step) });
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          const step = e.shiftKey ? 5 : 1;
+          updateImage(selectedImageId, { y: Math.max(0, curImg.y - step) });
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          const step = e.shiftKey ? 5 : 1;
+          updateImage(selectedImageId, { y: Math.min(100 - curImg.height, curImg.y + step) });
+        } else if (e.key === "[" || e.key === "{") {
+          e.preventDefault();
+          const nextRot = (((curImg.rotation || 0) - (e.shiftKey ? 45 : 15)) % 360 + 360) % 360;
+          updateImage(selectedImageId, { rotation: nextRot });
+        } else if (e.key === "]" || e.key === "}") {
+          e.preventDefault();
+          const nextRot = (((curImg.rotation || 0) + (e.shiftKey ? 45 : 15)) % 360 + 360) % 360;
+          updateImage(selectedImageId, { rotation: nextRot });
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedImageId, activePage, pages]);
+
   // Page Actions
   const rotatePage = (index: number) => {
     pushHistory(pages);
@@ -571,6 +870,36 @@ export const PdfEditor: FC<PdfEditorProps> = ({
   };
 
   // Image / Signature Actions
+  const updateImage = (imgId: string, updates: Partial<ImageItem>, pushToHistory = true) => {
+    if (pushToHistory) pushHistory(pages);
+    setPages((prev) =>
+      prev.map((pg, i) =>
+        i === activePageIndex
+          ? {
+              ...pg,
+              images: pg.images.map((img) => (img.id === imgId ? { ...img, ...updates } : img)),
+            }
+          : pg
+      )
+    );
+  };
+
+  const duplicateImage = (imgId: string) => {
+    const targetImg = activePage?.images.find((img) => img.id === imgId);
+    if (!targetImg) return;
+    pushHistory(pages);
+    const newImg: ImageItem = {
+      ...targetImg,
+      id: `img-${Date.now()}`,
+      x: Math.min(85, targetImg.x + 4),
+      y: Math.min(85, targetImg.y + 4),
+    };
+    setPages((prev) =>
+      prev.map((pg, i) => (i === activePageIndex ? { ...pg, images: [...pg.images, newImg] } : pg))
+    );
+    setSelectedImageId(newImg.id);
+  };
+
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activePage) return;
@@ -580,22 +909,41 @@ export const PdfEditor: FC<PdfEditorProps> = ({
       const dataUrl = event.target?.result as string;
       if (!dataUrl) return;
 
-      pushHistory(pages);
-      const isPng = file.type === "image/png" || dataUrl.startsWith("data:image/png");
-      const imgObj: ImageItem = {
-        id: `img-${Date.now()}`,
-        dataUrl,
-        isPng,
-        x: 30,
-        y: 30,
-        width: 30,
-        height: 20,
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        pushHistory(pages);
+        const isPng = file.type === "image/png" || dataUrl.startsWith("data:image/png");
+        const naturalAspect = tempImg.naturalWidth / (tempImg.naturalHeight || 1);
+        const pageW = canvasRef.current?.width || 600;
+        const pageH = canvasRef.current?.height || 800;
+        const pageAspect = pageW / pageH;
+
+        const width = 32;
+        let height = Math.round((width * pageAspect) / naturalAspect);
+        if (height > 60) height = 60;
+        if (height < 5) height = 5;
+
+        const imgObj: ImageItem = {
+          id: `img-${Date.now()}`,
+          dataUrl,
+          isPng,
+          x: Math.max(5, Math.round(50 - width / 2)),
+          y: Math.max(5, Math.round(50 - height / 2)),
+          width,
+          height,
+          rotation: 0,
+          lockAspectRatio: true,
+        };
+        setPages((prev) =>
+          prev.map((pg, i) => (i === activePageIndex ? { ...pg, images: [...pg.images, imgObj] } : pg))
+        );
+        setSelectedImageId(imgObj.id);
+        setActiveTab("images");
       };
-      setPages((prev) =>
-        prev.map((pg, i) => (i === activePageIndex ? { ...pg, images: [...pg.images, imgObj] } : pg))
-      );
+      tempImg.src = dataUrl;
     };
     reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const removeImage = (imgId: string) => {
@@ -603,36 +951,37 @@ export const PdfEditor: FC<PdfEditorProps> = ({
     setPages((prev) =>
       prev.map((pg, i) => (i === activePageIndex ? { ...pg, images: pg.images.filter((img) => img.id !== imgId) } : pg))
     );
+    if (selectedImageId === imgId) {
+      setSelectedImageId(null);
+    }
   };
 
-  // Signature Modal Handlers
-  const [sigDrawing, setSigDrawing] = useState(false);
-  const saveSignature = () => {
-    const canvas = signatureCanvasRef.current;
-    if (!canvas || !activePage) return;
-    const dataUrl = canvas.toDataURL("image/png");
-
+  // Signature Modal Handler
+  const handleSaveSignature = (dataUrl: string, aspect: number) => {
+    if (!activePage) return;
     pushHistory(pages);
+    const pageW = canvasRef.current?.width || 600;
+    const pageH = canvasRef.current?.height || 800;
+    const pageAspect = pageW / pageH;
+
+    const width = 28;
+    const height = Math.max(6, Math.min(30, Math.round((width * pageAspect) / (aspect || 2.5))));
+
     const imgObj: ImageItem = {
       id: `sig-${Date.now()}`,
       dataUrl,
       isPng: true,
-      x: 35,
+      x: Math.max(5, Math.round(50 - width / 2)),
       y: 65,
-      width: 30,
-      height: 15,
+      width,
+      height,
+      rotation: 0,
+      lockAspectRatio: true,
     };
     setPages((prev) =>
       prev.map((pg, i) => (i === activePageIndex ? { ...pg, images: [...pg.images, imgObj] } : pg))
     );
-    setShowSigModal(false);
-  };
-
-  const clearSignature = () => {
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setSelectedImageId(imgObj.id);
   };
 
   const exportPdf = async (downloadOnly = false) => {
@@ -751,6 +1100,10 @@ export const PdfEditor: FC<PdfEditorProps> = ({
           fileInputRef={fileInputRef}
           handleImageUpload={handleImageUpload}
           setShowSigModal={setShowSigModal}
+          selectedImageId={selectedImageId}
+          setSelectedImageId={setSelectedImageId}
+          updateImage={updateImage}
+          duplicateImage={duplicateImage}
           removeImage={removeImage}
           isDark={isDark}
           border={border}
@@ -777,6 +1130,15 @@ export const PdfEditor: FC<PdfEditorProps> = ({
           updateText={updateText}
           removeText={removeText}
           startResizeText={startResizeText}
+          selectedImageId={selectedImageId}
+          setSelectedImageId={setSelectedImageId}
+          startResizeImage={startResizeImage}
+          resizingImageId={resizingImage?.id || null}
+          startRotateImage={startRotateImage}
+          rotatingImageId={rotatingImage?.id || null}
+          currentRotateAngle={currentRotateAngle}
+          updateImage={updateImage}
+          duplicateImage={duplicateImage}
           removeImage={removeImage}
           isDark={isDark}
         />
@@ -785,13 +1147,10 @@ export const PdfEditor: FC<PdfEditorProps> = ({
       <SignatureModal
         showSigModal={showSigModal}
         setShowSigModal={setShowSigModal}
-        signatureCanvasRef={signatureCanvasRef}
-        sigDrawing={sigDrawing}
-        setSigDrawing={setSigDrawing}
-        clearSignature={clearSignature}
-        saveSignature={saveSignature}
+        onSaveSignature={handleSaveSignature}
         bgCard={bgCard}
         border={border}
+        isDark={isDark}
       />
     </div>
   );

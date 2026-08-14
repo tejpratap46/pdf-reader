@@ -117,15 +117,46 @@ export async function exportPdfHelper(
 
         const imgW = (img.width / 100) * pWidth;
         const imgH = (img.height / 100) * pHeight;
-        const imgX = (img.x / 100) * pWidth;
-        const imgY = pHeight - (img.y / 100) * pHeight - imgH;
+        const rawRot = img.rotation || 0;
+        const normalizedRot = ((rawRot % 360) + 360) % 360;
 
-        pdfPage.drawImage(embeddedImg, {
-          x: imgX,
-          y: imgY,
-          width: imgW,
-          height: imgH,
-        });
+        if (normalizedRot !== 0) {
+          // Center of the image in PDF coordinates
+          const normCx = (img.x + img.width / 2) / 100;
+          const normCy = (img.y + img.height / 2) / 100;
+          const pdfCx = normCx * pWidth;
+          const pdfCy = pHeight - normCy * pHeight;
+
+          // In PDF coordinates (where Y is pointing up), clockwise rotation is -normalizedRot
+          const rad = (-normalizedRot * Math.PI) / 180;
+          const cosA = Math.cos(rad);
+          const sinA = Math.sin(rad);
+
+          // Center relative to the unrotated lower-left origin (0, 0)
+          const cxRel = (imgW / 2) * cosA - (imgH / 2) * sinA;
+          const cyRel = (imgW / 2) * sinA + (imgH / 2) * cosA;
+
+          const pdfX = pdfCx - cxRel;
+          const pdfY = pdfCy - cyRel;
+
+          pdfPage.drawImage(embeddedImg, {
+            x: pdfX,
+            y: pdfY,
+            width: imgW,
+            height: imgH,
+            rotate: degrees(-normalizedRot),
+          });
+        } else {
+          const imgX = (img.x / 100) * pWidth;
+          const imgY = pHeight - (img.y / 100) * pHeight - imgH;
+
+          pdfPage.drawImage(embeddedImg, {
+            x: imgX,
+            y: imgY,
+            width: imgW,
+            height: imgH,
+          });
+        }
       } catch (e) {
         console.error("Error embedding image onto PDF:", e);
       }

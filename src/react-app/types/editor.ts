@@ -37,6 +37,8 @@ export interface ImageItem {
   y: number; // percentage (0-100)
   width: number; // percentage of page width
   height: number; // percentage of page height
+  rotation?: number; // degrees (0-360 or -180 to 180)
+  lockAspectRatio?: boolean; // keep aspect ratio when resizing
 }
 
 export interface StampItem {

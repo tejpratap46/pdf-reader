@@ -1,8 +1,8 @@
 import { FC, RefObject, MouseEvent } from "react";
-import { PageState, TextItem } from "../../../types/editor";
+import { PageState, TextItem, ImageItem } from "../../../types/editor";
 import { TextOverlays } from "./TextOverlays";
 import { StampOverlays } from "./StampOverlays";
-import { ImageOverlays } from "./ImageOverlays";
+import { ImageOverlays, ResizeHandleType } from "./ImageOverlays";
 
 interface EditorCanvasProps {
   previewContainerRef: RefObject<HTMLDivElement | null>;
@@ -21,6 +21,15 @@ interface EditorCanvasProps {
   updateText: (textId: string, updates: Partial<TextItem>) => void;
   removeText: (textId: string) => void;
   startResizeText: (e: MouseEvent, id: string, currentFontSize: number) => void;
+  selectedImageId: string | null;
+  setSelectedImageId: (id: string | null) => void;
+  startResizeImage: (e: MouseEvent, id: string, handle: ResizeHandleType, img: ImageItem) => void;
+  resizingImageId: string | null;
+  startRotateImage: (e: MouseEvent, id: string, initialRotation: number) => void;
+  rotatingImageId: string | null;
+  currentRotateAngle: number | null;
+  updateImage: (id: string, updates: Partial<ImageItem>, pushToHistory?: boolean) => void;
+  duplicateImage: (id: string) => void;
   removeImage: (id: string) => void;
   isDark: boolean;
 }
@@ -42,12 +51,22 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
   updateText,
   removeText,
   startResizeText,
+  selectedImageId,
+  setSelectedImageId,
+  startResizeImage,
+  resizingImageId,
+  startRotateImage,
+  rotatingImageId,
+  currentRotateAngle,
+  updateImage,
+  duplicateImage,
   removeImage,
   isDark,
 }) => {
   return (
     <main
       ref={previewContainerRef}
+      onClick={() => setSelectedImageId(null)}
       className="flex-1 overflow-auto flex items-center justify-center p-8 relative"
       style={{ background: isDark ? "#040711" : "#e2e8f0" }}
     >
@@ -65,6 +84,12 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
             width: canvasRef.current?.width || 600,
             height: canvasRef.current?.height || 800,
             background: "#ffffff",
+          }}
+          onClick={(e) => {
+            // Clicking canvas itself deselects image if not clicked on an image
+            if (e.target === e.currentTarget || e.target === canvasRef.current || e.target === drawOverlayRef.current) {
+              setSelectedImageId(null);
+            }
           }}
         >
           {/* PDF Background Canvas */}
@@ -96,7 +121,21 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
           <StampOverlays stamps={activePage.stamps} />
 
           {/* Image Overlays Layer */}
-          <ImageOverlays images={activePage.images} startDrag={startDrag} draggingId={draggingId} removeImage={removeImage} />
+          <ImageOverlays
+            images={activePage.images}
+            selectedImageId={selectedImageId}
+            setSelectedImageId={setSelectedImageId}
+            startDrag={startDrag}
+            draggingId={draggingId}
+            startResizeImage={startResizeImage}
+            resizingImageId={resizingImageId}
+            startRotateImage={startRotateImage}
+            rotatingImageId={rotatingImageId}
+            currentRotateAngle={currentRotateAngle}
+            updateImage={updateImage}
+            duplicateImage={duplicateImage}
+            removeImage={removeImage}
+          />
         </div>
       )}
     </main>
