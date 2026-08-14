@@ -25,6 +25,8 @@ interface EditorHeaderProps {
   setScale: (fn: (s: number) => number) => void;
   exportPdf: (downloadOnly: boolean) => void;
   saving: boolean;
+  savingAction?: "save" | "download" | null;
+  saveProgress?: { progress: number; stage: string } | null;
   border: string;
   bgCard: string;
   bgInput: string;
@@ -45,11 +47,15 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
   setScale,
   exportPdf,
   saving,
+  savingAction,
+  saveProgress,
   border,
   bgCard,
   bgInput,
   textMain,
 }) => {
+  const percentText = saveProgress ? `${Math.round(saveProgress.progress * 100)}%` : "";
+
   return (
     <header className="flex items-center justify-between px-5 py-3 border-b shrink-0 shadow-md backdrop-blur-lg" style={{ background: bgCard, borderColor: border }}>
       <div className="flex items-center gap-3">
@@ -69,7 +75,8 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
         )}
         <button
           onClick={onClose}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 cursor-pointer"
+          disabled={saving}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 cursor-pointer disabled:opacity-50"
           style={{ borderColor: border, background: bgInput, color: textMain }}
         >
           <IcoX /> Exit Editor
@@ -90,7 +97,7 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
       {/* Center: Controls */}
       <div className="hidden md:flex items-center gap-2">
         <button
-          disabled={historyLength === 0}
+          disabled={historyLength === 0 || saving}
           onClick={undo}
           title="Undo"
           className="p-2 rounded-lg border transition-colors disabled:opacity-40 cursor-pointer"
@@ -104,7 +111,7 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
         {/* Page Switcher */}
         <div className="flex items-center gap-1 text-xs">
           <button
-            disabled={activePageIndex === 0}
+            disabled={activePageIndex === 0 || saving}
             onClick={() => setActivePageIndex((p) => Math.max(0, p - 1))}
             className="p-1.5 rounded-md border disabled:opacity-40 cursor-pointer"
             style={{ borderColor: border, background: bgInput }}
@@ -115,7 +122,7 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
             Page {activePageIndex + 1} / {pagesLength}
           </span>
           <button
-            disabled={activePageIndex === pagesLength - 1}
+            disabled={activePageIndex === pagesLength - 1 || saving}
             onClick={() => setActivePageIndex((p) => Math.min(pagesLength - 1, p + 1))}
             className="p-1.5 rounded-md border disabled:opacity-40 cursor-pointer"
             style={{ borderColor: border, background: bgInput }}
@@ -129,16 +136,18 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
         {/* Zoom */}
         <div className="flex items-center gap-1">
           <button
+            disabled={saving}
             onClick={() => setScale((s) => Math.max(0.5, s - 0.1))}
-            className="p-1.5 rounded-md border cursor-pointer"
+            className="p-1.5 rounded-md border disabled:opacity-50 cursor-pointer"
             style={{ borderColor: border, background: bgInput }}
           >
             <IcoZoomOut />
           </button>
           <span className="font-mono text-xs w-12 text-center">{Math.round(scale * 100)}%</span>
           <button
+            disabled={saving}
             onClick={() => setScale((s) => Math.min(2.5, s + 0.1))}
-            className="p-1.5 rounded-md border cursor-pointer"
+            className="p-1.5 rounded-md border disabled:opacity-50 cursor-pointer"
             style={{ borderColor: border, background: bgInput }}
           >
             <IcoZoomIn />
@@ -148,26 +157,42 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
 
       {/* Right Actions */}
       <div className="flex items-center gap-2.5">
+        {saving && saveProgress?.stage && (
+          <span className="hidden lg:inline text-xs font-medium text-amber-500 truncate max-w-[200px]">
+            {saveProgress.stage}
+          </span>
+        )}
         <button
           onClick={() => exportPdf(true)}
           disabled={saving}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 hover:bg-slate-800 cursor-pointer"
+          title="Download edited PDF to your device"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 hover:bg-slate-800 disabled:opacity-60 cursor-pointer"
           style={{ borderColor: border, background: bgInput, color: textMain }}
         >
-          <IcoDownload /> Download PDF
+          {saving && savingAction === "download" ? (
+            <span className="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <IcoDownload />
+          )}
+          {saving && savingAction === "download"
+            ? `Downloading (${percentText || "..."})`
+            : "Download PDF"}
         </button>
         <button
           onClick={() => exportPdf(false)}
           disabled={saving}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer"
+          title="Apply edits and save to reader view"
+          className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 disabled:opacity-75 disabled:hover:scale-100 cursor-pointer"
           style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
         >
-          {saving ? (
+          {saving && savingAction === "save" ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
             <IcoSave />
           )}
-          {saving ? "Saving PDF..." : "Apply & Save"}
+          {saving && savingAction === "save"
+            ? `Saving (${percentText || "..."})`
+            : "Apply & Save"}
         </button>
       </div>
     </header>

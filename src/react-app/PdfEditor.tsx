@@ -32,6 +32,8 @@ export const PdfEditor: FC<PdfEditorProps> = ({
   const [pdfJsDoc, setPdfJsDoc] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
+  const [savingAction, setSavingAction] = useState<"save" | "download" | null>(null);
+  const [saveProgress, setSaveProgress] = useState<{ progress: number; stage: string } | null>(null);
 
   /* Resizable & Collapsible Editor Sidebar */
   const {
@@ -1022,12 +1024,25 @@ export const PdfEditor: FC<PdfEditorProps> = ({
   const exportPdf = async (downloadOnly = false) => {
     try {
       setSaving(true);
-      await exportPdfHelper(pdfFileBytes, fileName, pages, downloadOnly, onSave);
+      setSavingAction(downloadOnly ? "download" : "save");
+      setSaveProgress({ progress: 0.05, stage: "Starting export..." });
+      await exportPdfHelper(
+        pdfFileBytes,
+        fileName,
+        pages,
+        downloadOnly,
+        onSave,
+        (progress, stage) => {
+          setSaveProgress({ progress, stage });
+        }
+      );
     } catch (err) {
       console.error("Failed to export modified PDF:", err);
       alert("Error saving PDF file. Please check console logs.");
     } finally {
       setSaving(false);
+      setSavingAction(null);
+      setSaveProgress(null);
     }
   };
 
@@ -1056,6 +1071,8 @@ export const PdfEditor: FC<PdfEditorProps> = ({
         setScale={setScale}
         exportPdf={exportPdf}
         saving={saving}
+        savingAction={savingAction}
+        saveProgress={saveProgress}
         border={border}
         bgCard={bgCard}
         bgInput={bgInput}

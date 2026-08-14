@@ -1,13 +1,29 @@
 import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
 import { PageState } from "../types/editor";
+import { pdfExportWorkerClient } from "../services/pdfExportWorkerClient";
 
-export async function exportPdfHelper(
+function sanitizeTextForStandardFont(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u2014/g, "--")
+    .replace(/\u2013/g, "-")
+    .replace(/\u2026/g, "...")
+    .replace(/\u2022/g, "*")
+    .replace(/\u00A0/g, " ")
+    .replace(/[^\x00-\xFF]/g, "?");
+}
+
+/**
+ * Main-thread fallback compiler for PDF modifications in environments where Web Workers are restricted.
+ */
+async function compilePdfMainThread(
   pdfFileBytes: Uint8Array,
-  fileName: string,
   pages: PageState[],
-  downloadOnly: boolean,
-  onSave: (newPdfBytes: Uint8Array, newFileName?: string) => void
-): Promise<void> {
+  onProgress?: (progress: number, stage: string) => void
+): Promise<Uint8Array> {
+  onProgress?.(0.05, "Loading original document...");
   const srcDoc = await PDFDocument.load(pdfFileBytes, { ignoreEncryption: true });
   const outDoc = await PDFDocument.create();
 
@@ -28,13 +44,25 @@ export async function exportPdfHelper(
 
   const getPdfFont = (fontFamily: string | undefined, isBold: boolean, isItalic: boolean) => {
     const fam = (fontFamily || "").toLowerCase();
-    if (fam.includes("times") || fam.includes("serif") || fam.includes("roman") || fam.includes("georgia") || fam.includes("cambria") || fam.includes("garamond")) {
+    if (
+      fam.includes("times") ||
+      fam.includes("serif") ||
+      fam.includes("roman") ||
+      fam.includes("georgia") ||
+      fam.includes("cambria") ||
+      fam.includes("garamond")
+    ) {
       if (isBold && isItalic) return timesBoldItalic;
       if (isBold) return timesBold;
       if (isItalic) return timesItalic;
       return timesFont;
     }
-    if (fam.includes("courier") || fam.includes("mono") || fam.includes("consolas") || fam.includes("code")) {
+    if (
+      fam.includes("courier") ||
+      fam.includes("mono") ||
+      fam.includes("consolas") ||
+      fam.includes("code")
+    ) {
       if (isBold && isItalic) return courierBoldItalic;
       if (isBold) return courierBold;
       if (isItalic) return courierItalic;
@@ -46,8 +74,17 @@ export async function exportPdfHelper(
     return helveticaFont;
   };
 
+  const totalPages = pages.length;
+
   // Loop over current edited page array
-  for (const pgState of pages) {
+  for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+    const pgState = pages[pageIdx];
+    const pageProgressBase = 0.1 + (pageIdx / Math.max(1, totalPages)) * 0.75;
+    onProgress?.(
+      pageProgressBase,
+      `Processing page ${pageIdx + 1} of ${totalPages}...`
+    );
+
     let pdfPage: ReturnType<typeof outDoc.addPage>;
 
     if (pgState.originalIndex !== null) {
@@ -103,10 +140,11 @@ export async function exportPdfHelper(
     // 2. Draw text overlays (including background cover rectangles for original text edits)
     for (const txt of pgState.texts) {
       const fontToUse = getPdfFont(txt.fontFamily, txt.isBold, !!txt.isItalic);
+      const cleanText = sanitizeTextForStandardFont(txt.text);
 
       const pdfX = (txt.x / 100) * pWidth;
       const textH = fontToUse.heightAtSize(txt.fontSize);
-      const textW = fontToUse.widthOfTextAtSize(txt.text, txt.fontSize);
+      const textW = fontToUse.widthOfTextAtSize(cleanText, txt.fontSize);
       const pdfY = pHeight - (txt.y / 100) * pHeight - txt.fontSize * 0.78;
 
       // Draw background cover rectangle if present (e.g. to whiteout original text)
@@ -136,7 +174,7 @@ export async function exportPdfHelper(
       const g = parseInt(hex.substring(2, 4), 16) / 255 || 0;
       const b = parseInt(hex.substring(4, 6), 16) / 255 || 0;
 
-      pdfPage.drawText(txt.text, {
+      pdfPage.drawText(cleanText, {
         x: pdfX,
         y: pdfY,
         size: txt.fontSize,
@@ -152,7 +190,9 @@ export async function exportPdfHelper(
       const g = parseInt(hex.substring(2, 4), 16) / 255 || 0.1;
       const b = parseInt(hex.substring(4, 6), 16) / 255 || 0.1;
 
-      pdfPage.drawText(stp.text, {
+      const cleanStampText = sanitizeTextForStandardFont(stp.text);
+
+      pdfPage.drawText(cleanStampText, {
         x: pWidth * 0.25,
         y: pHeight * 0.5,
         size: 42,
@@ -219,20 +259,70 @@ export async function exportPdfHelper(
     }
   }
 
-  // Generate modified PDF Uint8Array
+  onProgress?.(0.92, "Generating final PDF file...");
   const finalBytes = await outDoc.save();
+  onProgress?.(1.0, "Done");
+  return finalBytes;
+}
+
+/**
+ * Compiles edited PDF bytes, preferentially in a background Web Worker with automatic fallback to main thread.
+ */
+export async function exportPdfBytes(
+  pdfFileBytes: Uint8Array,
+  pages: PageState[],
+  onProgress?: (progress: number, stage: string) => void
+): Promise<Uint8Array> {
+  try {
+    return await pdfExportWorkerClient.exportPdf(pdfFileBytes, pages, onProgress);
+  } catch (workerErr) {
+    console.warn("PDF Web Worker export failed or unavailable, falling back to main thread:", workerErr);
+    return await compilePdfMainThread(pdfFileBytes, pages, onProgress);
+  }
+}
+
+/**
+ * Triggers a browser download for the provided PDF binary buffer with safe asynchronous blob URL lifecycle
+ */
+export function downloadPdfBlob(bytes: Uint8Array, fileName: string): void {
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName.endsWith(".pdf")
+    ? fileName.replace(/\.pdf$/i, "-edited.pdf")
+    : `${fileName}-edited.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    try {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // ignore cleanup errors
+    }
+  }, 1500);
+}
+
+/**
+ * High-level helper for exporting and saving edited PDF documents.
+ */
+export async function exportPdfHelper(
+  pdfFileBytes: Uint8Array,
+  fileName: string,
+  pages: PageState[],
+  downloadOnly: boolean,
+  onSave: (newPdfBytes: Uint8Array, newFileName?: string) => void,
+  onProgress?: (progress: number, stage: string) => void
+): Promise<void> {
+  const finalBytes = await exportPdfBytes(pdfFileBytes, pages, onProgress);
 
   if (downloadOnly) {
-    const blob = new Blob([finalBytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName.endsWith(".pdf") ? fileName.replace(".pdf", "-edited.pdf") : `${fileName}-edited.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadPdfBlob(finalBytes, fileName);
   } else {
-    onSave(finalBytes, fileName.endsWith("-edited.pdf") ? fileName : fileName.replace(".pdf", "-edited.pdf"));
+    const newFileName = fileName.endsWith("-edited.pdf")
+      ? fileName
+      : fileName.replace(/\.pdf$/i, "-edited.pdf");
+    onSave(finalBytes, newFileName);
   }
 }

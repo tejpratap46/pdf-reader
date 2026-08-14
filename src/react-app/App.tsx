@@ -511,8 +511,11 @@ export default function PDFReader(): ReactElement {
   );
 
   const handleSaveEditedPdf = (newBytes: Uint8Array, newName?: string) => {
-    setPdfBytes(newBytes);
-    const blob = new Blob([newBytes], { type: "application/pdf" });
+    const copy = new Uint8Array(
+      newBytes.buffer.slice(newBytes.byteOffset, newBytes.byteOffset + newBytes.byteLength)
+    );
+    setPdfBytes(copy);
+    const blob = new Blob([copy], { type: "application/pdf" });
     const nameToUse = newName || fileName || "edited.pdf";
     const file = new File([blob], nameToUse, { type: "application/pdf" });
     setIsEditorOpen(false);
