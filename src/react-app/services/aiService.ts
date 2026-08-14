@@ -1,7 +1,73 @@
 import { getAI, getGenerativeModel, GenerativeModel, ChatSession, GoogleAIBackend } from "firebase/ai";
 import { app, isFirebaseConfigured } from "../config/firebase";
+import {
+  AILanguageModelSession,
+  createChromeAiSession,
+  sendChromeAiStreamingMessage,
+  checkChromeAiAvailability,
+  ChromeAiAvailabilityStatus,
+} from "./chromeAiService";
 
+export type AiProviderType = "chrome-builtin" | "firebase";
 export type GeminiModelName = "gemini-3.7-flash";
+export type ChromeModelName = "chrome-gemini-nano";
+export type AnyAiModelId = GeminiModelName | ChromeModelName;
+
+export interface GenerationStageInfo {
+  stage: "initializing" | "prefilling" | "thinking" | "streaming" | "done" | "error";
+  label: string;
+  detail?: string;
+  elapsedMs: number;
+  tokensReceived?: number;
+  charsReceived?: number;
+  speed?: number; // tokens or chars per second
+}
+
+export interface AiModelInfo {
+  id: AnyAiModelId;
+  provider: AiProviderType;
+  name: string;
+  shortName: string;
+  description: string;
+  isLocal: boolean;
+  requiresAuth: boolean;
+  contextLimitText: string;
+  maxTokens: number;
+  badgeText: string;
+  badgeColor: string;
+  iconType: "cpu" | "cloud";
+}
+
+export const AI_MODELS: Record<AnyAiModelId, AiModelInfo> = {
+  "chrome-gemini-nano": {
+    id: "chrome-gemini-nano",
+    provider: "chrome-builtin",
+    name: "Chrome Gemini Nano (In-Browser)",
+    shortName: "Gemini Nano",
+    description: "100% private, on-device AI running directly in your browser. Zero cloud latency, no sign-in or API keys needed.",
+    isLocal: true,
+    requiresAuth: false,
+    contextLimitText: "~4,096 - 8,192 tokens",
+    maxTokens: 4096,
+    badgeText: "On-Device",
+    badgeColor: "emerald",
+    iconType: "cpu",
+  },
+  "gemini-3.7-flash": {
+    id: "gemini-3.7-flash",
+    provider: "firebase",
+    name: "Gemini 3.7 Flash (Cloud)",
+    shortName: "Gemini 3.7 Flash",
+    description: "Google's fastest multimodal model with a 1,000,000+ token context window and high reasoning fidelity.",
+    isLocal: false,
+    requiresAuth: true,
+    contextLimitText: "1,048,576 tokens",
+    maxTokens: 1048576,
+    badgeText: "Cloud",
+    badgeColor: "blue",
+    iconType: "cloud",
+  },
+};
 
 export interface ChatMessage {
   id: string;
@@ -10,12 +76,16 @@ export interface ChatMessage {
   timestamp: number;
   isStreaming?: boolean;
   isError?: boolean;
+  modelId?: AnyAiModelId;
+  provider?: AiProviderType;
+  stageInfo?: GenerationStageInfo;
 }
 
 export interface StreamCallbacks {
   onChunk: (chunkText: string, fullText: string) => void;
   onDone: (fullText: string) => void;
   onError: (error: Error) => void;
+  onStageChange?: (info: GenerationStageInfo) => void;
 }
 
 let aiInstance: ReturnType<typeof getAI> | null = null;
@@ -94,7 +164,7 @@ export function createDocumentModel(options: {
 }
 
 /**
- * Starts a new multi-turn chat session with optional prior history.
+ * Starts a new multi-turn Firebase chat session with optional prior history.
  */
 export function startDocChatSession(options: {
   docTitle?: string;
@@ -111,7 +181,7 @@ export function startDocChatSession(options: {
 }
 
 /**
- * Sends a message in a chat session and streams the response in real-time.
+ * Sends a message in a Firebase chat session and streams the response in real-time.
  */
 export async function sendStreamingChatMessage(
   chatSession: ChatSession,
@@ -119,7 +189,16 @@ export async function sendStreamingChatMessage(
   callbacks: StreamCallbacks,
   signal?: AbortSignal
 ): Promise<string> {
+  const startTime = Date.now();
   let accumulatedText = "";
+  let chunkCount = 0;
+
+  callbacks.onStageChange?.({
+    stage: "thinking",
+    label: "Connecting to Cloud Gemini 3.7 Flash...",
+    detail: "Sending prompt context to Google AI servers",
+    elapsedMs: 0,
+  });
 
   try {
     const result = await chatSession.sendMessageStream(message);
@@ -130,14 +209,37 @@ export async function sendStreamingChatMessage(
       }
       const text = chunk.text();
       if (text) {
+        chunkCount++;
         accumulatedText += text;
+        const elapsed = Date.now() - startTime;
         callbacks.onChunk(text, accumulatedText);
+        callbacks.onStageChange?.({
+          stage: "streaming",
+          label: `Streaming response (${accumulatedText.length} chars)`,
+          detail: "Gemini 3.7 Flash Cloud",
+          elapsedMs: elapsed,
+          tokensReceived: chunkCount,
+          charsReceived: accumulatedText.length,
+        });
       }
     }
+
+    const totalElapsed = Date.now() - startTime;
+    callbacks.onStageChange?.({
+      stage: "done",
+      label: "Completed",
+      elapsedMs: totalElapsed,
+      charsReceived: accumulatedText.length,
+      tokensReceived: chunkCount,
+    });
 
     callbacks.onDone(accumulatedText);
     return accumulatedText;
   } catch (err: unknown) {
+    if (signal?.aborted) {
+      callbacks.onDone(accumulatedText);
+      return accumulatedText;
+    }
     console.error("Firebase AI streaming error:", err);
     const rawMessage = err instanceof Error ? err.message : String(err);
     let message = rawMessage || "Failed to generate AI response.";
@@ -151,6 +253,12 @@ export async function sendStreamingChatMessage(
       message = "Gemini quota exceeded. Please try again shortly or select a different model.";
     }
     const errorObj = new Error(message);
+    callbacks.onStageChange?.({
+      stage: "error",
+      label: "Cloud generation error",
+      detail: message,
+      elapsedMs: Date.now() - startTime,
+    });
     callbacks.onError(errorObj);
     throw errorObj;
   }
@@ -191,3 +299,10 @@ export const QUICK_PROMPTS = [
     prompt: "Explain the main topic and core arguments of this document in simple, easy-to-understand terms as if explaining to a beginner.",
   },
 ];
+
+export {
+  createChromeAiSession,
+  sendChromeAiStreamingMessage,
+  checkChromeAiAvailability,
+};
+export type { ChromeAiAvailabilityStatus, AILanguageModelSession };

@@ -97,16 +97,25 @@ The Markdown export engine forms the foundational layer for upcoming AI-powered 
 - **RAG & Chunking Ready**: Clean line-based markdown allows semantic chunking without losing table headers or list contexts.
 
 ### Built-in AI Prompt Presets
-The interactive **Export as Markdown** modal includes ready-to-use prompt wrappers:
+The interactive **Export as Markdown** modal and **Folio AI Chat** include ready-to-use prompt wrappers:
 - 📝 **Executive Summary**: Generates TL;DR, core findings, and key takeaways.
 - ❓ **Q&A & Knowledge Base**: Formats the document as system context for accurate, hallucination-free question answering.
-- 🔍 **Structured JSON Extraction**: Instructs the model to output parsed dates, entities, and financial tables into strict JSON schemas.
-- ✅ **Action Items & Checklist**: Isolates actionable tasks, assigned owners, and milestones.
+- 🔍 **Structured JSON Extraction**: Instructs the model to output parsed dates, entities, and financial tables into strict Markdown/JSON tables.
+- 💡 **Key Takeaways & Study Quizzes**: Creates 5-point summaries or interactive multiple-choice study questions.
 
-### Planned LLM Roadmap
-- [ ] **Cloudflare Workers AI Edge Inference**: Serverless document summarization powered by `@cloudflare/ai` using Llama 3.3 and DeepSeek models.
-- [ ] **Interactive Document Chat**: In-browser sidecar assistant to converse with the loaded document.
-- [ ] **Local Embeddings & Semantic Search**: Vectorize document chunks using in-browser Transformers.js / ONNX or Cloudflare Vectorize.
+### 🧠 Dual AI Engines: In-Browser AI & Cloud AI
+Folio provides seamless switching between on-device and cloud document intelligence:
+1. **⚡ In-Browser AI (Chrome Built-in Gemini Nano)**:
+   - Powered by Google Chrome's native **Prompt API** (`ai.languageModel` / `LanguageModel`).
+   - **100% On-Device & Private**: Zero server roundtrips, no user data ever leaves your device.
+   - **No Login Required**: Instant local inference without signing in or requiring API keys.
+   - To enable in Google Chrome:
+     - Visit `chrome://flags/#prompt-api-for-gemini-nano` -> Set to **Enabled**.
+     - Visit `chrome://flags/#optimization-guide-on-device-model` -> Set to **Enabled BypassPerfRequirement**.
+     - Check model components in `chrome://components` (Optimization Guide On Device Model).
+2. **☁️ Cloud AI (Firebase Gemini 3.7 Flash)**:
+   - Google's fastest multimodal model with a 1,000,000+ token context window.
+   - Grounded in high-fidelity markdown extracted by anydoc-wasm with real-time streaming and tokenx budgeting.
 
 ---
 
