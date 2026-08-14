@@ -2,6 +2,7 @@ import { FC } from "react";
 import { SourceMode, TtsState, Theme, BeforeInstallPromptEvent } from "../../types/reader";
 import { useDark } from "../../hooks/useTheme";
 import { ThemeDropdown } from "../common/ThemeDropdown";
+import { UserMenu } from "../auth/UserMenu";
 import { IcoPanel, IcoGlobe, IcoFile, IcoDownload, IcoArrowR } from "../common/Icons";
 
 interface HeaderProps {
@@ -52,11 +53,18 @@ export const Header: FC<HeaderProps> = ({
       <div className="flex items-center gap-3">
         <button
           onClick={() => setSidebarOpen((o) => !o)}
-          title={`${sidebarOpen ? "Hide" : "Show"} sidebar`}
-          className="p-1.5 rounded-md transition-colors"
-          style={{ color: textMut }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = bgHover)}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          title={`${sidebarOpen ? "Collapse" : "Expand"} sidebar (Ctrl+B)`}
+          className="p-1.5 rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-center"
+          style={{
+            color: sidebarOpen ? "#f59e0b" : textMut,
+            background: sidebarOpen ? (d ? "rgba(245, 158, 11, 0.12)" : "rgba(245, 158, 11, 0.15)") : "transparent",
+          }}
+          onMouseEnter={(e) => {
+            if (!sidebarOpen) (e.currentTarget as HTMLElement).style.background = bgHover;
+          }}
+          onMouseLeave={(e) => {
+            if (!sidebarOpen) (e.currentTarget as HTMLElement).style.background = "transparent";
+          }}
         >
           <IcoPanel />
         </button>
@@ -121,6 +129,7 @@ export const Header: FC<HeaderProps> = ({
           {statusLabel}
         </span>
         <ThemeDropdown theme={theme} setTheme={setTheme} />
+        <UserMenu border={border} bgCard={bgCard} bgHover={bgHover} textMut={textMut} />
       </div>
     </header>
   );

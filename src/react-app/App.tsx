@@ -6,11 +6,13 @@ import { splitParagraphs, getParagraphStarts, snapToWord, extractTextFromHtml } 
 import { usePdfJs } from "./hooks/usePdfJs";
 import { useTheme, DarkCtx } from "./hooks/useTheme";
 import { useAudioKeepAlive } from "./hooks/useAudioKeepAlive";
+import { useResizableSidebar } from "./hooks/useResizableSidebar";
 import { Header } from "./components/reader/Header";
 import { Sidebar } from "./components/reader/Sidebar";
 import { PdfViewer } from "./components/reader/PdfViewer";
 import { MarkdownExportModal } from "./components/common/MarkdownExportModal";
 import { convertBytesToMarkdown } from "./utils/markdownExport";
+import { IcoChevR } from "./components/common/Icons";
 
 export default function PDFReader(): ReactElement {
   const pdfReady = usePdfJs();
@@ -72,7 +74,40 @@ export default function PDFReader(): ReactElement {
   const [activePara, setActivePara] = useState(-1);
   const [paraProgress, setParaProgress] = useState(0);
   const [autoNextPage, setAutoNextPage] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  /* Resizable & Collapsible Sidebar */
+  const {
+    width: sidebarWidth,
+    isOpen: sidebarOpen,
+    isDragging: isSidebarDragging,
+    setIsOpen: setSidebarOpen,
+    resetWidth: resetSidebarWidth,
+    handleMouseDown: handleSidebarMouseDown,
+    handleTouchStart: handleSidebarTouchStart,
+  } = useResizableSidebar({
+    storageKeyPrefix: "folio_reader_sidebar",
+    defaultWidth: 320,
+    minWidth: 240,
+    maxWidth: 720,
+    collapseThreshold: 140,
+    defaultOpen: true,
+  });
+
+  /* Keyboard shortcut: Ctrl+B / Cmd+B to toggle sidebar */
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+        const target = e.target as HTMLElement;
+        if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+          return;
+        }
+        e.preventDefault();
+        setSidebarOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [setSidebarOpen]);
 
   /* SEO */
   useEffect(() => {
@@ -611,10 +646,35 @@ export default function PDFReader(): ReactElement {
           textMut={textMut}
         />
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="relative flex flex-1 overflow-hidden">
+          {/* Floating trigger button to expand sidebar when collapsed */}
+          {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              title="Expand sidebar (Ctrl+B)"
+              className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 hover:shadow-lg group cursor-pointer"
+              style={{
+                background: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
+                borderColor: isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
+                color: textMain,
+              }}
+            >
+              <span className="text-amber-500 transition-transform duration-150 group-hover:translate-x-0.5">
+                <IcoChevR size={14} />
+              </span>
+              <span className="text-xs font-semibold text-amber-500">Sidebar</span>
+            </button>
+          )}
+
           {/* Sidebar */}
           <Sidebar
             sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            sidebarWidth={sidebarWidth}
+            isDragging={isSidebarDragging}
+            onResizeMouseDown={handleSidebarMouseDown}
+            onResizeTouchStart={handleSidebarTouchStart}
+            onResetWidth={resetSidebarWidth}
             sourceMode={sourceMode}
             setSourceMode={setSourceMode}
             pdfReady={pdfReady}

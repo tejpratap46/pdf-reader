@@ -6,6 +6,7 @@ import { WebPanel } from "./WebPanel";
 import { HFCard } from "./HFCard";
 import { Waveform } from "../common/Waveform";
 import { SeekBar } from "../common/SeekBar";
+import { SidebarResizer } from "./SidebarResizer";
 import {
   IcoFile,
   IcoGlobe,
@@ -15,10 +16,17 @@ import {
   IcoPlay,
   IcoPause,
   IcoStop,
+  IcoChevL,
 } from "../common/Icons";
 
 interface SidebarProps {
   sidebarOpen: boolean;
+  setSidebarOpen?: (open: boolean | ((prev: boolean) => boolean)) => void;
+  sidebarWidth?: number;
+  isDragging?: boolean;
+  onResizeMouseDown?: (e: React.MouseEvent) => void;
+  onResizeTouchStart?: (e: React.TouchEvent) => void;
+  onResetWidth?: () => void;
   sourceMode: SourceMode;
   setSourceMode: (m: SourceMode) => void;
   pdfReady: boolean;
@@ -84,6 +92,12 @@ interface SidebarProps {
 
 export const Sidebar: FC<SidebarProps> = ({
   sidebarOpen,
+  setSidebarOpen,
+  sidebarWidth = 320,
+  isDragging = false,
+  onResizeMouseDown,
+  onResizeTouchStart,
+  onResetWidth,
   sourceMode,
   setSourceMode,
   pdfReady,
@@ -142,35 +156,67 @@ export const Sidebar: FC<SidebarProps> = ({
 
   return (
     <aside
-      className="flex flex-col shrink-0 overflow-hidden transition-all duration-300"
-      style={{ width: sidebarOpen ? 320 : 0, borderRight: `1px solid ${border}`, background: bgSide }}
+      className={`relative flex flex-col shrink-0 overflow-hidden ${
+        isDragging ? "" : "transition-[width] duration-300 ease-out"
+      }`}
+      style={{
+        width: sidebarOpen ? sidebarWidth : 0,
+        borderRight: sidebarOpen ? `1px solid ${border}` : "none",
+        background: bgSide,
+      }}
     >
-      <div className="flex-1 overflow-y-auto overflow-x-hidden" style={{ width: 320 }}>
+      <div
+        className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col"
+        style={{
+          width: Math.max(240, sidebarWidth),
+          minWidth: 240,
+        }}
+      >
         <div className="flex flex-col gap-5 p-5">
-          {/* Source tabs */}
-          <div className="flex rounded-lg p-0.5 gap-0.5" style={{ background: d ? "#1f2937" : "#f3f4f6" }}>
-            {(["pdf", "web"] as SourceMode[]).map((m) => (
+          {/* Source tabs & Collapse Button */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex rounded-lg p-0.5 gap-0.5" style={{ background: d ? "#1f2937" : "#f3f4f6" }}>
+              {(["pdf", "web"] as SourceMode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setSourceMode(m)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                  style={
+                    sourceMode === m
+                      ? { background: d ? "#111827" : "#fff", color: "#f59e0b", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
+                      : { background: "transparent", color: textMut }
+                  }
+                >
+                  {m === "pdf" ? (
+                    <>
+                      <IcoFile /> PDF
+                    </>
+                  ) : (
+                    <>
+                      <IcoGlobe /> Web Page
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
+            {setSidebarOpen && (
               <button
-                key={m}
-                onClick={() => setSourceMode(m)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150"
-                style={
-                  sourceMode === m
-                    ? { background: d ? "#111827" : "#fff", color: "#f59e0b", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
-                    : { background: "transparent", color: textMut }
-                }
+                onClick={() => setSidebarOpen(false)}
+                title="Collapse sidebar (Ctrl+B)"
+                className="p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+                style={{ color: textMut }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = bgHover;
+                  (e.currentTarget as HTMLElement).style.color = textMain;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                  (e.currentTarget as HTMLElement).style.color = textMut;
+                }}
               >
-                {m === "pdf" ? (
-                  <>
-                    <IcoFile /> PDF
-                  </>
-                ) : (
-                  <>
-                    <IcoGlobe /> Web Page
-                  </>
-                )}
+                <IcoChevL size={16} />
               </button>
-            ))}
+            )}
           </div>
 
           {/* PDF panel */}
@@ -368,6 +414,17 @@ export const Sidebar: FC<SidebarProps> = ({
           )}
         </div>
       </div>
+
+      {/* Resize Handle */}
+      {sidebarOpen && onResizeMouseDown && onResizeTouchStart && (
+        <SidebarResizer
+          onMouseDown={onResizeMouseDown}
+          onTouchStart={onResizeTouchStart}
+          onDoubleClick={onResetWidth}
+          isDragging={!!isDragging}
+          currentWidth={sidebarWidth}
+        />
+      )}
     </aside>
   );
 };

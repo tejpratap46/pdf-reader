@@ -8,9 +8,12 @@ import {
   IcoZoomIn,
   IcoDownload,
   IcoSave,
+  IcoPanel,
 } from "../common/Icons";
 
 interface EditorHeaderProps {
+  sidebarOpen?: boolean;
+  setSidebarOpen?: (fn: (o: boolean) => boolean) => void;
   fileName: string;
   onClose: () => void;
   historyLength: number;
@@ -29,6 +32,8 @@ interface EditorHeaderProps {
 }
 
 export const EditorHeader: FC<EditorHeaderProps> = ({
+  sidebarOpen,
+  setSidebarOpen,
   fileName,
   onClose,
   historyLength,
@@ -48,6 +53,20 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
   return (
     <header className="flex items-center justify-between px-5 py-3 border-b shrink-0 shadow-md backdrop-blur-lg" style={{ background: bgCard, borderColor: border }}>
       <div className="flex items-center gap-3">
+        {setSidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen((o) => !o)}
+            title={`${sidebarOpen ? "Collapse" : "Expand"} sidebar (Ctrl+B)`}
+            className="p-1.5 rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-center border"
+            style={{
+              borderColor: border,
+              color: sidebarOpen ? "#f59e0b" : textMain,
+              background: sidebarOpen ? "rgba(245, 158, 11, 0.12)" : bgInput,
+            }}
+          >
+            <IcoPanel />
+          </button>
+        )}
         <button
           onClick={onClose}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 cursor-pointer"
