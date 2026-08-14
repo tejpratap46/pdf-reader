@@ -8,6 +8,7 @@ import {
   StampItem,
   PageState,
   TabMode,
+  OriginalTextSelectionInfo,
 } from "./types/editor";
 import { exportPdfHelper } from "./utils/pdfExport";
 import { EditorHeader } from "./components/editor/EditorHeader";
@@ -81,6 +82,10 @@ export const PdfEditor: FC<PdfEditorProps> = ({
   const [textFontSize, setTextFontSize] = useState<number>(20);
   const [textColor, setTextColor] = useState<string>("#0f172a");
   const [textBold, setTextBold] = useState<boolean>(true);
+
+  // Original Text Selection & Inline Editing State
+  const [selectionInfo, setSelectionInfo] = useState<OriginalTextSelectionInfo | null>(null);
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
   // Watermark/Stamp controls
   const [stampText, setStampText] = useState<string>("CONFIDENTIAL");
@@ -845,6 +850,36 @@ export const PdfEditor: FC<PdfEditorProps> = ({
     );
   };
 
+  const handleEditOriginalText = (info: OriginalTextSelectionInfo) => {
+    if (!activePage) return;
+    pushHistory(pages);
+
+    const textObj: TextItem = {
+      id: `text-${Date.now()}`,
+      text: info.text,
+      x: Math.round(info.x * 100) / 100,
+      y: Math.round(info.y * 100) / 100,
+      width: Math.round(info.width * 100) / 100,
+      height: Math.round(info.height * 100) / 100,
+      fontSize: info.fontSize,
+      color: info.color,
+      isBold: info.isBold,
+      isItalic: info.isItalic,
+      backgroundColor: info.backgroundColor || "#ffffff",
+      fontFamily: info.fontFamily || "sans-serif",
+      isOriginalEdit: true,
+    };
+
+    setPages((prev) =>
+      prev.map((pg, i) => (i === activePageIndex ? { ...pg, texts: [...pg.texts, textObj] } : pg))
+    );
+
+    setSelectionInfo(null);
+    window.getSelection()?.removeAllRanges();
+    setEditingTextId(textObj.id);
+    setActiveTab("text");
+  };
+
   // Stamp Actions
   const addStampToPage = (preset?: string) => {
     if (!activePage) return;
@@ -1117,6 +1152,9 @@ export const PdfEditor: FC<PdfEditorProps> = ({
           previewContainerRef={previewContainerRef}
           loading={loading}
           activePage={activePage}
+          pdfJsDoc={pdfJsDoc}
+          activeOriginalIndex={activeOriginalIndex}
+          activeRotation={activeRotation}
           canvasRef={canvasRef}
           drawOverlayRef={drawOverlayRef}
           tool={tool}
@@ -1130,6 +1168,11 @@ export const PdfEditor: FC<PdfEditorProps> = ({
           updateText={updateText}
           removeText={removeText}
           startResizeText={startResizeText}
+          editingTextId={editingTextId}
+          setEditingTextId={setEditingTextId}
+          selectionInfo={selectionInfo}
+          setSelectionInfo={setSelectionInfo}
+          onEditOriginalText={handleEditOriginalText}
           selectedImageId={selectedImageId}
           setSelectedImageId={setSelectedImageId}
           startResizeImage={startResizeImage}

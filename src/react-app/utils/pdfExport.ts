@@ -13,6 +13,38 @@ export async function exportPdfHelper(
 
   const helveticaFont = await outDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBold = await outDoc.embedFont(StandardFonts.HelveticaBold);
+  const helveticaItalic = await outDoc.embedFont(StandardFonts.HelveticaOblique);
+  const helveticaBoldItalic = await outDoc.embedFont(StandardFonts.HelveticaBoldOblique);
+
+  const timesFont = await outDoc.embedFont(StandardFonts.TimesRoman);
+  const timesBold = await outDoc.embedFont(StandardFonts.TimesRomanBold);
+  const timesItalic = await outDoc.embedFont(StandardFonts.TimesRomanItalic);
+  const timesBoldItalic = await outDoc.embedFont(StandardFonts.TimesRomanBoldItalic);
+
+  const courierFont = await outDoc.embedFont(StandardFonts.Courier);
+  const courierBold = await outDoc.embedFont(StandardFonts.CourierBold);
+  const courierItalic = await outDoc.embedFont(StandardFonts.CourierOblique);
+  const courierBoldItalic = await outDoc.embedFont(StandardFonts.CourierBoldOblique);
+
+  const getPdfFont = (fontFamily: string | undefined, isBold: boolean, isItalic: boolean) => {
+    const fam = (fontFamily || "").toLowerCase();
+    if (fam.includes("times") || fam.includes("serif") || fam.includes("roman") || fam.includes("georgia") || fam.includes("cambria") || fam.includes("garamond")) {
+      if (isBold && isItalic) return timesBoldItalic;
+      if (isBold) return timesBold;
+      if (isItalic) return timesItalic;
+      return timesFont;
+    }
+    if (fam.includes("courier") || fam.includes("mono") || fam.includes("consolas") || fam.includes("code")) {
+      if (isBold && isItalic) return courierBoldItalic;
+      if (isBold) return courierBold;
+      if (isItalic) return courierItalic;
+      return courierFont;
+    }
+    if (isBold && isItalic) return helveticaBoldItalic;
+    if (isBold) return helveticaBold;
+    if (isItalic) return helveticaItalic;
+    return helveticaFont;
+  };
 
   // Loop over current edited page array
   for (const pgState of pages) {
@@ -68,11 +100,35 @@ export async function exportPdfHelper(
       }
     }
 
-    // 2. Draw text overlays
+    // 2. Draw text overlays (including background cover rectangles for original text edits)
     for (const txt of pgState.texts) {
-      const fontToUse = txt.isBold ? helveticaBold : helveticaFont;
+      const fontToUse = getPdfFont(txt.fontFamily, txt.isBold, !!txt.isItalic);
+
       const pdfX = (txt.x / 100) * pWidth;
-      const pdfY = pHeight - (txt.y / 100) * pHeight; // Invert Y for PDF coordinate system
+      const textH = fontToUse.heightAtSize(txt.fontSize);
+      const textW = fontToUse.widthOfTextAtSize(txt.text, txt.fontSize);
+      const pdfY = pHeight - (txt.y / 100) * pHeight - txt.fontSize * 0.78;
+
+      // Draw background cover rectangle if present (e.g. to whiteout original text)
+      if (txt.backgroundColor && txt.backgroundColor !== "transparent") {
+        const bgHex = txt.backgroundColor.replace("#", "");
+        const bgR = parseInt(bgHex.substring(0, 2), 16) / 255 || 1;
+        const bgG = parseInt(bgHex.substring(2, 4), 16) / 255 || 1;
+        const bgB = parseInt(bgHex.substring(4, 6), 16) / 255 || 1;
+
+        const boxW = Math.max(textW + 3, txt.width ? (txt.width / 100) * pWidth : textW + 3);
+        const boxH = Math.max(textH + 2, txt.height ? (txt.height / 100) * pHeight : textH + 2);
+        const boxX = pdfX - 0.5;
+        const boxY = pHeight - (txt.y / 100) * pHeight - boxH;
+
+        pdfPage.drawRectangle({
+          x: boxX,
+          y: boxY,
+          width: boxW,
+          height: boxH,
+          color: rgb(bgR, bgG, bgB),
+        });
+      }
 
       // Parse HEX color to RGB
       const hex = txt.color.replace("#", "");

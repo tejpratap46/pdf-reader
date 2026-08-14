@@ -1,13 +1,18 @@
-import { FC, RefObject, MouseEvent } from "react";
-import { PageState, TextItem, ImageItem } from "../../../types/editor";
+import { FC, RefObject, MouseEvent, useRef } from "react";
+import { PageState, TextItem, ImageItem, OriginalTextSelectionInfo } from "../../../types/editor";
 import { TextOverlays } from "./TextOverlays";
 import { StampOverlays } from "./StampOverlays";
 import { ImageOverlays, ResizeHandleType } from "./ImageOverlays";
+import { CanvasTextSelector } from "./CanvasTextSelector";
+import { TextSelectionToolbar } from "./TextSelectionToolbar";
 
 interface EditorCanvasProps {
   previewContainerRef: RefObject<HTMLDivElement | null>;
   loading: boolean;
   activePage?: PageState;
+  pdfJsDoc: any;
+  activeOriginalIndex: number | null;
+  activeRotation: number;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   drawOverlayRef: RefObject<HTMLCanvasElement | null>;
   tool: "pen" | "highlighter" | "eraser" | "select";
@@ -21,6 +26,11 @@ interface EditorCanvasProps {
   updateText: (textId: string, updates: Partial<TextItem>) => void;
   removeText: (textId: string) => void;
   startResizeText: (e: MouseEvent, id: string, currentFontSize: number) => void;
+  editingTextId: string | null;
+  setEditingTextId: (id: string | null) => void;
+  selectionInfo: OriginalTextSelectionInfo | null;
+  setSelectionInfo: (info: OriginalTextSelectionInfo | null) => void;
+  onEditOriginalText: (info: OriginalTextSelectionInfo) => void;
   selectedImageId: string | null;
   setSelectedImageId: (id: string | null) => void;
   startResizeImage: (e: MouseEvent, id: string, handle: ResizeHandleType, img: ImageItem) => void;
@@ -38,6 +48,9 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
   previewContainerRef,
   loading,
   activePage,
+  pdfJsDoc,
+  activeOriginalIndex,
+  activeRotation,
   canvasRef,
   drawOverlayRef,
   tool,
@@ -51,6 +64,11 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
   updateText,
   removeText,
   startResizeText,
+  editingTextId,
+  setEditingTextId,
+  selectionInfo,
+  setSelectionInfo,
+  onEditOriginalText,
   selectedImageId,
   setSelectedImageId,
   startResizeImage,
@@ -63,10 +81,14 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
   removeImage,
   isDark,
 }) => {
+  const pageContainerRef = useRef<HTMLDivElement | null>(null);
+
   return (
     <main
       ref={previewContainerRef}
-      onClick={() => setSelectedImageId(null)}
+      onClick={() => {
+        setSelectedImageId(null);
+      }}
       className="flex-1 overflow-auto flex items-center justify-center p-8 relative"
       style={{ background: isDark ? "#040711" : "#e2e8f0" }}
     >
@@ -79,6 +101,7 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
 
       {!loading && activePage && (
         <div
+          ref={pageContainerRef}
           className="relative shadow-2xl rounded-lg overflow-hidden"
           style={{
             width: canvasRef.current?.width || 600,
@@ -94,6 +117,19 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
         >
           {/* PDF Background Canvas */}
           <canvas ref={canvasRef} className="block" />
+
+          {/* Interactive Canvas Text Selection (directly mapped to PDF items with zero duplicate DOM text) */}
+          <CanvasTextSelector
+            pdfJsDoc={pdfJsDoc}
+            activeOriginalIndex={activeOriginalIndex}
+            activeRotation={activeRotation}
+            scale={scale}
+            tool={tool}
+            canvasRef={canvasRef}
+            selectionInfo={selectionInfo}
+            onTextSelected={setSelectionInfo}
+            onEditOriginalText={onEditOriginalText}
+          />
 
           {/* Drawing Overlay Canvas */}
           <canvas
@@ -115,6 +151,8 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
             updateText={updateText}
             removeText={removeText}
             startResizeText={startResizeText}
+            editingTextId={editingTextId}
+            setEditingTextId={setEditingTextId}
           />
 
           {/* Watermark / Stamp Overlays Layer */}
@@ -135,6 +173,15 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
             updateImage={updateImage}
             duplicateImage={duplicateImage}
             removeImage={removeImage}
+          />
+
+          {/* Floating Action Pill for Selected Text */}
+          <TextSelectionToolbar
+            selectionInfo={selectionInfo}
+            onEditOriginalText={onEditOriginalText}
+            onClearSelection={() => setSelectionInfo(null)}
+            isDark={isDark}
+            pageContainerRef={pageContainerRef}
           />
         </div>
       )}

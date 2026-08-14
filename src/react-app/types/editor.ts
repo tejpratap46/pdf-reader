@@ -27,6 +27,34 @@ export interface TextItem {
   fontSize: number;
   color: string;
   isBold: boolean;
+  isItalic?: boolean;
+  backgroundColor?: string; // background whiteout cover color (e.g. '#ffffff')
+  width?: number; // percentage (0-100)
+  height?: number; // percentage (0-100)
+  fontFamily?: string;
+  isOriginalEdit?: boolean; // true if this text item replaced original PDF text
+}
+
+export interface OriginalTextSelectionInfo {
+  text: string;
+  x: number; // percentage (0-100)
+  y: number; // percentage (0-100)
+  width: number; // percentage (0-100)
+  height: number; // percentage (0-100)
+  fontSize: number;
+  color: string;
+  isBold: boolean;
+  isItalic?: boolean;
+  backgroundColor?: string;
+  fontFamily?: string;
+  clientRect: {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+    width: number;
+    height: number;
+  };
 }
 
 export interface ImageItem {
