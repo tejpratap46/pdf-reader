@@ -1,91 +1,24 @@
 import { PDFDocument } from "pdf-lib";
 import { estimateTokenCount } from "tokenx";
-import init, {
-  toMarkdownBytes,
-  formatFromBytes,
-  formatFromExtension,
-  formatFromPath,
-  Format,
-  ConvertErrorCode,
-} from "@firecrawl/anydoc-wasm";
-import anydocWasmUrl from "@firecrawl/anydoc-wasm/anydoc_wasm_bg.wasm?url";
+import type { Format, ConvertErrorCode } from "@firecrawl/anydoc-wasm";
+import {
+  anydocWorkerClient,
+  MarkdownExportResult,
+  MarkdownStats,
+} from "../services/anydocWorkerClient";
 
-let isWasmInitialized = false;
-let initPromise: Promise<void> | null = null;
+export type { Format, ConvertErrorCode, MarkdownExportResult, MarkdownStats };
 
+/**
+ * Warms up and initializes the background Web Worker with anydoc-wasm
+ */
 export async function ensureAnydocWasm(): Promise<void> {
-  if (isWasmInitialized) return;
-  if (!initPromise) {
-    initPromise = (async () => {
-      // List of candidate URLs to locate the wasm binary
-      const candidates: string[] = [
-        anydocWasmUrl,
-        "/anydoc_wasm_bg.wasm",
-      ];
-
-      try {
-        const importMetaUrl = new URL(/* @vite-ignore */ "anydoc_wasm_bg.wasm", import.meta.url).href;
-        if (!candidates.includes(importMetaUrl)) {
-          candidates.push(importMetaUrl);
-        }
-      } catch {
-        // Ignore if import.meta.url cannot be resolved
-      }
-
-      let lastError: unknown = null;
-
-      for (const url of candidates) {
-        try {
-          const res = await fetch(url);
-          if (res.ok) {
-            const buffer = await res.arrayBuffer();
-            // Passing pre-fetched ArrayBuffer directly avoids instantiateStreaming HTTP status/MIME errors
-            await init({ module_or_path: buffer });
-            isWasmInitialized = true;
-            return;
-          }
-        } catch (e) {
-          lastError = e;
-        }
-      }
-
-      // Fallback: try default init
-      try {
-        await init();
-        isWasmInitialized = true;
-        return;
-      } catch (e) {
-        lastError = e;
-      }
-
-      throw new Error(
-        `Failed to initialize WebAssembly document parser: ${
-          lastError instanceof Error ? lastError.message : "WASM binary could not be loaded"
-        }`
-      );
-    })();
-  }
-  return initPromise;
+  return anydocWorkerClient.init();
 }
 
-export interface MarkdownExportResult {
-  markdown: string;
-  detectedFormat?: Format;
-  stats: MarkdownStats;
-  sourceType: "pdf" | "document" | "web";
-  pagesLabel?: string;
-}
-
-export interface MarkdownStats {
-  characters: number;
-  words: number;
-  lines: number;
-  estimatedTokens: number;
-  headingCount: number;
-  tableCount: number;
-  codeBlockCount: number;
-}
-
+/**
+ * Computes token, word, line, and markdown syntax structure statistics
+ */
 export function computeMarkdownStats(text: string): MarkdownStats {
   const characters = text.length;
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -193,64 +126,15 @@ export function formatPageListSummary(pages: number[]): string {
 
 /**
  * Convert binary document bytes (PDF, DOCX, XLSX, EPUB, PPTX, etc.) to GitHub Flavored Markdown
- * using @firecrawl/anydoc-wasm WebAssembly bindings. Supports page selection for PDFs.
+ * using @firecrawl/anydoc-wasm inside a dedicated background Web Worker for non-blocking performance.
+ * Supports page selection for PDFs.
  */
 export async function convertBytesToMarkdown(
   bytes: Uint8Array,
   fileName?: string,
   selectedPages?: number[]
 ): Promise<MarkdownExportResult> {
-  await ensureAnydocWasm();
-
-  let detectedFormat: Format | undefined = formatFromBytes(bytes);
-  if (!detectedFormat && fileName) {
-    detectedFormat = formatFromPath(fileName) || formatFromExtension(fileName);
-  }
-
-  let bytesToConvert = bytes;
-  let pagesLabel: string | undefined;
-
-  // If specific pages are requested for a PDF, extract subset before converting
-  if ((detectedFormat === "pdf" || !detectedFormat) && selectedPages && selectedPages.length > 0) {
-    try {
-      const subset = await extractPdfPages(bytes, selectedPages);
-      bytesToConvert = subset;
-      pagesLabel = `Pages ${formatPageListSummary(selectedPages)}`;
-    } catch (e) {
-      console.warn("Could not extract subset of pages, converting full document:", e);
-    }
-  }
-
-  try {
-    const markdown = toMarkdownBytes(bytesToConvert, detectedFormat || null);
-    const stats = computeMarkdownStats(markdown);
-
-    return {
-      markdown,
-      detectedFormat,
-      stats,
-      sourceType: detectedFormat === "pdf" ? "pdf" : "document",
-      pagesLabel,
-    };
-  } catch (err: unknown) {
-    const errorObj = err as { code?: ConvertErrorCode; message?: string } | undefined;
-    const code: ConvertErrorCode | undefined = errorObj?.code;
-    let message = errorObj?.message || "Failed to convert document to Markdown.";
-
-    if (code === "encrypted") {
-      message = "The document is password-protected or encrypted.";
-    } else if (code === "unsupported") {
-      message = "The document format is unsupported or contains only scanned images without OCR text.";
-    } else if (code === "malformed") {
-      message = "The document is corrupted or malformed.";
-    } else if (code === "resourceLimit") {
-      message = "Document exceeded safety decompression limits.";
-    }
-
-    const enhancedError = new Error(message) as Error & { code?: ConvertErrorCode };
-    enhancedError.code = code;
-    throw enhancedError;
-  }
+  return anydocWorkerClient.convertBytesToMarkdown(bytes, fileName, selectedPages);
 }
 
 /**

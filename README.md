@@ -39,7 +39,8 @@ Folio integrates **`@firecrawl/anydoc-wasm`**, a Rust-based WebAssembly compilat
 - **Web Pages & Online Articles**
 
 ### ✨ Markdown Export Features
-- **Granular Page Selection**: Convert **All Pages**, the **Current Page**, or any **Custom Range** (e.g. `1-3, 5, 8-10`) via in-memory `pdf-lib` page extraction before WASM processing.
+- **Dedicated Background Web Worker**: WASM binary compilation, document parsing, PDF page slicing, and GFM conversion run entirely off the main thread in a Web Worker, ensuring a stutter-free, smooth 60/120fps UI.
+- **Granular Page Selection**: Convert **All Pages**, the **Current Page**, or any **Custom Range** (e.g. `1-3, 5, 8-10`) via in-worker `pdf-lib` page extraction before WASM processing.
 - **High-Fidelity GFM Preview**: Full rendering of markdown data tables, formatted headings, code blocks with syntax styling, blockquotes, and task lists via `marked`.
 - **100% Client-Side & Private**: Documents never leave the user's browser—WebAssembly executes locally on device memory with zero server data transfer.
 - **Structural Fidelity**: Preserves document hierarchy, nested headings, markdown data tables, bulleted lists, and code blocks.
@@ -58,7 +59,7 @@ The Markdown export engine forms the foundational layer for upcoming AI-powered 
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│          @firecrawl/anydoc-wasm (Client-Side WASM)          │
+│     @firecrawl/anydoc-wasm (Dedicated Background Worker)    │
 │        - Document Model Parsing & Layout Analysis           │
 │        - GitHub-Flavored Markdown (GFM) Generation          │
 └──────────────────────────────┬──────────────────────────────┘
