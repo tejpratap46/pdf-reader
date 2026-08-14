@@ -10,9 +10,10 @@ import { useResizableSidebar } from "./hooks/useResizableSidebar";
 import { Header } from "./components/reader/Header";
 import { Sidebar } from "./components/reader/Sidebar";
 import { PdfViewer } from "./components/reader/PdfViewer";
+import { AiChatSidebar } from "./components/ai/AiChatSidebar";
 import { MarkdownExportModal } from "./components/common/MarkdownExportModal";
-import { convertBytesToMarkdown } from "./utils/markdownExport";
-import { IcoChevR } from "./components/common/Icons";
+import { convertBytesToMarkdown, convertWebToMarkdown } from "./utils/markdownExport";
+import { IcoChevR, IcoSparklesFilled } from "./components/common/Icons";
 
 export default function PDFReader(): ReactElement {
   const pdfReady = usePdfJs();
@@ -64,6 +65,12 @@ export default function PDFReader(): ReactElement {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isMarkdownModalOpen, setIsMarkdownModalOpen] = useState(false);
 
+  /* AI Context & Document Markdown */
+  const [docMarkdown, setDocMarkdown] = useState<string>("");
+  const [currentPageMarkdown, setCurrentPageMarkdown] = useState<string>("");
+  const [isExtractingMarkdown, setIsExtractingMarkdown] = useState(false);
+  const pageMarkdownCacheRef = useRef<Map<number, string>>(new Map());
+
   /* TTS State */
   const [paragraphs, setParagraphs] = useState<string[]>([]);
   const [ttsState, setTtsState] = useState<TtsState>("idle");
@@ -75,7 +82,46 @@ export default function PDFReader(): ReactElement {
   const [paraProgress, setParaProgress] = useState(0);
   const [autoNextPage, setAutoNextPage] = useState(false);
 
-  /* Resizable & Collapsible Sidebar */
+  /* Clear single-page markdown cache when document changes */
+  useEffect(() => {
+    pageMarkdownCacheRef.current.clear();
+  }, [pdfBytes, fileName]);
+
+  /* Extract single-page Markdown for the active page */
+  useEffect(() => {
+    let isMounted = true;
+    if (sourceMode === "pdf" && pdfBytes && pageNum >= 1) {
+      if (pageMarkdownCacheRef.current.has(pageNum)) {
+        setCurrentPageMarkdown(pageMarkdownCacheRef.current.get(pageNum)!);
+        return;
+      }
+      convertBytesToMarkdown(pdfBytes, fileName, [pageNum])
+        .then((res) => {
+          if (isMounted) {
+            const md = res.markdown || "";
+            pageMarkdownCacheRef.current.set(pageNum, md);
+            setCurrentPageMarkdown(md);
+          }
+        })
+        .catch((err) => {
+          console.warn(`Single page ${pageNum} markdown extraction failed:`, err);
+          if (isMounted) {
+            const fallbackMd = paragraphs.length > 0 ? paragraphs.join("\n\n") : "";
+            setCurrentPageMarkdown(fallbackMd);
+          }
+        });
+    } else if (sourceMode === "web" && paragraphs.length > 0) {
+      const res = convertWebToMarkdown(webTitle, webUrl, paragraphs);
+      setCurrentPageMarkdown(res.markdown || "");
+    } else {
+      setCurrentPageMarkdown("");
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [sourceMode, pdfBytes, fileName, pageNum, webTitle, webUrl, paragraphs]);
+
+  /* Resizable & Collapsible Left Sidebar (Reader / TTS) */
   const {
     width: sidebarWidth,
     isOpen: sidebarOpen,
@@ -91,23 +137,81 @@ export default function PDFReader(): ReactElement {
     maxWidth: 720,
     collapseThreshold: 140,
     defaultOpen: true,
+    side: "left",
   });
 
-  /* Keyboard shortcut: Ctrl+B / Cmd+B to toggle sidebar */
+  /* Resizable & Collapsible Right Sidebar (Firebase AI Chat) */
+  const {
+    width: aiSidebarWidth,
+    isOpen: aiSidebarOpen,
+    isDragging: isAiSidebarDragging,
+    setIsOpen: setAiSidebarOpen,
+    resetWidth: resetAiSidebarWidth,
+    handleMouseDown: handleAiSidebarMouseDown,
+    handleTouchStart: handleAiSidebarTouchStart,
+  } = useResizableSidebar({
+    storageKeyPrefix: "folio_reader_ai_sidebar",
+    defaultWidth: 360,
+    minWidth: 260,
+    maxWidth: 720,
+    collapseThreshold: 150,
+    defaultOpen: true,
+    side: "right",
+  });
+
+  const hasDocument = sourceMode === "pdf" ? !!(pdfDoc && pdfBytes) : webLoaded;
+
+  /* Keyboard shortcut: Ctrl+B / Cmd+B for Left Sidebar, Ctrl+J / Cmd+J for AI Sidebar */
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
-        const target = e.target as HTMLElement;
-        if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-          return;
-        }
         e.preventDefault();
         setSidebarOpen((prev) => !prev);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        if (hasDocument) {
+          setAiSidebarOpen((prev) => !prev);
+        }
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [setSidebarOpen]);
+  }, [setSidebarOpen, setAiSidebarOpen, hasDocument]);
+
+  /* Extract and cache document Markdown using anydoc-wasm for AI context */
+  useEffect(() => {
+    let isMounted = true;
+    if (sourceMode === "pdf" && pdfBytes) {
+      setIsExtractingMarkdown(true);
+      convertBytesToMarkdown(pdfBytes, fileName)
+        .then((res) => {
+          if (isMounted) {
+            setDocMarkdown(res.markdown || "");
+            setIsExtractingMarkdown(false);
+          }
+        })
+        .catch((err) => {
+          console.warn("Markdown extraction for AI context failed:", err);
+          if (isMounted) {
+            setIsExtractingMarkdown(false);
+          }
+        });
+    } else if (sourceMode === "web" && paragraphs.length > 0) {
+      const res = convertWebToMarkdown(webTitle, webUrl, paragraphs);
+      setDocMarkdown(res.markdown || "");
+      setIsExtractingMarkdown(false);
+    } else {
+      setDocMarkdown("");
+      setIsExtractingMarkdown(false);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [sourceMode, pdfBytes, fileName, webTitle, webUrl, paragraphs]);
 
   /* SEO */
   useEffect(() => {
@@ -631,6 +735,9 @@ export default function PDFReader(): ReactElement {
         <Header
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
+          aiSidebarOpen={aiSidebarOpen}
+          setAiSidebarOpen={setAiSidebarOpen}
+          hasDocument={hasDocument}
           displayTitle={displayTitle}
           sourceMode={sourceMode}
           installPrompt={installPrompt}
@@ -647,11 +754,11 @@ export default function PDFReader(): ReactElement {
         />
 
         <div className="relative flex flex-1 overflow-hidden">
-          {/* Floating trigger button to expand sidebar when collapsed */}
+          {/* Floating trigger button to expand Left sidebar when collapsed */}
           {!sidebarOpen && (
             <button
               onClick={() => setSidebarOpen(true)}
-              title="Expand sidebar (Ctrl+B)"
+              title="Expand left sidebar (Ctrl+B)"
               className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 hover:shadow-lg group cursor-pointer"
               style={{
                 background: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
@@ -666,7 +773,7 @@ export default function PDFReader(): ReactElement {
             </button>
           )}
 
-          {/* Sidebar */}
+          {/* Left Sidebar (Document & TTS Controls) */}
           <Sidebar
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
@@ -770,6 +877,55 @@ export default function PDFReader(): ReactElement {
             textMain={textMain}
             textMut={textMut}
           />
+
+          {/* Right Sidebar (Firebase AI Chat & Document Intelligence) - Shown only after document is loaded */}
+          {hasDocument && (
+            <AiChatSidebar
+              sidebarOpen={aiSidebarOpen}
+              setSidebarOpen={setAiSidebarOpen}
+              sidebarWidth={aiSidebarWidth}
+              isDragging={isAiSidebarDragging}
+              onResizeMouseDown={handleAiSidebarMouseDown}
+              onResizeTouchStart={handleAiSidebarTouchStart}
+              onResetWidth={resetAiSidebarWidth}
+              docTitle={sourceMode === "web" ? webTitle : fileName}
+              docMarkdown={docMarkdown}
+              currentPageMarkdown={currentPageMarkdown}
+              isExtractingMarkdown={isExtractingMarkdown}
+              currentPage={pageNum}
+              totalPages={totalPages}
+              sourceMode={sourceMode}
+              voices={voices}
+              selectedVoice={selectedVoice}
+              ttsRate={ttsRate}
+              ttsPitch={ttsPitch}
+              border={border}
+              bgSide={bgSide}
+              bgInput={bgInput}
+              bgHover={bgHover}
+              textMain={textMain}
+              textMut={textMut}
+            />
+          )}
+
+          {/* Floating trigger button to expand AI sidebar when collapsed - Shown only after document is loaded */}
+          {hasDocument && !aiSidebarOpen && (
+            <button
+              onClick={() => setAiSidebarOpen(true)}
+              title="Expand AI Chat (Ctrl+J)"
+              className="absolute right-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 hover:shadow-lg group cursor-pointer"
+              style={{
+                background: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
+                borderColor: isDark ? "rgba(66, 133, 244, 0.4)" : "#60a5fa",
+                color: textMain,
+              }}
+            >
+              <span className="text-blue-500 transition-transform duration-150 group-hover:scale-110">
+                <IcoSparklesFilled size={13} />
+              </span>
+              <span className="text-xs font-semibold text-blue-500">Ask AI</span>
+            </button>
+          )}
         </div>
       </div>
       {isEditorOpen && pdfBytes && (

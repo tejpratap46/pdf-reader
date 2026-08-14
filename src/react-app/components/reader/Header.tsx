@@ -3,11 +3,14 @@ import { SourceMode, TtsState, Theme, BeforeInstallPromptEvent } from "../../typ
 import { useDark } from "../../hooks/useTheme";
 import { ThemeDropdown } from "../common/ThemeDropdown";
 import { UserMenu } from "../auth/UserMenu";
-import { IcoPanel, IcoGlobe, IcoFile, IcoDownload, IcoArrowR } from "../common/Icons";
+import { IcoPanel, IcoGlobe, IcoFile, IcoDownload, IcoArrowR, IcoSparklesFilled } from "../common/Icons";
 
 interface HeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (fn: (o: boolean) => boolean) => void;
+  aiSidebarOpen?: boolean;
+  setAiSidebarOpen?: (fn: (o: boolean) => boolean) => void;
+  hasDocument?: boolean;
   displayTitle: string;
   sourceMode: SourceMode;
   installPrompt: BeforeInstallPromptEvent | null;
@@ -26,6 +29,9 @@ interface HeaderProps {
 export const Header: FC<HeaderProps> = ({
   sidebarOpen,
   setSidebarOpen,
+  aiSidebarOpen,
+  setAiSidebarOpen,
+  hasDocument = false,
   displayTitle,
   sourceMode,
   installPrompt,
@@ -128,6 +134,29 @@ export const Header: FC<HeaderProps> = ({
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusDot, boxShadow: statusGlow }} />
           {statusLabel}
         </span>
+        {hasDocument && setAiSidebarOpen && (
+          <button
+            onClick={() => setAiSidebarOpen((o) => !o)}
+            title={`${aiSidebarOpen ? "Close" : "Open"} AI Chat (Ctrl+J)`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 hover:scale-105 cursor-pointer border"
+            style={{
+              background: aiSidebarOpen
+                ? "linear-gradient(135deg, #4285F4, #9333EA)"
+                : d
+                ? "rgba(66, 133, 244, 0.12)"
+                : "rgba(66, 133, 244, 0.08)",
+              borderColor: aiSidebarOpen
+                ? "transparent"
+                : d
+                ? "rgba(66, 133, 244, 0.4)"
+                : "rgba(66, 133, 244, 0.3)",
+              color: aiSidebarOpen ? "#ffffff" : d ? "#93c5fd" : "#2563eb",
+            }}
+          >
+            <IcoSparklesFilled size={13} />
+            <span>Ask AI</span>
+          </button>
+        )}
         <ThemeDropdown theme={theme} setTheme={setTheme} />
         <UserMenu border={border} bgCard={bgCard} bgHover={bgHover} textMut={textMut} />
       </div>

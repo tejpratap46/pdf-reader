@@ -18,7 +18,8 @@
 		"marked": "^18.0.9",
 		"pdf-lib": "^1.17.1",
 		"react": "19.2.1",
-		"react-dom": "19.2.1"
+		"react-dom": "19.2.1",
+		"tokenx": "^2.1.0"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.51.0",

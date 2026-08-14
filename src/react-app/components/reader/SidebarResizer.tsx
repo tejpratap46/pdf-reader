@@ -7,6 +7,7 @@ interface SidebarResizerProps {
   onDoubleClick?: () => void;
   isDragging: boolean;
   currentWidth: number;
+  side?: "left" | "right";
 }
 
 export const SidebarResizer: FC<SidebarResizerProps> = ({
@@ -15,9 +16,12 @@ export const SidebarResizer: FC<SidebarResizerProps> = ({
   onDoubleClick,
   isDragging,
   currentWidth,
+  side = "left",
 }) => {
   const isDark = useDark();
   const [isHovered, setIsHovered] = useState(false);
+
+  const isLeftSidebar = side === "left";
 
   return (
     <div
@@ -27,9 +31,11 @@ export const SidebarResizer: FC<SidebarResizerProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       title="Drag to resize sidebar • Double-click to reset"
-      className="absolute top-0 right-0 bottom-0 w-2.5 z-30 cursor-col-resize select-none flex items-center justify-center transition-colors group"
+      className={`absolute top-0 bottom-0 w-2.5 z-30 cursor-col-resize select-none flex items-center justify-center transition-colors group ${
+        isLeftSidebar ? "right-0" : "left-0"
+      }`}
       style={{
-        transform: "translateX(50%)",
+        transform: isLeftSidebar ? "translateX(50%)" : "translateX(-50%)",
       }}
     >
       {/* Visual resize line */}
@@ -64,7 +70,9 @@ export const SidebarResizer: FC<SidebarResizerProps> = ({
       {/* Floating Width Indicator Tooltip when dragging */}
       {isDragging && (
         <div
-          className="absolute top-8 left-4 px-2 py-1 rounded-md text-[11px] font-mono font-bold text-white shadow-lg pointer-events-none z-50 whitespace-nowrap animate-in fade-in zoom-in-95 duration-100"
+          className={`absolute top-8 ${
+            isLeftSidebar ? "left-4" : "right-4"
+          } px-2 py-1 rounded-md text-[11px] font-mono font-bold text-white shadow-lg pointer-events-none z-50 whitespace-nowrap animate-in fade-in zoom-in-95 duration-100`}
           style={{
             background: "rgba(15, 23, 42, 0.92)",
             border: "1px solid rgba(245, 158, 11, 0.5)",

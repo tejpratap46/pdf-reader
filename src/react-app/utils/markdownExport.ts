@@ -1,4 +1,5 @@
 import { PDFDocument } from "pdf-lib";
+import { estimateTokenCount } from "tokenx";
 import init, {
   toMarkdownBytes,
   formatFromBytes,
@@ -89,8 +90,7 @@ export function computeMarkdownStats(text: string): MarkdownStats {
   const characters = text.length;
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
   const lines = text.length ? text.split("\n").length : 0;
-  // Standard token heuristic for LLMs (approx 4 chars or 0.75 words per token)
-  const estimatedTokens = Math.ceil(characters / 4);
+  const estimatedTokens = estimateTokenCount(text);
 
   const headingCount = (text.match(/^#{1,6}\s+/gm) || []).length;
   const tableCount = (text.match(/\|[\s\S]*?\|[\s\S]*?\n\|[-:\s|]+\|/g) || []).length;

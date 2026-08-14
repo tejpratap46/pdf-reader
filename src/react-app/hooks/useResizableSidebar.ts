@@ -7,6 +7,7 @@ export interface UseResizableSidebarOptions {
   maxWidth?: number;
   collapseThreshold?: number;
   defaultOpen?: boolean;
+  side?: "left" | "right";
 }
 
 export interface ResizableSidebarState {
@@ -29,6 +30,7 @@ export function useResizableSidebar(options: UseResizableSidebarOptions = {}): R
     maxWidth = 720,
     collapseThreshold = 140,
     defaultOpen = true,
+    side = "left",
   } = options;
 
   const widthKey = `${storageKeyPrefix}_width`;
@@ -157,7 +159,8 @@ export function useResizableSidebar(options: UseResizableSidebarOptions = {}): R
 
     const onMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - dragInfoRef.current.startX;
-      const proposedWidth = dragInfoRef.current.startWidth + deltaX;
+      const effectiveDelta = side === "right" ? -deltaX : deltaX;
+      const proposedWidth = dragInfoRef.current.startWidth + effectiveDelta;
       const maxAllowed = Math.min(maxWidth, window.innerWidth * 0.75);
 
       if (proposedWidth < collapseThreshold) {
@@ -177,7 +180,8 @@ export function useResizableSidebar(options: UseResizableSidebarOptions = {}): R
       if (e.touches.length !== 1) return;
       const touch = e.touches[0];
       const deltaX = touch.clientX - dragInfoRef.current.startX;
-      const proposedWidth = dragInfoRef.current.startWidth + deltaX;
+      const effectiveDelta = side === "right" ? -deltaX : deltaX;
+      const proposedWidth = dragInfoRef.current.startWidth + effectiveDelta;
       const maxAllowed = Math.min(maxWidth, window.innerWidth * 0.75);
 
       if (proposedWidth < collapseThreshold) {
@@ -221,7 +225,7 @@ export function useResizableSidebar(options: UseResizableSidebarOptions = {}): R
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
     };
-  }, [isDragging, minWidth, maxWidth, collapseThreshold, setIsOpen, setWidth]);
+  }, [isDragging, minWidth, maxWidth, collapseThreshold, setIsOpen, setWidth, side]);
 
   return {
     width,
