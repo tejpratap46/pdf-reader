@@ -26,7 +26,13 @@ import {
   AILanguageModelSession,
   GenerationStageInfo,
 } from "../../services/aiService";
-import { estimateTokenCount } from "tokenx";
+import {
+  getCachedTokenCount,
+  getPageTokenCount,
+  setPageTokenCount,
+  getAllPagesTokenCount,
+  setAllPagesTokenCount,
+} from "../../utils/tokenCache";
 import { ChatSession } from "firebase/ai";
 import { AiChatMessage } from "./AiChatMessage";
 import { SidebarResizer } from "../reader/SidebarResizer";
@@ -63,6 +69,7 @@ interface AiChatSidebarProps {
   docTitle?: string;
   docMarkdown: string;
   currentPageMarkdown?: string;
+  getPageMarkdown?: (pageNum: number) => Promise<string>;
   isExtractingMarkdown: boolean;
   currentPage: number;
   totalPages: number;
@@ -96,6 +103,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
   docTitle,
   docMarkdown,
   currentPageMarkdown = "",
+  getPageMarkdown,
   isExtractingMarkdown,
   currentPage,
   totalPages,
@@ -132,6 +140,8 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
   const [contextScope, setContextScope] = useState<"full" | "page">("full");
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+  const [isCalculatingPageTokens, setIsCalculatingPageTokens] = useState(false);
+  const [pageTokensVersion, setPageTokensVersion] = useState(0);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const firebaseChatSessionRef = useRef<ChatSession | null>(null);
@@ -139,6 +149,20 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const tokenDetailsRef = useRef<HTMLDivElement>(null);
+
+  // In-memory token count caches
+  const pageTokensCacheRef = useRef<Map<number, number>>(new Map());
+  const docTokensCacheRef = useRef<number | null>(null);
+  const msgTokensCacheRef = useRef<Map<string, number>>(new Map());
+  const systemTokensCacheRef = useRef<Map<string, number>>(new Map());
+
+  // Clear in-memory token caches on document change
+  useEffect(() => {
+    pageTokensCacheRef.current.clear();
+    docTokensCacheRef.current = null;
+    systemTokensCacheRef.current.clear();
+    msgTokensCacheRef.current.clear();
+  }, [docTitle]);
 
   const currentModelId: AnyAiModelId = provider === "chrome-builtin" ? "chrome-gemini-nano" : "gemini-3.7-flash";
   const currentModel = AI_MODELS[currentModelId];
@@ -250,7 +274,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
     return docMarkdown;
   }, [contextScope, currentPageMarkdown, docMarkdown]);
 
-  // Reset chat sessions when context scope, page, or document changes
+  // Reset chat sessions when context scope, active page (in page mode), or document changes
   useEffect(() => {
     firebaseChatSessionRef.current = null;
     if (chromeAiSessionRef.current) {
@@ -261,11 +285,12 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
       }
       chromeAiSessionRef.current = null;
     }
-  }, [contextScope, currentPage, activeMarkdown, provider]);
+  }, [contextScope, contextScope === "page" ? currentPage : 1, activeMarkdown, provider]);
 
   // Pre-warm Chrome Gemini Nano session in background idle time for instant sub-second response
   useEffect(() => {
     if (provider !== "chrome-builtin" || !chromeAiStatus?.isSupported || !sidebarOpen) return;
+    if (contextScope === "page" && !currentPageMarkdown) return;
     if (!activeMarkdown || isExtractingMarkdown) return;
     if (chromeAiSessionRef.current) return;
 
@@ -287,7 +312,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
       } catch {
         // ignore background prewarm failure
       }
-    }, 400);
+    }, 500);
 
     return () => {
       cancelled = true;
@@ -299,33 +324,114 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
     sidebarOpen,
     activeMarkdown,
     isExtractingMarkdown,
-    currentPage,
+    currentPageMarkdown,
+    contextScope === "page" ? currentPage : 1,
     totalPages,
     contextScope,
     docTitle,
   ]);
 
-  // Token calculations
+  const docKey = docTitle || "active-document";
+  const allPagesTokens = getAllPagesTokenCount(docKey);
+
+  // In-memory cached token calculations - strictly avoids re-calculating if already calculated
   const fileContextTokens = useMemo(() => {
-    return estimateTokenCount(activeMarkdown);
-  }, [activeMarkdown]);
+    if (contextScope === "page") {
+      // Check if page token count is already cached for THIS specific page
+      const cachedPage = getPageTokenCount(docKey, currentPage);
+      if (cachedPage !== undefined) {
+        return cachedPage;
+      }
+      return 0;
+    }
+
+    // Full doc (All Pages) context scope: strictly return cached count without recalculating
+    const cachedAllPages = getAllPagesTokenCount(docKey);
+    if (cachedAllPages !== undefined) {
+      return cachedAllPages;
+    }
+    if (docTokensCacheRef.current !== null) {
+      return docTokensCacheRef.current;
+    }
+    if (docMarkdown) {
+      const count = getCachedTokenCount(docMarkdown);
+      setAllPagesTokenCount(docKey, count);
+      docTokensCacheRef.current = count;
+      return count;
+    }
+    return 0;
+  }, [contextScope, currentPage, docMarkdown, docKey, pageTokensVersion]);
+
+  // When in page mode, calculate page token count once for the active page if not already cached
+  useEffect(() => {
+    if (contextScope !== "page") {
+      setIsCalculatingPageTokens(false);
+      return;
+    }
+
+    const cached = getPageTokenCount(docKey, currentPage);
+    if (cached !== undefined) {
+      setIsCalculatingPageTokens(false);
+      return;
+    }
+
+    if (getPageMarkdown) {
+      let isMounted = true;
+      const targetPage = currentPage;
+      setIsCalculatingPageTokens(true);
+
+      getPageMarkdown(targetPage)
+        .then((md) => {
+          if (isMounted) {
+            const count = getCachedTokenCount(md);
+            setPageTokenCount(docKey, targetPage, count);
+            setPageTokensVersion((v) => v + 1);
+          }
+        })
+        .catch((err) => {
+          console.warn(`Failed to calculate page ${targetPage} token count:`, err);
+        })
+        .finally(() => {
+          if (isMounted) {
+            setIsCalculatingPageTokens(false);
+          }
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [contextScope, currentPage, getPageMarkdown, docKey]);
+
+  // Base system instruction template tokens (constant overhead estimated once)
+  const baseSystemTokens = useMemo(() => {
+    const sample = buildDocumentSystemInstruction({
+      docTitle: docTitle || "Active Document",
+      docMarkdown: "",
+      scope: "full",
+    });
+    return getCachedTokenCount(sample);
+  }, [docTitle]);
 
   const systemInstructionTokens = useMemo(() => {
-    const fullSystemInstruction = buildDocumentSystemInstruction({
-      docTitle: docTitle || "Active Document",
-      docMarkdown: activeMarkdown || "",
-      pageContext: { current: currentPage, total: totalPages },
-      scope: contextScope,
-    });
-    return estimateTokenCount(fullSystemInstruction);
-  }, [docTitle, activeMarkdown, currentPage, totalPages, contextScope]);
+    return baseSystemTokens + fileContextTokens;
+  }, [baseSystemTokens, fileContextTokens]);
 
   const historyTokens = useMemo(() => {
-    return messages.reduce((total, msg) => total + estimateTokenCount(msg.content), 0);
+    let total = 0;
+    for (const msg of messages) {
+      let count = msgTokensCacheRef.current.get(msg.id);
+      if (count === undefined) {
+        count = getCachedTokenCount(msg.content);
+        msgTokensCacheRef.current.set(msg.id, count);
+      }
+      total += count;
+    }
+    return total;
   }, [messages]);
 
   const queryTokens = useMemo(() => {
-    return estimateTokenCount(inputValue);
+    return inputValue.trim() ? getCachedTokenCount(inputValue) : 0;
   }, [inputValue]);
 
   const totalInputTokens = useMemo(() => {
@@ -451,6 +557,32 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
     };
 
     try {
+      // 1. Resolve markdown context: wait to generate MD file before sending AI request (once, until page is changed)
+      let requestContextMarkdown = activeMarkdown;
+
+      if (contextScope === "page") {
+        if (!currentPageMarkdown && getPageMarkdown) {
+          streamCallbacks.onStageChange({
+            stage: "prefilling",
+            label: `Generating Page ${currentPage} markdown...`,
+            detail: "Extracting page context via background worker",
+            elapsedMs: Date.now() - userMsg.timestamp,
+          });
+
+          // Wait to generate page markdown once until page changes
+          requestContextMarkdown = await getPageMarkdown(currentPage);
+
+          // Update page token cache in memory
+          const count = getCachedTokenCount(requestContextMarkdown);
+          setPageTokenCount(docKey, currentPage, count);
+          pageTokensCacheRef.current.set(currentPage, count);
+        } else {
+          requestContextMarkdown = currentPageMarkdown || docMarkdown;
+        }
+      } else {
+        requestContextMarkdown = docMarkdown;
+      }
+
       if (provider === "chrome-builtin") {
         // Run locally via Chrome Built-in AI (Gemini Nano)
         if (!chromeAiSessionRef.current) {
@@ -462,7 +594,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
           });
           chromeAiSessionRef.current = await createChromeAiSession({
             docTitle: docTitle || "Active Document",
-            docMarkdown: activeMarkdown || "No document loaded.",
+            docMarkdown: requestContextMarkdown || "No document loaded.",
             pageContext: { current: currentPage, total: totalPages },
             scope: contextScope,
             signal: abortController.signal,
@@ -484,7 +616,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
         if (!firebaseChatSessionRef.current) {
           firebaseChatSessionRef.current = startDocChatSession({
             docTitle: docTitle || "Active Document",
-            docMarkdown: activeMarkdown || "No document loaded yet.",
+            docMarkdown: requestContextMarkdown || "No document loaded yet.",
             pageContext: { current: currentPage, total: totalPages },
             scope: contextScope,
             modelName: "gemini-3.7-flash",
@@ -790,10 +922,10 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {isExtractingMarkdown ? (
+            {isExtractingMarkdown || isCalculatingPageTokens ? (
               <span className="flex items-center gap-1 text-amber-500">
                 <span className="animate-spin"><IcoLoader size={10} /></span>
-                <span>Parsing...</span>
+                <span>{isCalculatingPageTokens ? `Parsing p.${currentPage}...` : "Parsing..."}</span>
               </span>
             ) : (
               <span className="flex items-center gap-1 text-emerald-500 font-medium">
@@ -1254,6 +1386,14 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                               {queryTokens.toLocaleString()} tokens
                             </span>
                           </div>
+                          {contextScope === "page" && allPagesTokens !== undefined && (
+                            <div className="flex items-center justify-between opacity-80 pt-1 border-t border-dashed" style={{ borderColor: border }}>
+                              <span className="flex items-center gap-1">📚 All Pages (Total):</span>
+                              <span className="font-semibold" style={{ color: textMain }}>
+                                {allPagesTokens.toLocaleString()} tokens
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="pt-1.5 border-t flex items-center justify-between text-[9px]" style={{ borderColor: border, color: textMut }}>

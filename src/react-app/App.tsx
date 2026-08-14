@@ -13,6 +13,13 @@ import { PdfViewer } from "./components/reader/PdfViewer";
 import { AiChatSidebar } from "./components/ai/AiChatSidebar";
 import { MarkdownExportModal } from "./components/common/MarkdownExportModal";
 import { convertBytesToMarkdown, convertWebToMarkdown } from "./utils/markdownExport";
+import {
+  clearTokenCache,
+  getAllPagesTokenCount,
+  setAllPagesTokenCount,
+  setPageTokenCount,
+  setCachedTokenCount,
+} from "./utils/tokenCache";
 import { IcoChevR, IcoSparklesFilled } from "./components/common/Icons";
 
 export default function PDFReader(): ReactElement {
@@ -70,6 +77,7 @@ export default function PDFReader(): ReactElement {
   const [currentPageMarkdown, setCurrentPageMarkdown] = useState<string>("");
   const [isExtractingMarkdown, setIsExtractingMarkdown] = useState(false);
   const pageMarkdownCacheRef = useRef<Map<number, string>>(new Map());
+  const pendingPageMarkdownRequestsRef = useRef<Map<number, Promise<string>>>(new Map());
 
   /* TTS State */
   const [paragraphs, setParagraphs] = useState<string[]>([]);
@@ -82,44 +90,84 @@ export default function PDFReader(): ReactElement {
   const [paraProgress, setParaProgress] = useState(0);
   const [autoNextPage, setAutoNextPage] = useState(false);
 
-  /* Clear single-page markdown cache when document changes */
+  /* Clear single-page markdown and token cache when document changes */
   useEffect(() => {
     pageMarkdownCacheRef.current.clear();
+    pendingPageMarkdownRequestsRef.current.clear();
+    clearTokenCache();
+    setCurrentPageMarkdown("");
   }, [pdfBytes, fileName]);
 
-  /* Extract single-page Markdown for the active page */
+  /* Synchronize current page markdown from memory cache on page change without eager recalculation */
   useEffect(() => {
-    let isMounted = true;
-    if (sourceMode === "pdf" && pdfBytes && pageNum >= 1) {
-      if (pageMarkdownCacheRef.current.has(pageNum)) {
-        setCurrentPageMarkdown(pageMarkdownCacheRef.current.get(pageNum)!);
-        return;
-      }
-      convertBytesToMarkdown(pdfBytes, fileName, [pageNum])
-        .then((res) => {
-          if (isMounted) {
-            const md = res.markdown || "";
-            pageMarkdownCacheRef.current.set(pageNum, md);
-            setCurrentPageMarkdown(md);
-          }
-        })
-        .catch((err) => {
-          console.warn(`Single page ${pageNum} markdown extraction failed:`, err);
-          if (isMounted) {
-            const fallbackMd = paragraphs.length > 0 ? paragraphs.join("\n\n") : "";
-            setCurrentPageMarkdown(fallbackMd);
-          }
-        });
+    if (pageMarkdownCacheRef.current.has(pageNum)) {
+      setCurrentPageMarkdown(pageMarkdownCacheRef.current.get(pageNum)!);
     } else if (sourceMode === "web" && paragraphs.length > 0) {
       const res = convertWebToMarkdown(webTitle, webUrl, paragraphs);
       setCurrentPageMarkdown(res.markdown || "");
     } else {
       setCurrentPageMarkdown("");
     }
-    return () => {
-      isMounted = false;
-    };
-  }, [sourceMode, pdfBytes, fileName, pageNum, webTitle, webUrl, paragraphs]);
+  }, [pageNum, sourceMode, webTitle, webUrl, paragraphs]);
+
+  /* On-demand generator for single page markdown with in-memory caching */
+  const getPageMarkdown = useCallback(
+    async (targetPage: number): Promise<string> => {
+      // 1. Check in-memory cache
+      if (pageMarkdownCacheRef.current.has(targetPage)) {
+        return pageMarkdownCacheRef.current.get(targetPage)!;
+      }
+
+      // 2. Check in-flight promise to avoid duplicate concurrent extractions
+      if (pendingPageMarkdownRequestsRef.current.has(targetPage)) {
+        return pendingPageMarkdownRequestsRef.current.get(targetPage)!;
+      }
+
+      // 3. Web mode fallback
+      if (sourceMode === "web") {
+        if (paragraphs.length > 0) {
+          const res = convertWebToMarkdown(webTitle, webUrl, paragraphs);
+          const md = res.markdown || "";
+          pageMarkdownCacheRef.current.set(targetPage, md);
+          return md;
+        }
+        return "";
+      }
+
+      // 4. PDF mode extraction via background worker
+      if (sourceMode === "pdf" && pdfBytes && targetPage >= 1) {
+        const docKey = fileName || "document";
+        const promise = (async () => {
+          try {
+            const res = await convertBytesToMarkdown(pdfBytes, fileName, [targetPage]);
+            const md = res.markdown || "";
+            pageMarkdownCacheRef.current.set(targetPage, md);
+            if (res.stats && typeof res.stats.estimatedTokens === "number") {
+              setPageTokenCount(docKey, targetPage, res.stats.estimatedTokens);
+              setCachedTokenCount(md, res.stats.estimatedTokens);
+            }
+            if (targetPage === pageNum) {
+              setCurrentPageMarkdown(md);
+            }
+            return md;
+          } catch (err) {
+            console.warn(`Single page ${targetPage} markdown extraction failed:`, err);
+            const fallbackMd = paragraphs.length > 0 ? paragraphs.join("\n\n") : "";
+            pageMarkdownCacheRef.current.set(targetPage, fallbackMd);
+            return fallbackMd;
+          } finally {
+            pendingPageMarkdownRequestsRef.current.delete(targetPage);
+          }
+        })();
+
+        pendingPageMarkdownRequestsRef.current.set(targetPage, promise);
+        return promise;
+      }
+
+      return "";
+    },
+    [sourceMode, pdfBytes, fileName, pageNum, webTitle, webUrl, paragraphs]
+  );
 
   /* Resizable & Collapsible Left Sidebar (Reader / TTS) */
   const {
@@ -182,16 +230,28 @@ export default function PDFReader(): ReactElement {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [setSidebarOpen, setAiSidebarOpen, hasDocument]);
 
-  /* Extract and cache document Markdown using anydoc-wasm for AI context */
+  /* Extract and cache document Markdown using anydoc-wasm for AI context (runs once per loaded document) */
   useEffect(() => {
     let isMounted = true;
+    const docKey = sourceMode === "web" ? (webTitle || "web-article") : (fileName || "document");
+
     if (sourceMode === "pdf" && pdfBytes) {
+      // Avoid redundant extraction if document markdown is already generated for this file
+      if (getAllPagesTokenCount(docKey) !== undefined && docMarkdown) {
+        return;
+      }
       setIsExtractingMarkdown(true);
       convertBytesToMarkdown(pdfBytes, fileName)
         .then((res) => {
           if (isMounted) {
-            setDocMarkdown(res.markdown || "");
+            const md = res.markdown || "";
+            setDocMarkdown(md);
             setIsExtractingMarkdown(false);
+            // Cache total token count for all pages
+            if (res.stats && typeof res.stats.estimatedTokens === "number") {
+              setAllPagesTokenCount(docKey, res.stats.estimatedTokens);
+              setCachedTokenCount(md, res.stats.estimatedTokens);
+            }
           }
         })
         .catch((err) => {
@@ -200,18 +260,26 @@ export default function PDFReader(): ReactElement {
             setIsExtractingMarkdown(false);
           }
         });
-    } else if (sourceMode === "web" && paragraphs.length > 0) {
+    } else if (sourceMode === "web" && webLoaded) {
+      if (getAllPagesTokenCount(docKey) !== undefined && docMarkdown) {
+        return;
+      }
       const res = convertWebToMarkdown(webTitle, webUrl, paragraphs);
-      setDocMarkdown(res.markdown || "");
+      const md = res.markdown || "";
+      setDocMarkdown(md);
       setIsExtractingMarkdown(false);
-    } else {
+      if (res.stats && typeof res.stats.estimatedTokens === "number") {
+        setAllPagesTokenCount(docKey, res.stats.estimatedTokens);
+        setCachedTokenCount(md, res.stats.estimatedTokens);
+      }
+    } else if (!pdfBytes && !webLoaded) {
       setDocMarkdown("");
       setIsExtractingMarkdown(false);
     }
     return () => {
       isMounted = false;
     };
-  }, [sourceMode, pdfBytes, fileName, webTitle, webUrl, paragraphs]);
+  }, [sourceMode, pdfBytes, fileName, webTitle, webUrl, webLoaded]);
 
   /* SEO */
   useEffect(() => {
@@ -343,41 +411,49 @@ export default function PDFReader(): ReactElement {
     }, 600);
   }, []);
 
-  /* Continuous Scroll Observer */
+  /* Continuous Scroll Observer - Tracks the most visible page in the viewport */
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container || viewMode !== "scroll" || sourceMode !== "pdf" || !totalPages) return;
 
+    let rafId: number | null = null;
+
     const onScroll = () => {
       if (isProgrammaticScrollingRef.current) return;
-      const containerRect = container.getBoundingClientRect();
-      const targetY = containerRect.top + containerRect.height * 0.35;
 
-      let closestPage = pageNum;
-      let minDistance = Infinity;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const containerRect = container.getBoundingClientRect();
+        if (containerRect.height === 0) return;
 
-      for (let i = 1; i <= totalPages; i++) {
-        const el = pageRefs.current[i];
-        if (!el) continue;
-        const rect = el.getBoundingClientRect();
-        const pageCenter = rect.top + rect.height / 2;
-        const dist = Math.abs(pageCenter - targetY);
+        let maxVisibleHeight = 0;
+        let mostVisiblePage = pageNum;
 
-        if (rect.bottom > containerRect.top && rect.top < containerRect.bottom) {
-          if (dist < minDistance) {
-            minDistance = dist;
-            closestPage = i;
+        for (let i = 1; i <= totalPages; i++) {
+          const el = pageRefs.current[i];
+          if (!el) continue;
+          const rect = el.getBoundingClientRect();
+          const visibleTop = Math.max(containerRect.top, rect.top);
+          const visibleBottom = Math.min(containerRect.bottom, rect.bottom);
+          const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+          if (visibleHeight > maxVisibleHeight) {
+            maxVisibleHeight = visibleHeight;
+            mostVisiblePage = i;
           }
         }
-      }
 
-      if (closestPage !== pageNum && closestPage >= 1 && closestPage <= totalPages) {
-        setPageNum(closestPage);
-      }
+        if (mostVisiblePage !== pageNum && mostVisiblePage >= 1 && mostVisiblePage <= totalPages) {
+          setPageNum(mostVisiblePage);
+        }
+      });
     };
 
     container.addEventListener("scroll", onScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onScroll);
+    return () => {
+      container.removeEventListener("scroll", onScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, [viewMode, sourceMode, totalPages, pageNum]);
 
   const stopTts = useCallback(
@@ -891,6 +967,7 @@ export default function PDFReader(): ReactElement {
               docTitle={sourceMode === "web" ? webTitle : fileName}
               docMarkdown={docMarkdown}
               currentPageMarkdown={currentPageMarkdown}
+              getPageMarkdown={getPageMarkdown}
               isExtractingMarkdown={isExtractingMarkdown}
               currentPage={pageNum}
               totalPages={totalPages}
