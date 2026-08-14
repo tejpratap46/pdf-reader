@@ -17,6 +17,8 @@ import {
   IcoGlobe,
   IcoLoader,
   IcoUpload,
+  IcoMarkdown,
+  IcoSparkles,
 } from "../common/Icons";
 
 interface PdfViewerProps {
@@ -41,6 +43,7 @@ interface PdfViewerProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
   rendering: boolean;
   setIsEditorOpen: (v: boolean) => void;
+  onExportMarkdown?: () => void;
 
   // Web view props
   webUrl: string;
@@ -103,6 +106,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
   bgCanvas,
   textMain,
   textMut,
+  onExportMarkdown,
 }) => {
   const d = useDark();
   const showPdfView = sourceMode === "pdf" && (pdfDoc || pdfLoading);
@@ -187,6 +191,26 @@ export const PdfViewer: FC<PdfViewerProps> = ({
             >
               <IcoEdit />
               <span>Edit PDF</span>
+            </button>
+          )}
+
+          {/* Export Markdown Button */}
+          {pdfBytes && onExportMarkdown && (
+            <button
+              onClick={onExportMarkdown}
+              title="Export to Markdown via @firecrawl/anydoc-wasm (AI & LLM-Ready)"
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md border transition-all duration-150 cursor-pointer shadow-xs hover:scale-105"
+              style={{
+                borderColor: d ? "rgba(245,158,11,0.4)" : "rgba(245,158,11,0.6)",
+                background: d ? "rgba(245,158,11,0.12)" : "rgba(254,243,199,0.7)",
+                color: "#f59e0b",
+              }}
+            >
+              <IcoMarkdown size={14} />
+              <span>Export MD</span>
+              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[9px] font-bold bg-amber-500 text-white uppercase tracking-wider">
+                <IcoSparkles size={8} /> AI
+              </span>
             </button>
           )}
 

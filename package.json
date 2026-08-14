@@ -12,7 +12,9 @@
 		"publish": true
 	},
 	"dependencies": {
+		"@firecrawl/anydoc-wasm": "^0.1.9",
 		"hono": "^4.13.0",
+		"marked": "^18.0.9",
 		"pdf-lib": "^1.17.1",
 		"react": "19.2.1",
 		"react-dom": "19.2.1"

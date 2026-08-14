@@ -199,10 +199,13 @@ export const Sidebar: FC<SidebarProps> = ({
                   <IcoUpload />
                 </div>
                 <p className="text-xs leading-relaxed" style={{ color: textMut }}>
-                  {pdfReady ? "Drop a PDF here or click to browse" : "Loading PDF engine…"}
+                  {pdfReady ? "Drop a PDF or document here or click to browse" : "Loading PDF engine…"}
+                </p>
+                <p className="text-[10px] mt-1 opacity-70" style={{ color: textMut }}>
+                  PDF, DOCX, EPUB, XLSX, CSV, RTF, ODT
                 </p>
               </div>
-              {pdfDoc && pdfBytes && (
+              {pdfBytes && pdfDoc && (
                 <button
                   onClick={() => setIsEditorOpen(true)}
                   className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
@@ -213,7 +216,7 @@ export const Sidebar: FC<SidebarProps> = ({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.doc,.docx,.epub,.odt,.rtf,.xlsx,.ods,.odp,.csv"
                 className="hidden"
                 onChange={(e: ChangeEvent<HTMLInputElement>) => handleFile(e.target.files?.[0])}
               />

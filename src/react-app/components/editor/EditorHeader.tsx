@@ -50,7 +50,7 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
       <div className="flex items-center gap-3">
         <button
           onClick={onClose}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 cursor-pointer"
           style={{ borderColor: border, background: bgInput, color: textMain }}
         >
           <IcoX /> Exit Editor
@@ -74,7 +74,7 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
           disabled={historyLength === 0}
           onClick={undo}
           title="Undo"
-          className="p-2 rounded-lg border transition-colors disabled:opacity-40"
+          className="p-2 rounded-lg border transition-colors disabled:opacity-40 cursor-pointer"
           style={{ borderColor: border, background: bgInput, color: textMain }}
         >
           <IcoUndo />
@@ -87,7 +87,7 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
           <button
             disabled={activePageIndex === 0}
             onClick={() => setActivePageIndex((p) => Math.max(0, p - 1))}
-            className="p-1.5 rounded-md border disabled:opacity-40"
+            className="p-1.5 rounded-md border disabled:opacity-40 cursor-pointer"
             style={{ borderColor: border, background: bgInput }}
           >
             <IcoChevL />
@@ -98,7 +98,7 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
           <button
             disabled={activePageIndex === pagesLength - 1}
             onClick={() => setActivePageIndex((p) => Math.min(pagesLength - 1, p + 1))}
-            className="p-1.5 rounded-md border disabled:opacity-40"
+            className="p-1.5 rounded-md border disabled:opacity-40 cursor-pointer"
             style={{ borderColor: border, background: bgInput }}
           >
             <IcoChevR />
@@ -111,7 +111,7 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
         <div className="flex items-center gap-1">
           <button
             onClick={() => setScale((s) => Math.max(0.5, s - 0.1))}
-            className="p-1.5 rounded-md border"
+            className="p-1.5 rounded-md border cursor-pointer"
             style={{ borderColor: border, background: bgInput }}
           >
             <IcoZoomOut />
@@ -119,7 +119,7 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
           <span className="font-mono text-xs w-12 text-center">{Math.round(scale * 100)}%</span>
           <button
             onClick={() => setScale((s) => Math.min(2.5, s + 0.1))}
-            className="p-1.5 rounded-md border"
+            className="p-1.5 rounded-md border cursor-pointer"
             style={{ borderColor: border, background: bgInput }}
           >
             <IcoZoomIn />
@@ -132,15 +132,15 @@ export const EditorHeader: FC<EditorHeaderProps> = ({
         <button
           onClick={() => exportPdf(true)}
           disabled={saving}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 hover:bg-slate-800"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 hover:bg-slate-800 cursor-pointer"
           style={{ borderColor: border, background: bgInput, color: textMain }}
         >
-          <IcoDownload /> Download
+          <IcoDownload /> Download PDF
         </button>
         <button
           onClick={() => exportPdf(false)}
           disabled={saving}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg transition-all duration-200 hover:scale-105"
+          className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer"
           style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
         >
           {saving ? (

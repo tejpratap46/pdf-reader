@@ -9,6 +9,8 @@ import { useAudioKeepAlive } from "./hooks/useAudioKeepAlive";
 import { Header } from "./components/reader/Header";
 import { Sidebar } from "./components/reader/Sidebar";
 import { PdfViewer } from "./components/reader/PdfViewer";
+import { MarkdownExportModal } from "./components/common/MarkdownExportModal";
+import { convertBytesToMarkdown } from "./utils/markdownExport";
 
 export default function PDFReader(): ReactElement {
   const pdfReady = usePdfJs();
@@ -58,6 +60,7 @@ export default function PDFReader(): ReactElement {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isMarkdownModalOpen, setIsMarkdownModalOpen] = useState(false);
 
   /* TTS State */
   const [paragraphs, setParagraphs] = useState<string[]>([]);
@@ -301,9 +304,36 @@ export default function PDFReader(): ReactElement {
     loadPdf(file);
   };
 
-  const handleFile = (file?: File) => {
-    if (file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) {
+  const handleFile = async (file?: File) => {
+    if (!file) return;
+    if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
       loadPdf(file);
+    } else {
+      stopTts(false);
+      try {
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        setPdfBytes(bytes);
+        setFileName(file.name);
+        setPdfDoc(null);
+        setTotalPages(1);
+        setPageNum(1);
+        setSourceMode("pdf");
+        setWebLoaded(false);
+        setWebTitle("");
+        setWebError("");
+        const res = await convertBytesToMarkdown(bytes, file.name);
+        if (res.markdown) {
+          const rawParas = res.markdown
+            .split(/\n\n+/)
+            .map((p) => p.replace(/[#*`_>]/g, "").trim())
+            .filter((p) => p.length > 5);
+          setParagraphs(rawParas.length > 0 ? rawParas : [res.markdown]);
+        }
+        setIsMarkdownModalOpen(true);
+      } catch (err) {
+        console.error("Document conversion error:", err);
+      }
     }
   };
 
@@ -661,6 +691,7 @@ export default function PDFReader(): ReactElement {
             fileInputRef={fileInputRef}
             rendering={rendering}
             setIsEditorOpen={setIsEditorOpen}
+            onExportMarkdown={() => setIsMarkdownModalOpen(true)}
             webUrl={webUrl}
             webTitle={webTitle}
             webLoading={webLoading}
@@ -690,6 +721,18 @@ export default function PDFReader(): ReactElement {
           isDark={isDark}
         />
       )}
+      <MarkdownExportModal
+        isOpen={isMarkdownModalOpen}
+        onClose={() => setIsMarkdownModalOpen(false)}
+        pdfBytes={pdfBytes}
+        fileName={fileName}
+        sourceMode={sourceMode}
+        currentPage={pageNum}
+        totalPages={totalPages}
+        webTitle={webTitle}
+        webUrl={webUrl}
+        webParagraphs={paragraphs}
+      />
     </DarkCtx.Provider>
   );
 }
