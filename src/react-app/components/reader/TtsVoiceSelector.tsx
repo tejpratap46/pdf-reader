@@ -1,5 +1,5 @@
 import { FC, useState, useMemo, useCallback, MouseEvent } from "react";
-import { useDark } from "../../hooks/useTheme";
+import { useDark, useThemeMode } from "../../hooks/useTheme";
 import {
   IcoPlay,
   IcoStop,
@@ -88,10 +88,12 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
 
   // Color tokens
   const d = isDark;
-  const cardBorder = border || (d ? "#374151" : "#e5e7eb");
-  const inputBg = bgInput || (d ? "#1f2937" : "#ffffff");
-  const mainText = textMain || (d ? "#f3f4f6" : "#111827");
-  const mutText = textMut || (d ? "#9ca3af" : "#6b7280");
+  const themeMode = useThemeMode();
+  const isAmoled = themeMode === "amoled";
+  const cardBorder = border || (isAmoled ? "#27272a" : d ? "#374151" : "#e5e7eb");
+  const inputBg = bgInput || (isAmoled ? "#09090b" : d ? "#1f2937" : "#ffffff");
+  const mainText = textMain || (isAmoled ? "#ffffff" : d ? "#f3f4f6" : "#111827");
+  const mutText = textMut || (isAmoled ? "#a1a1aa" : d ? "#9ca3af" : "#6b7280");
 
   if (voices.length === 0) {
     return (

@@ -22,6 +22,12 @@ export const IcoPanel     = ({ size = 16 }: { size?: number } = {}) => <Ico size
 export const IcoFile      = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6" />;
 export const IcoSun       = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M12 3v1M12 20v1M4.22 4.22l.7.7M18.36 18.36l.7.7M3 12h1M20 12h1M4.22 19.78l.7-.7M18.36 5.64l.7-.7M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7z" />;
 export const IcoMoon      = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />;
+export const IcoAmoled    = ({ size = 16 }: { size?: number } = {}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="4.5" fill="currentColor" />
+  </svg>
+);
 export const IcoMonitor   = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M2 3h20v14H2zM8 21h8M12 17v4" />;
 export const IcoCheck     = ({ size = 14 }: { size?: number } = {}) => <Ico size={size} d="M20 6L9 17l-5-5" />;
 export const IcoGlobe     = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />;

@@ -1,6 +1,7 @@
 import { FC, useRef, useState, useEffect, RefObject } from "react";
-import { PageSize } from "../../types/reader";
+import { PageSize, ResolvedTheme } from "../../types/reader";
 import { SearchMatch } from "../../types/search";
+import { useThemeMode, getPdfFilter } from "../../hooks/useTheme";
 
 interface PdfPageCardProps {
   doc: any;
@@ -12,6 +13,7 @@ interface PdfPageCardProps {
   scrollContainerRef: RefObject<HTMLDivElement | null>;
   onPageClick: (pageNum: number) => void;
   dark: boolean;
+  themeMode?: ResolvedTheme;
   pageMatches?: SearchMatch[];
   activeMatchIndex?: number;
 }
@@ -26,9 +28,14 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
   scrollContainerRef,
   onPageClick,
   dark,
+  themeMode: propThemeMode,
   pageMatches = [],
   activeMatchIndex = -1,
 }) => {
+  const contextThemeMode = useThemeMode();
+  const resolvedTheme = propThemeMode || contextThemeMode;
+  const isAmoled = resolvedTheme === "amoled";
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isNearViewport, setIsNearViewport] = useState(false);
@@ -105,31 +112,45 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
       style={{
         width: scaledWidth,
         minHeight: scaledHeight,
-        background: dark ? "#1e293b" : "#ffffff",
-        border: `1px solid ${isActive ? "#f59e0b" : dark ? "#334155" : "#e2e8f0"}`,
+        background: isAmoled ? "#000000" : dark ? "#1e293b" : "#ffffff",
+        border: `1px solid ${isActive ? "#f59e0b" : isAmoled ? "#27272a" : dark ? "#334155" : "#e2e8f0"}`,
       }}
     >
       {/* Top Header Badge */}
       <div
         className="w-full flex items-center justify-between px-4 py-2 border-b select-none transition-colors"
         style={{
-          borderColor: dark ? "#334155" : "#f1f5f9",
+          borderColor: isAmoled ? "#1e1e24" : dark ? "#334155" : "#f1f5f9",
           background: isActive
-            ? dark ? "rgba(245,158,11,0.12)" : "rgba(254,243,199,0.7)"
-            : dark ? "rgba(15,23,42,0.6)" : "rgba(248,250,252,0.8)",
+            ? isAmoled
+              ? "rgba(245,158,11,0.16)"
+              : dark
+              ? "rgba(245,158,11,0.12)"
+              : "rgba(254,243,199,0.7)"
+            : isAmoled
+            ? "rgba(0,0,0,0.85)"
+            : dark
+            ? "rgba(15,23,42,0.6)"
+            : "rgba(248,250,252,0.8)",
         }}
       >
         <div className="flex items-center gap-2">
           <span
             className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
-              isActive ? "bg-amber-500 text-white" : dark ? "bg-slate-800 text-slate-400" : "bg-slate-200 text-slate-600"
+              isActive
+                ? "bg-amber-500 text-white"
+                : isAmoled
+                ? "bg-zinc-900 text-zinc-400 border border-zinc-800"
+                : dark
+                ? "bg-slate-800 text-slate-400"
+                : "bg-slate-200 text-slate-600"
             }`}
           >
             Page {pageNum}
           </span>
           {isActive && <span className="text-[10px] text-amber-500 font-semibold tracking-wider uppercase">Active</span>}
         </div>
-        <span className="text-[11px] font-mono" style={{ color: dark ? "#94a3b8" : "#64748b" }}>
+        <span className="text-[11px] font-mono" style={{ color: isAmoled ? "#71717a" : dark ? "#94a3b8" : "#64748b" }}>
           {pageNum} / {totalPages}
         </span>
       </div>
@@ -148,7 +169,7 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
             {rendering && (
               <div
                 className="absolute inset-0 z-20 flex items-center justify-center backdrop-blur-[1px]"
-                style={{ background: dark ? "rgba(15,23,42,0.3)" : "rgba(255,255,255,0.3)" }}
+                style={{ background: isAmoled ? "rgba(0,0,0,0.5)" : dark ? "rgba(15,23,42,0.3)" : "rgba(255,255,255,0.3)" }}
               >
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-medium shadow-lg">
                   <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -156,7 +177,15 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
                 </div>
               </div>
             )}
-            <canvas ref={canvasRef} className="block transition-opacity duration-150" style={{ opacity: rendering ? 0.6 : 1 }} />
+            <canvas
+              ref={canvasRef}
+              className="block transition-opacity duration-150"
+              style={{
+                opacity: rendering ? 0.6 : 1,
+                filter: getPdfFilter(resolvedTheme),
+                background: isAmoled ? "#000000" : dark ? "#1e293b" : "#ffffff",
+              }}
+            />
 
             {/* Search Highlights Overlay */}
             {pageMatches && pageMatches.length > 0 && (
@@ -189,3 +218,4 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
     </div>
   );
 };
+

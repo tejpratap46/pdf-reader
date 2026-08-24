@@ -1,5 +1,5 @@
 import { FC, useState, KeyboardEvent } from "react";
-import { useDark } from "../../hooks/useTheme";
+import { useDark, useThemeMode } from "../../hooks/useTheme";
 import { SectionTitle } from "../common/Primitives";
 import { IcoGlobe, IcoLoader, IcoX } from "../common/Icons";
 
@@ -14,6 +14,8 @@ interface WebPanelProps {
 
 export const WebPanel: FC<WebPanelProps> = ({ onLoad, loading, loaded, title, error, onClear }) => {
   const d = useDark();
+  const themeMode = useThemeMode();
+  const isAmoled = themeMode === "amoled";
   const [url, setUrl] = useState("");
   const submit = () => {
     const u = url.trim();
@@ -42,7 +44,7 @@ export const WebPanel: FC<WebPanelProps> = ({ onLoad, loading, loaded, title, er
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && submit()}
             className="w-full rounded-md text-xs pl-8 pr-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors"
-            style={{ border: `1px solid ${d ? "#374151" : "#e5e7eb"}`, background: d ? "#1f2937" : "#fff", color: d ? "#f3f4f6" : "#111827" }}
+            style={{ border: `1px solid ${isAmoled ? "#27272a" : d ? "#374151" : "#e5e7eb"}`, background: isAmoled ? "#09090b" : d ? "#1f2937" : "#fff", color: d ? "#f3f4f6" : "#111827" }}
           />
         </div>
         <button

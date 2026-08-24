@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useMemo, useCallback } from "react";
 import { marked } from "marked";
-import { useDark } from "../../hooks/useTheme";
+import { useDark, useThemeMode } from "../../hooks/useTheme";
 import {
   MarkdownExportResult,
   convertBytesToMarkdown,
@@ -50,6 +50,8 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
   webParagraphs = [],
 }) => {
   const isDark = useDark();
+  const themeMode = useThemeMode();
+  const isAmoled = themeMode === "amoled";
   const [activeTab, setActiveTab] = useState<"preview" | "raw" | "ai">("preview");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -180,12 +182,12 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
   if (!isOpen) return null;
 
   // Color tokens
-  const bgModal = isDark ? "#0f172a" : "#ffffff";
-  const bgCard = isDark ? "#1e293b" : "#f8fafc";
-  const bgInner = isDark ? "#0b0f19" : "#ffffff";
-  const borderCol = isDark ? "#334155" : "#e2e8f0";
-  const textMain = isDark ? "#f8fafc" : "#0f172a";
-  const textMut = isDark ? "#94a3b8" : "#64748b";
+  const bgModal = isAmoled ? "#000000" : isDark ? "#0f172a" : "#ffffff";
+  const bgCard = isAmoled ? "#09090b" : isDark ? "#1e293b" : "#f8fafc";
+  const bgInner = isAmoled ? "#000000" : isDark ? "#0b0f19" : "#ffffff";
+  const borderCol = isAmoled ? "#27272a" : isDark ? "#334155" : "#e2e8f0";
+  const textMain = isAmoled ? "#ffffff" : isDark ? "#f8fafc" : "#0f172a";
+  const textMut = isAmoled ? "#a1a1aa" : isDark ? "#94a3b8" : "#64748b";
 
   return (
     <div
@@ -246,7 +248,7 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
         {sourceMode === "pdf" && totalPages > 1 && (
           <div
             className="px-6 py-3 border-b flex flex-col gap-2.5 shrink-0"
-            style={{ borderColor: borderCol, background: isDark ? "#131b2e" : "#f1f5f9" }}
+            style={{ borderColor: borderCol, background: isAmoled ? "#000000" : isDark ? "#131b2e" : "#f1f5f9" }}
           >
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
@@ -396,7 +398,7 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
             {/* Stats & Token Context Banner */}
             <div
               className="px-6 py-2.5 border-b flex items-center justify-between flex-wrap gap-3 shrink-0"
-              style={{ borderColor: borderCol, background: isDark ? "#090d16" : "#f8fafc" }}
+              style={{ borderColor: borderCol, background: isAmoled ? "#000000" : isDark ? "#090d16" : "#f8fafc" }}
             >
               <div className="flex items-center gap-4 text-xs font-medium flex-wrap">
                 <div className="flex items-center gap-1.5">

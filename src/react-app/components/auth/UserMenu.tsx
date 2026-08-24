@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, FC } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useDark } from "../../hooks/useTheme";
+import { useDark, useThemeMode } from "../../hooks/useTheme";
 import { IcoGoogle, IcoLogOut, IcoLoader, IcoCheck, IcoAlertCircle, IcoX } from "../common/Icons";
 
 interface UserMenuProps {
@@ -20,6 +20,8 @@ export const UserMenu: FC<UserMenuProps> = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const d = useDark();
+  const themeMode = useThemeMode();
+  const isAmoled = themeMode === "amoled";
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -56,7 +58,7 @@ export const UserMenu: FC<UserMenuProps> = ({
           disabled={actionLoading}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-150 hover:scale-105 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
-            backgroundColor: d ? "#27272a" : "#ffffff",
+            backgroundColor: isAmoled ? "#09090b" : d ? "#27272a" : "#ffffff",
             border: `1px solid ${border}`,
             color: d ? "#f4f4f5" : "#18181b",
           }}

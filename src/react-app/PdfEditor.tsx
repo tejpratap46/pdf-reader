@@ -17,6 +17,7 @@ import { EditorCanvas } from "./components/editor/canvas/EditorCanvas";
 import { ResizeHandleType } from "./components/editor/canvas/ImageOverlays";
 import { SignatureModal } from "./components/editor/SignatureModal";
 import { useResizableSidebar } from "./hooks/useResizableSidebar";
+import { useThemeMode } from "./hooks/useTheme";
 import { IcoChevR } from "./components/common/Icons";
 
 export const PdfEditor: FC<PdfEditorProps> = ({
@@ -1047,13 +1048,15 @@ export const PdfEditor: FC<PdfEditorProps> = ({
   };
 
   // UI Styling Tokens
-  const bg = isDark ? "#090d16" : "#f8fafc";
-  const bgCard = isDark ? "#111827" : "#ffffff";
-  const bgSide = isDark ? "#0f172a" : "#ffffff";
-  const border = isDark ? "#1e293b" : "#e2e8f0";
-  const textMain = isDark ? "#f8fafc" : "#0f172a";
-  const textMut = isDark ? "#94a3b8" : "#64748b";
-  const bgInput = isDark ? "#1e293b" : "#ffffff";
+  const themeMode = useThemeMode();
+  const isAmoled = themeMode === "amoled";
+  const bg = isAmoled ? "#000000" : isDark ? "#090d16" : "#f8fafc";
+  const bgCard = isAmoled ? "#000000" : isDark ? "#111827" : "#ffffff";
+  const bgSide = isAmoled ? "#000000" : isDark ? "#0f172a" : "#ffffff";
+  const border = isAmoled ? "#27272a" : isDark ? "#1e293b" : "#e2e8f0";
+  const textMain = isAmoled ? "#ffffff" : isDark ? "#f8fafc" : "#0f172a";
+  const textMut = isAmoled ? "#a1a1aa" : isDark ? "#94a3b8" : "#64748b";
+  const bgInput = isAmoled ? "#09090b" : isDark ? "#1e293b" : "#ffffff";
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-hidden font-sans select-none" style={{ background: bg, color: textMain }}>
@@ -1087,8 +1090,8 @@ export const PdfEditor: FC<PdfEditorProps> = ({
             title="Expand tools (Ctrl+B)"
             className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 hover:shadow-lg group cursor-pointer"
             style={{
-              background: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
-              borderColor: isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
+              background: isAmoled ? "rgba(0, 0, 0, 0.95)" : isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
+              borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
               color: textMain,
             }}
           >

@@ -1,7 +1,7 @@
 import { FC, RefObject, ChangeEvent } from "react";
 import { SourceMode, ViewMode, PageSize, TtsState } from "../../types/reader";
 import { SearchMatch, SearchOptions } from "../../types/search";
-import { useDark, dk } from "../../hooks/useTheme";
+import { useDark, useThemeMode, getPdfFilter, dk } from "../../hooks/useTheme";
 import { IconBtn } from "../common/Primitives";
 import { PdfPageCard } from "./PdfPageCard";
 import { SearchBar } from "./SearchBar";
@@ -144,6 +144,8 @@ export const PdfViewer: FC<PdfViewerProps> = ({
   textMut,
 }) => {
   const d = useDark();
+  const themeMode = useThemeMode();
+  const isAmoled = themeMode === "amoled";
   const showPdfView = sourceMode === "pdf" && (pdfDoc || pdfLoading);
 
   return (
@@ -365,15 +367,15 @@ export const PdfViewer: FC<PdfViewerProps> = ({
             <div
               className="pointer-events-auto flex items-center gap-2.5 px-3 py-1.5 rounded-full border backdrop-blur-md transition-all duration-200"
               style={{
-                background: d ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.9)",
-                borderColor: d ? "rgba(245,158,11,0.4)" : "#fde68a",
-                boxShadow: d ? "0 10px 25px -5px rgba(0, 0, 0, 0.5)" : "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                background: isAmoled ? "rgba(0,0,0,0.9)" : d ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.9)",
+                borderColor: isAmoled ? "rgba(245,158,11,0.5)" : d ? "rgba(245,158,11,0.4)" : "#fde68a",
+                boxShadow: isAmoled ? "0 10px 25px -5px rgba(0, 0, 0, 0.8)" : d ? "0 10px 25px -5px rgba(0, 0, 0, 0.5)" : "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
               }}
             >
               <span className="text-xs font-mono font-semibold text-amber-500">
                 Page {pageNum} <span className="opacity-50">/</span> {totalPages}
               </span>
-              <div className="w-px h-3.5" style={{ background: d ? "#334155" : "#e2e8f0" }} />
+              <div className="w-px h-3.5" style={{ background: isAmoled ? "#27272a" : d ? "#334155" : "#e2e8f0" }} />
               <button
                 onClick={() => changePage(1)}
                 title="Scroll to top"
@@ -389,8 +391,21 @@ export const PdfViewer: FC<PdfViewerProps> = ({
         {/* Single Page View Mode */}
         {!pdfLoading && showPdfView && viewMode === "single" && (
           <div className="flex justify-center p-8 min-h-full items-center">
-            <div className={`relative shadow-2xl transition-opacity duration-150 ${rendering ? "opacity-50" : "opacity-100"}`}>
-              <canvas ref={canvasRef} className="block rounded-lg overflow-hidden" style={{ border: `1px solid ${border}` }} />
+            <div
+              className={`relative shadow-2xl transition-opacity duration-150 rounded-lg overflow-hidden ${rendering ? "opacity-50" : "opacity-100"}`}
+              style={{
+                background: isAmoled ? "#000000" : d ? "#1e293b" : "#ffffff",
+                border: `1px solid ${isAmoled ? "#27272a" : border}`,
+              }}
+            >
+              <canvas
+                ref={canvasRef}
+                className="block rounded-lg overflow-hidden"
+                style={{
+                  filter: getPdfFilter(themeMode),
+                  background: isAmoled ? "#000000" : d ? "#1e293b" : "#ffffff",
+                }}
+              />
               {/* Search Highlights Overlay for Current Page */}
               {getPageMatches && getPageMatches(pageNum).length > 0 && (
                 <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-lg">
@@ -460,15 +475,17 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                           ? d ? "rgba(245,158,11,0.18)" : "rgba(254,243,199,0.8)"
                           : active
                           ? d ? "rgba(245,158,11,0.08)" : "rgba(254,243,199,0.5)"
+                          : isAmoled
+                          ? "rgba(255,255,255,0.03)"
                           : d ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.8)",
                         color: active || isMatchingPara ? textMain : textMut,
                       }}
                       onClick={() => !active && startReading(i)}
                       onMouseEnter={(e) => {
-                        if (!active && !isMatchingPara) (e.currentTarget as HTMLElement).style.background = d ? "rgba(255,255,255,0.04)" : bgHover;
+                        if (!active && !isMatchingPara) (e.currentTarget as HTMLElement).style.background = isAmoled ? "rgba(255,255,255,0.06)" : d ? "rgba(255,255,255,0.04)" : bgHover;
                       }}
                       onMouseLeave={(e) => {
-                        if (!active && !isMatchingPara) (e.currentTarget as HTMLElement).style.background = d ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.8)";
+                        if (!active && !isMatchingPara) (e.currentTarget as HTMLElement).style.background = isAmoled ? "rgba(255,255,255,0.03)" : d ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.8)";
                       }}
                     >
                       {active && (

@@ -1,4 +1,5 @@
-export type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark" | "amoled" | "system";
+export type ResolvedTheme = "light" | "dark" | "amoled";
 export type TtsState = "idle" | "playing" | "paused";
 export type SourceMode = "pdf" | "web";
 export type ViewMode = "scroll" | "single";

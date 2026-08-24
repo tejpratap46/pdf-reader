@@ -4,7 +4,7 @@ import { SourceMode, ViewMode, TtsState, PageSize, BeforeInstallPromptEvent } fr
 import { DEFAULT_HEADER_PCT, DEFAULT_FOOTER_PCT, CORS_PROXY } from "./constants/reader";
 import { splitParagraphs, getParagraphStarts, snapToWord, extractTextFromHtml } from "./utils/textExtractor";
 import { usePdfJs } from "./hooks/usePdfJs";
-import { useTheme, DarkCtx } from "./hooks/useTheme";
+import { useTheme, DarkCtx, ThemeCtx } from "./hooks/useTheme";
 import { useAudioKeepAlive } from "./hooks/useAudioKeepAlive";
 import { useResizableSidebar } from "./hooks/useResizableSidebar";
 import { useDocumentSearch } from "./hooks/useDocumentSearch";
@@ -36,7 +36,7 @@ import { IcoChevR, IcoSparklesFilled } from "./components/common/Icons";
 
 export default function PDFReader(): ReactElement {
   const pdfReady = usePdfJs();
-  const [isDark, theme, setTheme] = useTheme();
+  const [isDark, theme, setTheme, resolvedTheme] = useTheme();
   const { startKeepAlive, stopKeepAlive } = useAudioKeepAlive();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -865,93 +865,95 @@ export default function PDFReader(): ReactElement {
   const nextPage = () => changePage(pageNum + 1);
 
   /* Colour tokens */
+  const isAmoled = resolvedTheme === "amoled";
   const d = isDark;
-  const bg = d ? "#030712" : "#ffffff";
-  const bgCard = d ? "#111827" : "#ffffff";
-  const bgSide = d ? "#0f172a" : "#f9fafb";
-  const border = d ? "#1f2937" : "#e5e5e7";
-  const textMain = d ? "#f3f4f6" : "#111827";
-  const textMut = d ? "#9ca3af" : "#6b7280";
-  const bgInput = d ? "#1f2937" : "#ffffff";
-  const bgHover = d ? "#1f2937" : "#f3f4f6";
-  const bgCanvas = d ? "#0f172a" : "#f3f4f6";
+  const bg = isAmoled ? "#000000" : d ? "#030712" : "#ffffff";
+  const bgCard = isAmoled ? "#000000" : d ? "#111827" : "#ffffff";
+  const bgSide = isAmoled ? "#000000" : d ? "#0f172a" : "#f9fafb";
+  const border = isAmoled ? "#27272a" : d ? "#1f2937" : "#e5e5e7";
+  const textMain = isAmoled ? "#ffffff" : d ? "#f3f4f6" : "#111827";
+  const textMut = isAmoled ? "#a1a1aa" : d ? "#9ca3af" : "#6b7280";
+  const bgInput = isAmoled ? "#09090b" : d ? "#1f2937" : "#ffffff";
+  const bgHover = isAmoled ? "#18181b" : d ? "#1f2937" : "#f3f4f6";
+  const bgCanvas = isAmoled ? "#000000" : d ? "#0f172a" : "#f3f4f6";
 
   const displayTitle = sourceMode === "web" ? webTitle : fileName;
   const hasContent = paragraphs.length > 0;
 
   return (
     <DarkCtx.Provider value={isDark}>
-      <div className="h-screen flex flex-col overflow-hidden transition-colors duration-200" style={{ background: bg, color: textMain }}>
-        <style>{`
-          @keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin linear infinite}
-          @keyframes bar1{0%,100%{height:4px}50%{height:14px}}
-          @keyframes bar2{0%,100%{height:10px}50%{height:4px}}
-          @keyframes bar3{0%,100%{height:14px}50%{height:6px}}
-          @keyframes bar4{0%,100%{height:6px}50%{height:14px}}
-          @keyframes bar5{0%,100%{height:8px}50%{height:3px}}
-          .wavebar{display:inline-block;width:3px;border-radius:2px;background:#f59e0b}
-          .wavebar.paused{animation-play-state:paused!important}
-          .wb1{animation:bar1 0.7s ease-in-out infinite}.wb2{animation:bar2 0.5s ease-in-out infinite .1s}
-          .wb3{animation:bar3 0.6s ease-in-out infinite .2s}.wb4{animation:bar4 0.8s ease-in-out infinite .05s}
-          .wb5{animation:bar5 .55s ease-in-out infinite .15s}
-          input[type=range]{height:6px}
-          input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#f59e0b;cursor:pointer;margin-top:-4px}
-          input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#f59e0b;cursor:pointer;border:none}
-          ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}
-          ::-webkit-scrollbar-thumb{background:${d ? "#374151" : "#d1d5db"};border-radius:2px}
-        `}</style>
+      <ThemeCtx.Provider value={resolvedTheme}>
+        <div className="h-screen flex flex-col overflow-hidden transition-colors duration-200" style={{ background: bg, color: textMain }}>
+          <style>{`
+            @keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin linear infinite}
+            @keyframes bar1{0%,100%{height:4px}50%{height:14px}}
+            @keyframes bar2{0%,100%{height:10px}50%{height:4px}}
+            @keyframes bar3{0%,100%{height:14px}50%{height:6px}}
+            @keyframes bar4{0%,100%{height:6px}50%{height:14px}}
+            @keyframes bar5{0%,100%{height:8px}50%{height:3px}}
+            .wavebar{display:inline-block;width:3px;border-radius:2px;background:#f59e0b}
+            .wavebar.paused{animation-play-state:paused!important}
+            .wb1{animation:bar1 0.7s ease-in-out infinite}.wb2{animation:bar2 0.5s ease-in-out infinite .1s}
+            .wb3{animation:bar3 0.6s ease-in-out infinite .2s}.wb4{animation:bar4 0.8s ease-in-out infinite .05s}
+            .wb5{animation:bar5 .55s ease-in-out infinite .15s}
+            input[type=range]{height:6px}
+            input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#f59e0b;cursor:pointer;margin-top:-4px}
+            input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#f59e0b;cursor:pointer;border:none}
+            ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}
+            ::-webkit-scrollbar-thumb{background:${isAmoled ? "#27272a" : d ? "#374151" : "#d1d5db"};border-radius:2px}
+          `}</style>
 
-        {/* Global drag overlay */}
-        {globalDrag && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
-            <div className="rounded-2xl border-2 border-dashed border-amber-400 px-16 py-12 flex flex-col items-center gap-4 shadow-2xl animate-pulse" style={{ background: "rgba(245,158,11,0.08)" }}>
-              <div className="text-amber-400">📖</div>
-              <p className="text-xl font-semibold text-amber-400">Drop your PDF here</p>
-              <p className="text-sm" style={{ color: textMut }}>
-                Release to open the document
-              </p>
+          {/* Global drag overlay */}
+          {globalDrag && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
+              <div className="rounded-2xl border-2 border-dashed border-amber-400 px-16 py-12 flex flex-col items-center gap-4 shadow-2xl animate-pulse" style={{ background: "rgba(245,158,11,0.08)" }}>
+                <div className="text-amber-400">📖</div>
+                <p className="text-xl font-semibold text-amber-400">Drop your PDF here</p>
+                <p className="text-sm" style={{ color: textMut }}>
+                  Release to open the document
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Header */}
-        <Header
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-          aiSidebarOpen={aiSidebarOpen}
-          setAiSidebarOpen={setAiSidebarOpen}
-          isSearchOpen={isSearchOpen}
-          onOpenSearch={openSearch}
-          onCloseSearch={closeSearch}
-          hasDocument={hasDocument}
-          displayTitle={displayTitle}
-          sourceMode={sourceMode}
-          installPrompt={installPrompt}
-          setInstallPrompt={setInstallPrompt}
-          isStandalone={isStandalone}
-          autoNextPage={autoNextPage}
-          ttsState={ttsState}
-          theme={theme}
-          setTheme={setTheme}
-          border={border}
-          bgCard={bgCard}
-          bgHover={bgHover}
-          textMut={textMut}
-        />
+          {/* Header */}
+          <Header
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            aiSidebarOpen={aiSidebarOpen}
+            setAiSidebarOpen={setAiSidebarOpen}
+            isSearchOpen={isSearchOpen}
+            onOpenSearch={openSearch}
+            onCloseSearch={closeSearch}
+            hasDocument={hasDocument}
+            displayTitle={displayTitle}
+            sourceMode={sourceMode}
+            installPrompt={installPrompt}
+            setInstallPrompt={setInstallPrompt}
+            isStandalone={isStandalone}
+            autoNextPage={autoNextPage}
+            ttsState={ttsState}
+            theme={theme}
+            setTheme={setTheme}
+            border={border}
+            bgCard={bgCard}
+            bgHover={bgHover}
+            textMut={textMut}
+          />
 
-        <div className="relative flex flex-1 overflow-hidden">
-          {/* Floating trigger button to expand Left sidebar when collapsed */}
-          {!sidebarOpen && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              title="Expand left sidebar (Ctrl+B)"
-              className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 hover:shadow-lg group cursor-pointer"
-              style={{
-                background: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
-                borderColor: isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
-                color: textMain,
-              }}
-            >
+          <div className="relative flex flex-1 overflow-hidden">
+            {/* Floating trigger button to expand Left sidebar when collapsed */}
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                title="Expand left sidebar (Ctrl+B)"
+                className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 hover:shadow-lg group cursor-pointer"
+                style={{
+                  background: isAmoled ? "rgba(0, 0, 0, 0.95)" : isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
+                  borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
+                  color: textMain,
+                }}
+              >
               <span className="text-amber-500 transition-transform duration-150 group-hover:translate-x-0.5">
                 <IcoChevR size={14} />
               </span>
@@ -1151,6 +1153,7 @@ export default function PDFReader(): ReactElement {
         webUrl={webUrl}
         webParagraphs={paragraphs}
       />
+      </ThemeCtx.Provider>
     </DarkCtx.Provider>
   );
 }

@@ -174,7 +174,7 @@ export const Sidebar: FC<SidebarProps> = ({
         <div className="flex flex-col gap-5 p-5">
           {/* Source tabs & Collapse Button */}
           <div className="flex items-center gap-2">
-            <div className="flex-1 flex rounded-lg p-0.5 gap-0.5" style={{ background: d ? "#1f2937" : "#f3f4f6" }}>
+            <div className="flex-1 flex rounded-lg p-0.5 gap-0.5 border" style={{ background: bgInput, borderColor: border }}>
               {(["pdf", "web"] as SourceMode[]).map((m) => (
                 <button
                   key={m}
@@ -182,7 +182,7 @@ export const Sidebar: FC<SidebarProps> = ({
                   className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                   style={
                     sourceMode === m
-                      ? { background: d ? "#111827" : "#fff", color: "#f59e0b", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
+                      ? { background: bgSide, color: "#f59e0b", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
                       : { background: "transparent", color: textMut }
                   }
                 >

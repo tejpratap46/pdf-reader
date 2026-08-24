@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useMemo, useRef, useCallback, MouseEvent } from "react";
-import { useDark, dk } from "../../hooks/useTheme";
+import { useDark, useThemeMode, dk } from "../../hooks/useTheme";
 import {
   IcoSearch,
   IcoX,
@@ -37,6 +37,8 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
   ttsPitch = 1,
 }) => {
   const isDark = useDark();
+  const themeMode = useThemeMode();
+  const isAmoled = themeMode === "amoled";
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLangKey, setSelectedLangKey] = useState<string>("ALL");
   const [connectionFilter, setConnectionFilter] = useState<"all" | "offline" | "online">("all");
@@ -225,13 +227,13 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
   if (!isOpen) return null;
 
   const d = isDark;
-  const bgBackdrop = "rgba(0, 0, 0, 0.75)";
-  const bgModal = d ? "#0f172a" : "#ffffff";
-  const bgCard = d ? "#1e293b" : "#f8fafc";
-  const bgHover = d ? "#334155" : "#f1f5f9";
-  const borderCol = d ? "#334155" : "#e2e8f0";
-  const textMain = d ? "#f8fafc" : "#0f172a";
-  const textMut = d ? "#94a3b8" : "#64748b";
+  const bgBackdrop = "rgba(0, 0, 0, 0.85)";
+  const bgModal = isAmoled ? "#000000" : d ? "#0f172a" : "#ffffff";
+  const bgCard = isAmoled ? "#09090b" : d ? "#1e293b" : "#f8fafc";
+  const bgHover = isAmoled ? "#18181b" : d ? "#334155" : "#f1f5f9";
+  const borderCol = isAmoled ? "#27272a" : d ? "#334155" : "#e2e8f0";
+  const textMain = isAmoled ? "#ffffff" : d ? "#f8fafc" : "#0f172a";
+  const textMut = isAmoled ? "#a1a1aa" : d ? "#94a3b8" : "#64748b";
 
   return (
     <div

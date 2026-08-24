@@ -5,6 +5,7 @@ import { StampOverlays } from "./StampOverlays";
 import { ImageOverlays, ResizeHandleType } from "./ImageOverlays";
 import { CanvasTextSelector } from "./CanvasTextSelector";
 import { TextSelectionToolbar } from "./TextSelectionToolbar";
+import { useThemeMode, getPdfFilter } from "../../../hooks/useTheme";
 
 interface EditorCanvasProps {
   previewContainerRef: RefObject<HTMLDivElement | null>;
@@ -82,6 +83,8 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
   isDark,
 }) => {
   const pageContainerRef = useRef<HTMLDivElement | null>(null);
+  const themeMode = useThemeMode();
+  const isAmoled = themeMode === "amoled";
 
   return (
     <main
@@ -90,7 +93,7 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
         setSelectedImageId(null);
       }}
       className="flex-1 overflow-auto flex items-center justify-center p-8 relative"
-      style={{ background: isDark ? "#040711" : "#e2e8f0" }}
+      style={{ background: isAmoled ? "#000000" : isDark ? "#040711" : "#e2e8f0" }}
     >
       {loading && (
         <div className="flex flex-col items-center gap-3">
@@ -106,7 +109,8 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
           style={{
             width: canvasRef.current?.width || 600,
             height: canvasRef.current?.height || 800,
-            background: "#ffffff",
+            background: isAmoled ? "#000000" : isDark ? "#1e293b" : "#ffffff",
+            border: `1px solid ${isAmoled ? "#27272a" : isDark ? "#334155" : "#e2e8f0"}`,
           }}
           onClick={(e) => {
             // Clicking canvas itself deselects image if not clicked on an image
@@ -116,7 +120,14 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
           }}
         >
           {/* PDF Background Canvas */}
-          <canvas ref={canvasRef} className="block" />
+          <canvas
+            ref={canvasRef}
+            className="block"
+            style={{
+              filter: getPdfFilter(themeMode),
+              background: isAmoled ? "#000000" : isDark ? "#1e293b" : "#ffffff",
+            }}
+          />
 
           {/* Interactive Canvas Text Selection (directly mapped to PDF items with zero duplicate DOM text) */}
           <CanvasTextSelector

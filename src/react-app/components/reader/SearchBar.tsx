@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef, KeyboardEvent } from "react";
-import { useDark } from "../../hooks/useTheme";
+import { useDark, useThemeMode } from "../../hooks/useTheme";
 import { SearchOptions } from "../../types/search";
 import {
   IcoSearch,
@@ -39,6 +39,8 @@ export const SearchBar: FC<SearchBarProps> = ({
   onPrevMatch,
 }) => {
   const d = useDark();
+  const themeMode = useThemeMode();
+  const isAmoled = themeMode === "amoled";
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus and select input text whenever search is opened
@@ -73,9 +75,11 @@ export const SearchBar: FC<SearchBarProps> = ({
     <div
       className="absolute top-3 right-4 z-40 flex items-center gap-1.5 p-1.5 rounded-xl shadow-2xl border backdrop-blur-md transition-all duration-200 select-none animate-in fade-in slide-in-from-top-2"
       style={{
-        background: d ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.96)",
-        borderColor: d ? "rgba(245, 158, 11, 0.35)" : "#fde68a",
-        boxShadow: d
+        background: isAmoled ? "rgba(0, 0, 0, 0.95)" : d ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.96)",
+        borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : d ? "rgba(245, 158, 11, 0.35)" : "#fde68a",
+        boxShadow: isAmoled
+          ? "0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.7)"
+          : d
           ? "0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5)"
           : "0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08)",
       }}
@@ -97,9 +101,9 @@ export const SearchBar: FC<SearchBarProps> = ({
           placeholder="Find in document..."
           className="w-48 sm:w-56 text-xs pl-8 pr-7 py-1.5 rounded-lg focus:outline-none transition-all"
           style={{
-            background: d ? "#1e293b" : "#f1f5f9",
-            color: d ? "#f8fafc" : "#0f172a",
-            border: `1px solid ${d ? "#334155" : "#e2e8f0"}`,
+            background: isAmoled ? "#09090b" : d ? "#1e293b" : "#f1f5f9",
+            color: isAmoled ? "#ffffff" : d ? "#f8fafc" : "#0f172a",
+            border: `1px solid ${isAmoled ? "#27272a" : d ? "#334155" : "#e2e8f0"}`,
           }}
         />
         {query && (

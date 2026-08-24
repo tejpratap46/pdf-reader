@@ -705,7 +705,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
         {/* Header */}
         <div
           className="flex items-center justify-between px-3.5 py-2.5 border-b shrink-0"
-          style={{ borderColor: border, backgroundColor: isDark ? "#0f172a" : "#ffffff" }}
+          style={{ borderColor: border, backgroundColor: bgSide }}
         >
           <div className="flex items-center gap-2">
             <div
@@ -1250,7 +1250,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
               className="p-3 border-t shrink-0 flex flex-col gap-2"
               style={{
                 borderColor: border,
-                backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                backgroundColor: bgSide,
               }}
             >
               <div
@@ -1300,7 +1300,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                           ? "linear-gradient(135deg, #10B981, #059669)"
                           : "linear-gradient(135deg, #f59e0b, #d97706)"
                         : isDark
-                        ? "#1f2937"
+                        ? bgInput
                         : "#e2e8f0",
                       color: inputValue.trim() ? "#ffffff" : textMut,
                     }}
@@ -1344,7 +1344,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                       <div
                         className="absolute left-0 bottom-full mb-2 w-64 p-3 rounded-xl shadow-2xl z-50 text-xs flex flex-col gap-2 border animate-in fade-in zoom-in-95 duration-100"
                         style={{
-                          backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                          backgroundColor: bgSide,
                           borderColor: border,
                           boxShadow: isDark
                             ? "0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6)"
