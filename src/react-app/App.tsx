@@ -28,6 +28,8 @@ import {
   saveTtsRate,
   getSavedTtsPitch,
   saveTtsPitch,
+  getSavedTtsVolume,
+  saveTtsVolume,
   getSavedAutoNext,
   saveAutoNext,
   resolveBestVoice,
@@ -106,32 +108,20 @@ export default function PDFReader(): ReactElement {
   const [ttsState, setTtsState] = useState<TtsState>("idle");
   const [ttsRate, setTtsRateState] = useState<number>(() => getSavedTtsRate());
   const [ttsPitch, setTtsPitchState] = useState<number>(() => getSavedTtsPitch());
+  const [ttsVolume, setTtsVolumeState] = useState<number>(() => getSavedTtsVolume());
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoiceState] = useState<string>(() => getSavedVoiceName());
   const [activePara, setActivePara] = useState(-1);
   const [paraProgress, setParaProgress] = useState(0);
   const [autoNextPage, setAutoNextPageState] = useState<boolean>(() => getSavedAutoNext());
 
-  const setSelectedVoice = useCallback((v: string) => {
-    setSelectedVoiceState(v);
-    const matched = voices.find((item) => item.name === v);
-    saveTtsVoicePreference(v, matched?.lang);
-  }, [voices]);
-
-  const setTtsRate = useCallback((r: number) => {
-    setTtsRateState(r);
-    saveTtsRate(r);
-  }, []);
-
-  const setTtsPitch = useCallback((p: number) => {
-    setTtsPitchState(p);
-    saveTtsPitch(p);
-  }, []);
-
-  const setAutoNextPage = useCallback((a: boolean) => {
-    setAutoNextPageState(a);
-    saveAutoNext(a);
-  }, []);
+  const ttsRateRef = useRef<number>(ttsRate);
+  const ttsPitchRef = useRef<number>(ttsPitch);
+  const ttsVolumeRef = useRef<number>(ttsVolume);
+  const selectedVoiceRef = useRef<string>(selectedVoice);
+  const ttsStateRef = useRef<TtsState>("idle");
+  const currentReadingPosRef = useRef<{ paraIndex: number; charOffset: number }>({ paraIndex: 0, charOffset: 0 });
+  const restartTimerRef = useRef<number | null>(null);
 
   /* Clear single-page markdown and token cache when document changes */
   useEffect(() => {
@@ -322,6 +312,7 @@ export default function PDFReader(): ReactElement {
           const bestName = resolved?.name ?? "";
           if (bestName) {
             saveTtsVoicePreference(bestName, resolved?.lang);
+            selectedVoiceRef.current = bestName;
           }
           return bestName;
         });
@@ -493,12 +484,18 @@ export default function PDFReader(): ReactElement {
 
   const stopTts = useCallback(
     (u = true) => {
+      if (restartTimerRef.current) {
+        clearTimeout(restartTimerRef.current);
+        restartTimerRef.current = null;
+      }
       if (u) autoNextRef.current = false;
       window.speechSynthesis.cancel();
       stopKeepAlive();
       setTtsState("idle");
+      ttsStateRef.current = "idle";
       setActivePara(-1);
       setParaProgress(0);
+      currentReadingPosRef.current = { paraIndex: 0, charOffset: 0 };
     },
     [stopKeepAlive]
   );
@@ -646,9 +643,18 @@ export default function PDFReader(): ReactElement {
     setWebUrl(url);
     try {
       const res = await fetch(`${CORS_PROXY}${encodeURIComponent(url)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        let errorMsg = `HTTP ${res.status}`;
+        try {
+          const errData = await res.json();
+          if (errData?.error) errorMsg = errData.error;
+        } catch {
+          // ignore JSON parse error for error response
+        }
+        throw new Error(errorMsg);
+      }
       const json = await res.json();
-      const html: string = json.contents;
+      const html: string = json.html || json.contents;
       if (!html) throw new Error("Empty response – the site may block access.");
       const { title, paragraphs: paras } = extractTextFromHtml(html);
       if (!paras.length) throw new Error("No readable text found on this page.");
@@ -658,6 +664,9 @@ export default function PDFReader(): ReactElement {
       setSourceMode("web");
       setPdfDoc(null);
       setFileName("");
+    } catch (err: unknown) {
+      const error = err as Error;
+      setWebError(error.message || "Failed to fetch webpage");
     } finally {
       setWebLoading(false);
     }
@@ -790,21 +799,25 @@ export default function PDFReader(): ReactElement {
       const text = parts.join(" ").trim();
       if (!text) {
         setTtsState("idle");
+        ttsStateRef.current = "idle";
         setActivePara(-1);
         setParaProgress(0);
+        currentReadingPosRef.current = { paraIndex: 0, charOffset: 0 };
         return;
       }
       const headerOff = parts[0] === headerText ? headerText.length + 1 : 0;
       const localParas = [slicedFirst, ...restParas];
       const localStarts = getParagraphStarts(localParas);
       setActivePara(fromIdx);
+      currentReadingPosRef.current = { paraIndex: fromIdx, charOffset };
       setParaProgress(charOffset / (startPara.length || 1));
       startKeepAlive();
       autoNextRef.current = false;
       const utter = new SpeechSynthesisUtterance(text);
-      utter.rate = ttsRate;
-      utter.pitch = ttsPitch;
-      const voice = voices.find((v) => v.name === selectedVoice) || resolveBestVoice(voices, selectedVoice);
+      utter.rate = ttsRateRef.current;
+      utter.pitch = ttsPitchRef.current;
+      utter.volume = ttsVolumeRef.current;
+      const voice = voices.find((v) => v.name === selectedVoiceRef.current) || resolveBestVoice(voices, selectedVoiceRef.current);
       if (voice) utter.voice = voice;
       utter.onboundary = (e: SpeechSynthesisEvent) => {
         if (e.name !== "word") return;
@@ -818,14 +831,18 @@ export default function PDFReader(): ReactElement {
         const actualIdx = fromIdx + li;
         setActivePara(actualIdx);
         const charInLocal = c - localStarts[li];
+        const actualCharOffset = li === 0 ? charOffset + charInLocal : charInLocal;
+        currentReadingPosRef.current = { paraIndex: actualIdx, charOffset: actualCharOffset };
         const fullParaText = paragraphs[actualIdx] ?? "";
-        setParaProgress(Math.min(1, li === 0 ? (charOffset + charInLocal) / (fullParaText.length || 1) : charInLocal / (fullParaText.length || 1)));
+        setParaProgress(Math.min(1, actualCharOffset / (fullParaText.length || 1)));
       };
       utter.onend = () => {
         stopKeepAlive();
         setTtsState("idle");
+        ttsStateRef.current = "idle";
         setActivePara(-1);
         setParaProgress(0);
+        currentReadingPosRef.current = { paraIndex: 0, charOffset: 0 };
         if (autoNextRef.current) {
           autoNextRef.current = false;
           doAutoNext();
@@ -834,16 +851,70 @@ export default function PDFReader(): ReactElement {
       utter.onerror = () => {
         stopKeepAlive();
         setTtsState("idle");
+        ttsStateRef.current = "idle";
         setActivePara(-1);
         setParaProgress(0);
+        currentReadingPosRef.current = { paraIndex: 0, charOffset: 0 };
         autoNextRef.current = false;
       };
       autoNextRef.current = autoNextPage;
       window.speechSynthesis.speak(utter);
       setTtsState("playing");
+      ttsStateRef.current = "playing";
     },
-    [paragraphs, headerText, footerText, readHeader, readFooter, sourceMode, ttsRate, ttsPitch, voices, selectedVoice, autoNextPage, startKeepAlive, stopKeepAlive, doAutoNext]
+    [paragraphs, headerText, footerText, readHeader, readFooter, sourceMode, voices, autoNextPage, startKeepAlive, stopKeepAlive, doAutoNext]
   );
+
+  const restartPlaybackDebounced = useCallback(() => {
+    if (restartTimerRef.current) {
+      clearTimeout(restartTimerRef.current);
+    }
+    restartTimerRef.current = window.setTimeout(() => {
+      if (ttsStateRef.current === "playing") {
+        const { paraIndex, charOffset } = currentReadingPosRef.current;
+        const pIdx = Math.max(0, Math.min(paragraphs.length - 1, paraIndex));
+        const targetText = paragraphs[pIdx] ?? "";
+        const snappedOffset = snapToWord(targetText, charOffset);
+        buildAndSpeak(pIdx, snappedOffset);
+      }
+    }, 75);
+  }, [paragraphs, buildAndSpeak]);
+
+  const setSelectedVoice = useCallback((v: string) => {
+    setSelectedVoiceState(v);
+    selectedVoiceRef.current = v;
+    const matched = voices.find((item) => item.name === v);
+    saveTtsVoicePreference(v, matched?.lang);
+    if (ttsStateRef.current === "playing") {
+      restartPlaybackDebounced();
+    }
+  }, [voices, restartPlaybackDebounced]);
+
+  const setTtsRate = useCallback((r: number) => {
+    if (ttsStateRef.current === "playing") return;
+    setTtsRateState(r);
+    ttsRateRef.current = r;
+    saveTtsRate(r);
+  }, []);
+
+  const setTtsPitch = useCallback((p: number) => {
+    if (ttsStateRef.current === "playing") return;
+    setTtsPitchState(p);
+    ttsPitchRef.current = p;
+    saveTtsPitch(p);
+  }, []);
+
+  const setTtsVolume = useCallback((vol: number) => {
+    if (ttsStateRef.current === "playing") return;
+    setTtsVolumeState(vol);
+    ttsVolumeRef.current = vol;
+    saveTtsVolume(vol);
+  }, []);
+
+  const setAutoNextPage = useCallback((a: boolean) => {
+    setAutoNextPageState(a);
+    saveAutoNext(a);
+  }, []);
 
   const startReading = useCallback((i: number) => buildAndSpeak(i, 0), [buildAndSpeak]);
   const seekTo = useCallback(
@@ -863,11 +934,20 @@ export default function PDFReader(): ReactElement {
 
   const pauseTts = () => {
     if (ttsState === "playing") {
-      window.speechSynthesis.pause();
+      if (restartTimerRef.current) {
+        clearTimeout(restartTimerRef.current);
+        restartTimerRef.current = null;
+      }
+      window.speechSynthesis.cancel();
+      stopKeepAlive();
       setTtsState("paused");
+      ttsStateRef.current = "paused";
     } else if (ttsState === "paused") {
-      window.speechSynthesis.resume();
-      setTtsState("playing");
+      const { paraIndex, charOffset } = currentReadingPosRef.current;
+      const pIdx = Math.max(0, Math.min(paragraphs.length - 1, paraIndex));
+      const targetText = paragraphs[pIdx] ?? "";
+      const snapped = snapToWord(targetText, charOffset);
+      buildAndSpeak(pIdx, snapped);
     }
   };
 
@@ -1008,6 +1088,8 @@ export default function PDFReader(): ReactElement {
             setTtsRate={setTtsRate}
             ttsPitch={ttsPitch}
             setTtsPitch={setTtsPitch}
+            ttsVolume={ttsVolume}
+            setTtsVolume={setTtsVolume}
             autoNextPage={autoNextPage}
             setAutoNextPage={setAutoNextPage}
             headerText={headerText}
@@ -1113,6 +1195,7 @@ export default function PDFReader(): ReactElement {
               selectedVoice={selectedVoice}
               ttsRate={ttsRate}
               ttsPitch={ttsPitch}
+              ttsVolume={ttsVolume}
               border={border}
               bgSide={bgSide}
               bgInput={bgInput}

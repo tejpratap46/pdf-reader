@@ -17,6 +17,7 @@ interface TtsVoiceSelectorProps {
   onSelectVoice: (voiceName: string) => void;
   ttsRate?: number;
   ttsPitch?: number;
+  ttsVolume?: number;
   border?: string;
   bgInput?: string;
   bgHover?: string;
@@ -30,6 +31,7 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
   onSelectVoice,
   ttsRate = 1,
   ttsPitch = 1,
+  ttsVolume = 1,
   border,
   bgInput,
   textMain,
@@ -74,6 +76,7 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
       utter.voice = voice;
       utter.rate = ttsRate;
       utter.pitch = ttsPitch;
+      utter.volume = ttsVolume;
 
       utter.onend = () => {
         setPreviewVoice(null);
@@ -208,6 +211,7 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
         onSelectVoice={onSelectVoice}
         ttsRate={ttsRate}
         ttsPitch={ttsPitch}
+        ttsVolume={ttsVolume}
       />
     </>
   );

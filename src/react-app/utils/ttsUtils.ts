@@ -7,6 +7,7 @@ export const STORAGE_TTS_VOICE_KEY = "folio_tts_voice";
 export const STORAGE_TTS_LANG_KEY = "folio_tts_lang";
 export const STORAGE_TTS_RATE_KEY = "folio_tts_rate";
 export const STORAGE_TTS_PITCH_KEY = "folio_tts_pitch";
+export const STORAGE_TTS_VOLUME_KEY = "folio_tts_volume";
 export const STORAGE_TTS_AUTO_NEXT_KEY = "folio_tts_auto_next";
 
 export interface ParsedLanguage {
@@ -272,6 +273,27 @@ export function getSavedTtsPitch(): number {
 export function saveTtsPitch(pitch: number): void {
   try {
     localStorage.setItem(STORAGE_TTS_PITCH_KEY, String(pitch));
+  } catch {
+    // Ignore storage failure
+  }
+}
+
+export function getSavedTtsVolume(): number {
+  try {
+    const val = localStorage.getItem(STORAGE_TTS_VOLUME_KEY);
+    if (val !== null) {
+      const num = parseFloat(val);
+      if (!isNaN(num) && num >= 0 && num <= 1) return num;
+    }
+  } catch {
+    // Ignore storage failure
+  }
+  return 1;
+}
+
+export function saveTtsVolume(volume: number): void {
+  try {
+    localStorage.setItem(STORAGE_TTS_VOLUME_KEY, String(volume));
   } catch {
     // Ignore storage failure
   }

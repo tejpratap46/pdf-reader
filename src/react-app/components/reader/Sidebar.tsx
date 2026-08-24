@@ -60,6 +60,8 @@ interface SidebarProps {
   setTtsRate: (r: number) => void;
   ttsPitch: number;
   setTtsPitch: (p: number) => void;
+  ttsVolume: number;
+  setTtsVolume: (v: number) => void;
   autoNextPage: boolean;
   setAutoNextPage: (v: boolean) => void;
 
@@ -127,6 +129,8 @@ export const Sidebar: FC<SidebarProps> = ({
   setTtsRate,
   ttsPitch,
   setTtsPitch,
+  ttsVolume,
+  setTtsVolume,
   autoNextPage,
   setAutoNextPage,
   headerText,
@@ -313,14 +317,43 @@ export const Sidebar: FC<SidebarProps> = ({
               onSelectVoice={setSelectedVoice}
               ttsRate={ttsRate}
               ttsPitch={ttsPitch}
+              ttsVolume={ttsVolume}
               border={border}
               bgInput={bgInput}
               bgHover={bgHover}
               textMain={textMain}
               textMut={textMut}
             />
-            <SliderRow label="Speed" value={ttsRate} min={0.5} max={2} step={0.1} onChange={setTtsRate} display={`${ttsRate.toFixed(1)}×`} />
-            <SliderRow label="Pitch" value={ttsPitch} min={0.5} max={2} step={0.1} onChange={setTtsPitch} display={ttsPitch.toFixed(1)} />
+            <SliderRow
+              label="Volume"
+              value={ttsVolume}
+              min={0}
+              max={1}
+              step={0.05}
+              onChange={setTtsVolume}
+              display={`${Math.round(ttsVolume * 100)}%`}
+              disabled={ttsState === "playing"}
+            />
+            <SliderRow
+              label="Speed"
+              value={ttsRate}
+              min={0.5}
+              max={2}
+              step={0.1}
+              onChange={setTtsRate}
+              display={`${ttsRate.toFixed(1)}×`}
+              disabled={ttsState === "playing"}
+            />
+            <SliderRow
+              label="Pitch"
+              value={ttsPitch}
+              min={0.5}
+              max={2}
+              step={0.1}
+              onChange={setTtsPitch}
+              display={ttsPitch.toFixed(1)}
+              disabled={ttsState === "playing"}
+            />
           </div>
 
           <Divider />

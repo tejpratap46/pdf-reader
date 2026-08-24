@@ -25,6 +25,7 @@ interface TtsVoiceModalProps {
   onSelectVoice: (voiceName: string) => void;
   ttsRate?: number;
   ttsPitch?: number;
+  ttsVolume?: number;
 }
 
 export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
@@ -35,6 +36,7 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
   onSelectVoice,
   ttsRate = 1,
   ttsPitch = 1,
+  ttsVolume = 1,
 }) => {
   const isDark = useDark();
   const themeMode = useThemeMode();
@@ -212,6 +214,7 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
       utter.voice = voice;
       utter.rate = ttsRate;
       utter.pitch = ttsPitch;
+      utter.volume = ttsVolume;
 
       utter.onend = () => {
         setPreviewVoice(null);

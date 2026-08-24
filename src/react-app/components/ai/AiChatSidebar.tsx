@@ -81,6 +81,7 @@ interface AiChatSidebarProps {
   selectedVoice?: string;
   ttsRate?: number;
   ttsPitch?: number;
+  ttsVolume?: number;
 
   // Style tokens
   border: string;
@@ -112,6 +113,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
   selectedVoice = "",
   ttsRate = 1,
   ttsPitch = 1,
+  ttsVolume = 1,
   border,
   bgSide,
   bgInput,
@@ -227,6 +229,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
       const utter = new SpeechSynthesisUtterance(speechText);
       utter.rate = ttsRate;
       utter.pitch = ttsPitch;
+      utter.volume = ttsVolume;
       const voice = voices.find((v) => v.name === selectedVoice) || resolveBestVoice(voices, selectedVoice);
       if (voice) utter.voice = voice;
 
@@ -243,7 +246,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
       window.speechSynthesis.speak(utter);
       setSpeakingMsgId(msgId);
     },
-    [speakingMsgId, ttsRate, ttsPitch, voices, selectedVoice]
+    [speakingMsgId, ttsRate, ttsPitch, ttsVolume, voices, selectedVoice]
   );
 
   // Close token breakdown on outside click

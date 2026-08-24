@@ -76,10 +76,11 @@ export const SliderRow: FC<{
   step: number;
   onChange: (v: number) => void;
   display: string;
-}> = ({ label, value, min, max, step, onChange, display }) => {
+  disabled?: boolean;
+}> = ({ label, value, min, max, step, onChange, display, disabled = false }) => {
   const d = useDark();
   return (
-    <div className="flex flex-col gap-2">
+    <div className={`flex flex-col gap-2 transition-opacity ${disabled ? "opacity-40 cursor-not-allowed pointer-events-none" : ""}`}>
       <div className={`flex justify-between text-xs ${dk("text-gray-500", "text-gray-400", d)}`}>
         <span>{label}</span>
         <span className="font-mono tabular-nums text-amber-500">{display}</span>
@@ -90,8 +91,9 @@ export const SliderRow: FC<{
         max={max}
         step={step}
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className={`w-full h-1.5 rounded-full appearance-none cursor-pointer accent-amber-500 ${dk("bg-gray-200", "bg-gray-700", d)}`}
+        className={`w-full h-1.5 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed accent-amber-500 ${dk("bg-gray-200", "bg-gray-700", d)}`}
       />
     </div>
   );
