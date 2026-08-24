@@ -52,6 +52,15 @@ export const IcoSingleMode = () => (
   </svg>
 );
 
+export const IcoFitWidth = ({ size = 16 }: { size?: number } = {}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="4 8 1 12 4 16" />
+    <polyline points="20 8 23 12 20 16" />
+    <line x1="1" y1="12" x2="23" y2="12" />
+    <rect x="7" y="4" width="10" height="16" rx="1" />
+  </svg>
+);
+
 /* PDF Editor Icons */
 export const IcoSave        = () => <Ico size={18} d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8" />;
 export const IcoRotateCw    = ({ size = 18 }: { size?: number } = {}) => <Ico size={size} d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />;

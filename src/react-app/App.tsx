@@ -34,6 +34,16 @@ import {
 } from "./utils/ttsUtils";
 import { IcoChevR, IcoSparklesFilled } from "./components/common/Icons";
 
+function getInitialScale(): number {
+  if (typeof window === "undefined") return 1.2;
+  const width = window.innerWidth;
+  if (width < 480) return 0.65;
+  if (width < 768) return 0.85;
+  if (width < 1024) return 1.05;
+  if (width < 1440) return 1.2;
+  return 1.35;
+}
+
 export default function PDFReader(): ReactElement {
   const pdfReady = usePdfJs();
   const [isDark, theme, setTheme, resolvedTheme] = useTheme();
@@ -67,7 +77,7 @@ export default function PDFReader(): ReactElement {
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [pageNum, setPageNum] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [scale, setScale] = useState(1.4);
+  const [scale, setScale] = useState<number>(() => getInitialScale());
   const [pageSizes, setPageSizes] = useState<PageSize[]>([]);
   const [fileName, setFileName] = useState("");
   const [headerText, setHeaderText] = useState("");
@@ -217,7 +227,7 @@ export default function PDFReader(): ReactElement {
     minWidth: 240,
     maxWidth: 720,
     collapseThreshold: 140,
-    defaultOpen: true,
+    defaultOpen: typeof window !== "undefined" ? window.innerWidth >= 768 : true,
     side: "left",
   });
 
@@ -236,7 +246,7 @@ export default function PDFReader(): ReactElement {
     minWidth: 260,
     maxWidth: 720,
     collapseThreshold: 150,
-    defaultOpen: true,
+    defaultOpen: typeof window !== "undefined" ? window.innerWidth >= 1280 : false,
     side: "right",
   });
 

@@ -69,7 +69,15 @@ export const PdfEditor: FC<PdfEditorProps> = ({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [setSidebarOpen]);
-  const [scale, setScale] = useState<number>(1.0);
+
+  const [scale, setScale] = useState<number>(() => {
+    if (typeof window === "undefined") return 1.0;
+    const width = window.innerWidth;
+    if (width < 480) return 0.55;
+    if (width < 768) return 0.75;
+    if (width < 1024) return 0.9;
+    return 1.0;
+  });
 
   // Drawing tool controls
   const [tool, setTool] = useState<"pen" | "highlighter" | "eraser" | "select">("select");

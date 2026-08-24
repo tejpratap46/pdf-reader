@@ -14,6 +14,7 @@ import {
   IcoSingleMode,
   IcoZoomIn,
   IcoZoomOut,
+  IcoFitWidth,
   IcoEdit,
   IcoArrowR,
   IcoGlobe,
@@ -34,7 +35,7 @@ interface PdfViewerProps {
   pageNum: number;
   totalPages: number;
   scale: number;
-  setScale: (fn: (s: number) => number) => void;
+  setScale: (fn: ((s: number) => number) | number) => void;
   prevPage: () => void;
   nextPage: () => void;
   changePage: (num: number) => void;
@@ -207,14 +208,40 @@ export const PdfViewer: FC<PdfViewerProps> = ({
           <div className="w-px h-5 mx-1" style={{ background: border }} />
 
           {/* Zoom Controls */}
-          <IconBtn onClick={() => setScale((s) => Math.min(s + 0.2, 3))} title="Zoom in">
+          <IconBtn onClick={() => setScale((s: number) => Math.min(Number((s + 0.15).toFixed(2)), 3))} title="Zoom in">
             <IcoZoomIn />
           </IconBtn>
-          <span className="text-xs font-mono tabular-nums w-12 text-center" style={{ color: textMut }}>
+          <button
+            onClick={() => setScale(() => {
+              if (typeof window === "undefined") return 1.2;
+              const w = window.innerWidth;
+              if (w < 480) return 0.65;
+              if (w < 768) return 0.85;
+              if (w < 1024) return 1.05;
+              return 1.25;
+            })}
+            title="Reset Zoom / Fit to Screen"
+            className={`text-xs font-mono tabular-nums px-2 py-0.5 rounded transition-colors cursor-pointer ${
+              d ? "hover:bg-slate-800 text-slate-300" : "hover:bg-slate-200 text-slate-700"
+            }`}
+          >
             {Math.round(scale * 100)}%
-          </span>
-          <IconBtn onClick={() => setScale((s) => Math.max(s - 0.2, 0.5))} title="Zoom out">
+          </button>
+          <IconBtn onClick={() => setScale((s: number) => Math.max(Number((s - 0.15).toFixed(2)), 0.35))} title="Zoom out">
             <IcoZoomOut />
+          </IconBtn>
+          <IconBtn
+            onClick={() => setScale(() => {
+              if (typeof window === "undefined") return 1.2;
+              const w = window.innerWidth;
+              if (w < 480) return 0.65;
+              if (w < 768) return 0.85;
+              if (w < 1024) return 1.05;
+              return 1.25;
+            })}
+            title="Fit to Screen / Auto Width"
+          >
+            <IcoFitWidth />
           </IconBtn>
 
           <div className="w-px h-5 mx-1" style={{ background: border }} />
@@ -331,7 +358,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
 
         {/* Continuous Vertical Scroll View Mode */}
         {!pdfLoading && showPdfView && viewMode === "scroll" && (
-          <div className="flex flex-col items-center gap-8 py-8 px-4 w-full min-h-full">
+          <div className="flex flex-col items-center gap-6 sm:gap-8 py-6 sm:py-8 px-2 sm:px-4 min-w-full w-max mx-auto min-h-full">
             {Array.from({ length: totalPages }, (_, idx) => {
               const pNum = idx + 1;
               return (
@@ -340,7 +367,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                   ref={(el) => {
                     if (pageRefs.current) pageRefs.current[pNum] = el;
                   }}
-                  className="w-full flex justify-center"
+                  className="w-full flex justify-center min-w-fit"
                 >
                   <PdfPageCard
                     doc={pdfDoc}
@@ -363,7 +390,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
 
         {/* Floating Jumper / Indicator overlay for Continuous Scroll Mode */}
         {!pdfLoading && showPdfView && viewMode === "scroll" && totalPages > 1 && (
-          <div className="sticky bottom-6 flex justify-end px-8 pointer-events-none z-20">
+          <div className="sticky bottom-6 flex justify-end px-4 sm:px-8 pointer-events-none z-20">
             <div
               className="pointer-events-auto flex items-center gap-2.5 px-3 py-1.5 rounded-full border backdrop-blur-md transition-all duration-200"
               style={{
@@ -390,9 +417,9 @@ export const PdfViewer: FC<PdfViewerProps> = ({
 
         {/* Single Page View Mode */}
         {!pdfLoading && showPdfView && viewMode === "single" && (
-          <div className="flex justify-center p-8 min-h-full items-center">
+          <div className="flex justify-center p-3 sm:p-6 md:p-8 min-h-full items-center min-w-full w-max mx-auto">
             <div
-              className={`relative shadow-2xl transition-opacity duration-150 rounded-lg overflow-hidden ${rendering ? "opacity-50" : "opacity-100"}`}
+              className={`relative shadow-2xl transition-opacity duration-150 rounded-lg overflow-hidden max-w-full ${rendering ? "opacity-50" : "opacity-100"}`}
               style={{
                 background: isAmoled ? "#000000" : d ? "#1e293b" : "#ffffff",
                 border: `1px solid ${isAmoled ? "#27272a" : border}`,
@@ -400,8 +427,10 @@ export const PdfViewer: FC<PdfViewerProps> = ({
             >
               <canvas
                 ref={canvasRef}
-                className="block rounded-lg overflow-hidden"
+                className="block rounded-lg overflow-hidden max-w-full h-auto object-contain"
                 style={{
+                  maxWidth: "100%",
+                  height: "auto",
                   filter: getPdfFilter(themeMode),
                   background: isAmoled ? "#000000" : d ? "#1e293b" : "#ffffff",
                 }}

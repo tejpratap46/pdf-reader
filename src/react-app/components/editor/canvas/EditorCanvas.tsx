@@ -92,11 +92,11 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
       onClick={() => {
         setSelectedImageId(null);
       }}
-      className="flex-1 overflow-auto flex items-center justify-center p-8 relative"
+      className="flex-1 overflow-auto flex p-4 sm:p-8 relative"
       style={{ background: isAmoled ? "#000000" : isDark ? "#040711" : "#e2e8f0" }}
     >
       {loading && (
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center justify-center gap-3 m-auto">
           <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
           <span className="text-xs font-semibold text-amber-500 uppercase tracking-widest">Opening Editor...</span>
         </div>
@@ -105,7 +105,7 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
       {!loading && activePage && (
         <div
           ref={pageContainerRef}
-          className="relative shadow-2xl rounded-lg overflow-hidden"
+          className="relative shadow-2xl rounded-lg overflow-hidden m-auto shrink-0"
           style={{
             width: canvasRef.current?.width || 600,
             height: canvasRef.current?.height || 800,

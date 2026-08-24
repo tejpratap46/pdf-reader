@@ -43,8 +43,8 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
 
   const aspectRatio = pageSize?.aspectRatio || 612 / 792;
   const baseWidth = Math.min(850, pageSize?.width || 612);
-  const scaledWidth = baseWidth * scale;
-  const scaledHeight = scaledWidth / aspectRatio;
+  const scaledWidth = Math.round(baseWidth * scale);
+  const scaledHeight = Math.round(scaledWidth / aspectRatio);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -110,15 +110,15 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
         isActive ? "ring-2 ring-amber-500 shadow-2xl" : "shadow-lg hover:shadow-xl opacity-95 hover:opacity-100"
       }`}
       style={{
-        width: scaledWidth,
-        minHeight: scaledHeight,
+        width: "100%",
+        maxWidth: scaledWidth,
         background: isAmoled ? "#000000" : dark ? "#1e293b" : "#ffffff",
         border: `1px solid ${isActive ? "#f59e0b" : isAmoled ? "#27272a" : dark ? "#334155" : "#e2e8f0"}`,
       }}
     >
       {/* Top Header Badge */}
       <div
-        className="w-full flex items-center justify-between px-4 py-2 border-b select-none transition-colors"
+        className="w-full flex items-center justify-between px-3 sm:px-4 py-2 border-b select-none transition-colors"
         style={{
           borderColor: isAmoled ? "#1e1e24" : dark ? "#334155" : "#f1f5f9",
           background: isActive
@@ -156,16 +156,16 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
       </div>
 
       {/* Canvas view or Loading placeholder */}
-      <div className="relative flex-1 w-full flex items-center justify-center overflow-hidden">
+      <div className="relative w-full flex items-center justify-center overflow-hidden">
         {!isNearViewport && (
-          <div className="flex flex-col items-center justify-center gap-2 py-12">
+          <div className="flex flex-col items-center justify-center gap-2 py-12 w-full" style={{ minHeight: Math.min(scaledHeight, 300) }}>
             <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
             <span className="text-xs text-amber-500/80 font-medium">Page {pageNum}</span>
           </div>
         )}
 
         {isNearViewport && (
-          <div className="relative" style={{ width: scaledWidth, height: scaledHeight }}>
+          <div className="relative w-full flex items-center justify-center">
             {rendering && (
               <div
                 className="absolute inset-0 z-20 flex items-center justify-center backdrop-blur-[1px]"
@@ -179,8 +179,10 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
             )}
             <canvas
               ref={canvasRef}
-              className="block transition-opacity duration-150"
+              className="block w-full h-auto object-contain transition-opacity duration-150"
               style={{
+                maxWidth: "100%",
+                height: "auto",
                 opacity: rendering ? 0.6 : 1,
                 filter: getPdfFilter(resolvedTheme),
                 background: isAmoled ? "#000000" : dark ? "#1e293b" : "#ffffff",
