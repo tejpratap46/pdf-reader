@@ -587,6 +587,90 @@ export default function PDFReader(): ReactElement {
     }
   };
 
+  const handleLoadSampleDocument = async () => {
+    try {
+      const { PDFDocument, rgb, StandardFonts } = await import("pdf-lib");
+      const sampleDoc = await PDFDocument.create();
+      const page = sampleDoc.addPage([595.28, 841.89]); // A4
+      const fontBold = await sampleDoc.embedFont(StandardFonts.HelveticaBold);
+      const fontRegular = await sampleDoc.embedFont(StandardFonts.Helvetica);
+      const fontItalic = await sampleDoc.embedFont(StandardFonts.HelveticaOblique);
+
+      // Header Brand
+      page.drawText("FOLIO STUDIO", {
+        x: 50,
+        y: 775,
+        size: 20,
+        font: fontBold,
+        color: rgb(0.85, 0.47, 0.04), // amber/gold
+      });
+
+      page.drawText("The Art of Deep Reading, Narration & Document Intelligence", {
+        x: 50,
+        y: 752,
+        size: 11,
+        font: fontItalic,
+        color: rgb(0.4, 0.45, 0.52),
+      });
+
+      page.drawLine({
+        start: { x: 50, y: 736 },
+        end: { x: 545, y: 736 },
+        thickness: 1.5,
+        color: rgb(0.85, 0.86, 0.9),
+      });
+
+      const sections = [
+        {
+          heading: "1. Welcome to your Browser-Native Reading Sanctuary",
+          body: "Folio is an in-browser document studio designed for deep focus, fluid speech narration, and local AI intelligence. Every file you open remains 100% private, executed locally in a client-side WebAssembly environment without sending data to external servers.",
+        },
+        {
+          heading: "2. Synchronized Text-to-Speech Narration",
+          body: "Click 'Read Document' in the left sidebar to activate speech synthesis. Folio highlights each paragraph in real-time as it is spoken. You can modulate reading speed, pitch, and choose from dozens of natural voices.",
+        },
+        {
+          heading: "3. Dual AI Intelligence (Local & Cloud)",
+          body: "Press Ctrl+J to open the AI Chat companion. You can query this entire document or focus on individual pages using on-device Chrome Gemini Nano or Cloud Gemini 3.7 Flash with instant citations.",
+        },
+        {
+          heading: "4. Fullscreen Markup & Annotation Studio",
+          body: "Click 'Edit PDF' in the top toolbar to annotate, draw, sign, stamp, or reorganize pages effortlessly before exporting a pristine PDF.",
+        },
+      ];
+
+      let curY = 705;
+      for (const sec of sections) {
+        page.drawText(sec.heading, {
+          x: 50,
+          y: curY,
+          size: 11.5,
+          font: fontBold,
+          color: rgb(0.12, 0.15, 0.2),
+        });
+        curY -= 18;
+
+        page.drawText(sec.body, {
+          x: 50,
+          y: curY,
+          size: 10,
+          font: fontRegular,
+          color: rgb(0.25, 0.28, 0.35),
+          maxWidth: 495,
+          lineHeight: 15,
+        });
+        curY -= 62;
+      }
+
+      const pdfBytesData = await sampleDoc.save();
+      const blob = new Blob([pdfBytesData], { type: "application/pdf" });
+      const sampleFile = new File([blob], "Folio_Guide.pdf", { type: "application/pdf" });
+      loadPdf(sampleFile);
+    } catch (err) {
+      console.error("Failed to generate sample PDF:", err);
+    }
+  };
+
   /* PWA launch handling & install prompt */
   useEffect(() => {
     if (pdfReady && pendingFileRef.current) {
@@ -957,15 +1041,15 @@ export default function PDFReader(): ReactElement {
   /* Colour tokens */
   const isAmoled = resolvedTheme === "amoled";
   const d = isDark;
-  const bg = isAmoled ? "#000000" : d ? "#030712" : "#ffffff";
-  const bgCard = isAmoled ? "#000000" : d ? "#111827" : "#ffffff";
-  const bgSide = isAmoled ? "#000000" : d ? "#0f172a" : "#f9fafb";
-  const border = isAmoled ? "#27272a" : d ? "#1f2937" : "#e5e5e7";
-  const textMain = isAmoled ? "#ffffff" : d ? "#f3f4f6" : "#111827";
-  const textMut = isAmoled ? "#a1a1aa" : d ? "#9ca3af" : "#6b7280";
-  const bgInput = isAmoled ? "#09090b" : d ? "#1f2937" : "#ffffff";
-  const bgHover = isAmoled ? "#18181b" : d ? "#1f2937" : "#f3f4f6";
-  const bgCanvas = isAmoled ? "#000000" : d ? "#0f172a" : "#f3f4f6";
+  const bg = isAmoled ? "#000000" : d ? "#0b0e14" : "#fbfaf8";
+  const bgCard = isAmoled ? "#000000" : d ? "#111622" : "#ffffff";
+  const bgSide = isAmoled ? "#050507" : d ? "#0e121b" : "#f4f2ed";
+  const border = isAmoled ? "#1c1c21" : d ? "#1d2433" : "#e6e3da";
+  const textMain = isAmoled ? "#ffffff" : d ? "#f0f3f9" : "#17181c";
+  const textMut = isAmoled ? "#9e9ea7" : d ? "#828da0" : "#69665e";
+  const bgInput = isAmoled ? "#0a0a0c" : d ? "#161c2b" : "#ffffff";
+  const bgHover = isAmoled ? "#141418" : d ? "#1b2336" : "#eceae4";
+  const bgCanvas = isAmoled ? "#000000" : d ? "#080a0f" : "#f2efe9";
 
   const displayTitle = sourceMode === "web" ? webTitle : fileName;
   const hasContent = paragraphs.length > 0;
@@ -1037,17 +1121,17 @@ export default function PDFReader(): ReactElement {
               <button
                 onClick={() => setSidebarOpen(true)}
                 title="Expand left sidebar (Ctrl+B)"
-                className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 hover:shadow-lg group cursor-pointer"
+                className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 group cursor-pointer"
                 style={{
-                  background: isAmoled ? "rgba(0, 0, 0, 0.95)" : isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
+                  background: isAmoled ? "rgba(0, 0, 0, 0.95)" : isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.94)",
                   borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
                   color: textMain,
                 }}
               >
               <span className="text-amber-500 transition-transform duration-150 group-hover:translate-x-0.5">
-                <IcoChevR size={14} />
+                <IcoChevR size={13} />
               </span>
-              <span className="text-xs font-semibold text-amber-500">Sidebar</span>
+              <span className="text-xs font-bold text-amber-500">Sidebar</span>
             </button>
           )}
 
@@ -1139,6 +1223,7 @@ export default function PDFReader(): ReactElement {
             rendering={rendering}
             setIsEditorOpen={setIsEditorOpen}
             onExportMarkdown={() => setIsMarkdownModalOpen(true)}
+            onLoadSample={handleLoadSampleDocument}
             isSearchOpen={isSearchOpen}
             onOpenSearch={openSearch}
             onCloseSearch={closeSearch}
@@ -1210,17 +1295,25 @@ export default function PDFReader(): ReactElement {
             <button
               onClick={() => setAiSidebarOpen(true)}
               title="Expand AI Chat (Ctrl+J)"
-              className="absolute right-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 hover:shadow-lg group cursor-pointer"
+              className="absolute right-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 group cursor-pointer"
               style={{
-                background: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
-                borderColor: isDark ? "rgba(66, 133, 244, 0.4)" : "#60a5fa",
+                background: isAmoled
+                  ? "rgba(0, 0, 0, 0.95)"
+                  : isDark
+                  ? "rgba(30, 41, 59, 0.9)"
+                  : "rgba(255, 255, 255, 0.94)",
+                borderColor: isAmoled
+                  ? "rgba(37, 99, 235, 0.5)"
+                  : isDark
+                  ? "rgba(66, 133, 244, 0.4)"
+                  : "#60a5fa",
                 color: textMain,
               }}
             >
               <span className="text-blue-500 transition-transform duration-150 group-hover:scale-110">
                 <IcoSparklesFilled size={13} />
               </span>
-              <span className="text-xs font-semibold text-blue-500">Ask AI</span>
+              <span className="text-xs font-bold text-blue-500">Ask AI</span>
             </button>
           )}
         </div>

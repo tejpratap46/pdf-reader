@@ -13,7 +13,6 @@ import {
   IcoGlobe,
   IcoUpload,
   IcoEdit,
-  IcoVolume,
   IcoPlay,
   IcoPause,
   IcoStop,
@@ -175,28 +174,35 @@ export const Sidebar: FC<SidebarProps> = ({
           minWidth: 240,
         }}
       >
-        <div className="flex flex-col gap-5 p-5">
+        <div className="flex flex-col gap-4 p-4 sm:p-5">
           {/* Source tabs & Collapse Button */}
           <div className="flex items-center gap-2">
-            <div className="flex-1 flex rounded-lg p-0.5 gap-0.5 border" style={{ background: bgInput, borderColor: border }}>
+            <div
+              className="flex-1 flex rounded-xl p-1 gap-1 border shadow-2xs"
+              style={{ background: bgInput, borderColor: border }}
+            >
               {(["pdf", "web"] as SourceMode[]).map((m) => (
                 <button
                   key={m}
                   onClick={() => setSourceMode(m)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer"
                   style={
                     sourceMode === m
-                      ? { background: bgSide, color: "#f59e0b", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
+                      ? {
+                          background: d ? "#27272a" : "#ffffff",
+                          color: "#f59e0b",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+                        }
                       : { background: "transparent", color: textMut }
                   }
                 >
                   {m === "pdf" ? (
                     <>
-                      <IcoFile /> PDF
+                      <IcoFile size={13} /> PDF &amp; Docs
                     </>
                   ) : (
                     <>
-                      <IcoGlobe /> Web Page
+                      <IcoGlobe size={13} /> Web Article
                     </>
                   )}
                 </button>
@@ -206,31 +212,37 @@ export const Sidebar: FC<SidebarProps> = ({
               <button
                 onClick={() => setSidebarOpen(false)}
                 title="Collapse sidebar (Ctrl+B)"
-                className="p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
-                style={{ color: textMut }}
+                className="p-1.5 rounded-lg transition-all active:scale-95 cursor-pointer shrink-0 border"
+                style={{ color: textMut, borderColor: border, background: bgInput }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.background = bgHover;
                   (e.currentTarget as HTMLElement).style.color = textMain;
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                  (e.currentTarget as HTMLElement).style.background = bgInput;
                   (e.currentTarget as HTMLElement).style.color = textMut;
                 }}
               >
-                <IcoChevL size={16} />
+                <IcoChevL size={15} />
               </button>
             )}
           </div>
 
           {/* PDF panel */}
           {sourceMode === "pdf" && (
-            <div className="flex flex-col gap-3">
-              <SectionTitle>Document</SectionTitle>
+            <div className="flex flex-col gap-2.5">
+              <SectionTitle>Document File</SectionTitle>
               <div
-                className="rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all duration-200"
+                className="rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all duration-200 hover:border-amber-500/70 group"
                 style={{
-                  borderColor: localDrag ? "#f59e0b" : d ? "#374151" : "#e5e7eb",
-                  background: localDrag ? (d ? "rgba(245,158,11,0.08)" : "rgba(254,243,199,0.6)") : "transparent",
+                  borderColor: localDrag ? "#f59e0b" : d ? "#374151" : "#e2e8f0",
+                  background: localDrag
+                    ? d
+                      ? "rgba(245,158,11,0.08)"
+                      : "rgba(254,243,199,0.6)"
+                    : d
+                    ? "rgba(255,255,255,0.02)"
+                    : "rgba(255,255,255,0.6)",
                 }}
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e: DragEvent) => {
@@ -244,24 +256,44 @@ export const Sidebar: FC<SidebarProps> = ({
                   handleFile(e.dataTransfer.files[0]);
                 }}
               >
-                <div className="flex justify-center mb-2" style={{ color: textMut }}>
-                  <IcoUpload />
+                <div
+                  className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center transition-transform group-hover:scale-110"
+                  style={{
+                    background: d ? "rgba(245,158,11,0.12)" : "rgba(254,243,199,0.8)",
+                    color: "#f59e0b",
+                  }}
+                >
+                  <IcoUpload size={18} />
                 </div>
-                <p className="text-xs leading-relaxed" style={{ color: textMut }}>
-                  {pdfReady ? "Drop a PDF or document here or click to browse" : "Loading PDF engine…"}
+                <p className="text-xs font-semibold leading-relaxed" style={{ color: textMain }}>
+                  {pdfReady ? "Drop document or browse" : "Loading PDF engine…"}
                 </p>
-                <p className="text-[10px] mt-1 opacity-70" style={{ color: textMut }}>
-                  PDF, DOCX, EPUB, XLSX, CSV, RTF, ODT
-                </p>
+                <div className="flex flex-wrap items-center justify-center gap-1 mt-1.5">
+                  {["PDF", "DOCX", "EPUB", "XLSX", "CSV"].map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded"
+                      style={{
+                        background: d ? "#1f2937" : "#f1f5f9",
+                        color: textMut,
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
+
               {pdfBytes && pdfDoc && (
                 <button
                   onClick={() => setIsEditorOpen(true)}
-                  className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-sm transition-all duration-150 active:scale-98 cursor-pointer"
                 >
-                  <IcoEdit /> Open Fullscreen PDF Editor
+                  <IcoEdit size={13} />
+                  <span>Open PDF Markup Studio</span>
                 </button>
               )}
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -274,43 +306,62 @@ export const Sidebar: FC<SidebarProps> = ({
 
           {/* Web panel */}
           {sourceMode === "web" && (
-            <WebPanel onLoad={fetchWebPage} loading={webLoading} loaded={webLoaded} title={webTitle} error={webError} onClear={clearWeb} />
+            <WebPanel
+              onLoad={fetchWebPage}
+              loading={webLoading}
+              loaded={webLoaded}
+              title={webTitle}
+              error={webError}
+              onClear={clearWeb}
+            />
           )}
 
           <Divider />
 
           {/* TTS Controls */}
-          <div className="flex flex-col gap-4">
-            <SectionTitle>
-              <span className="flex items-center gap-1.5">
-                <IcoVolume /> Text-to-Speech
-              </span>
-            </SectionTitle>
+          <div className="flex flex-col gap-3">
+            <SectionTitle>Text-to-Speech Studio</SectionTitle>
+
+            {/* Main Audio Action Bar */}
             <div className="flex gap-2">
               <button
                 disabled={!hasContent}
                 onClick={ttsState === "idle" ? () => startReading(0) : pauseTts}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-white"
-                style={{ background: ttsState === "playing" ? "#22c55e" : "#f59e0b" }}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2 px-4 text-xs font-bold tracking-wide transition-all duration-150 active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-sm cursor-pointer"
+                style={{
+                  background:
+                    ttsState === "playing"
+                      ? "linear-gradient(135deg, #10b981, #059669)"
+                      : ttsState === "paused"
+                      ? "linear-gradient(135deg, #f59e0b, #d97706)"
+                      : "linear-gradient(135deg, #f59e0b, #d97706)",
+                }}
               >
                 {ttsState === "paused" ? (
                   <>
-                    <IcoPlay /> Resume
+                    <IcoPlay size={14} /> Resume Reading
                   </>
                 ) : ttsState === "playing" ? (
                   <>
-                    <IcoPause /> Pause
+                    <IcoPause size={14} /> Pause Narration
                   </>
                 ) : (
                   <>
-                    <IcoPlay /> Read {sourceMode === "web" ? "Page" : "PDF"}
+                    <IcoPlay size={14} /> Read {sourceMode === "web" ? "Article" : "Document"}
                   </>
                 )}
               </button>
-              <IconBtn onClick={() => stopTts(true)} disabled={ttsState === "idle"} title="Stop">
-                <IcoStop />
+
+              <IconBtn
+                onClick={() => stopTts(true)}
+                disabled={ttsState === "idle"}
+                title="Stop Narration"
+              >
+                <IcoStop size={15} />
               </IconBtn>
             </div>
+
+            {/* Voice Selector Card */}
             <TtsVoiceSelector
               voices={voices}
               selectedVoice={selectedVoice}
@@ -324,61 +375,83 @@ export const Sidebar: FC<SidebarProps> = ({
               textMain={textMain}
               textMut={textMut}
             />
-            <SliderRow
-              label="Volume"
-              value={ttsVolume}
-              min={0}
-              max={1}
-              step={0.05}
-              onChange={setTtsVolume}
-              display={`${Math.round(ttsVolume * 100)}%`}
-              disabled={ttsState === "playing"}
-            />
-            <SliderRow
-              label="Speed"
-              value={ttsRate}
-              min={0.5}
-              max={2}
-              step={0.1}
-              onChange={setTtsRate}
-              display={`${ttsRate.toFixed(1)}×`}
-              disabled={ttsState === "playing"}
-            />
-            <SliderRow
-              label="Pitch"
-              value={ttsPitch}
-              min={0.5}
-              max={2}
-              step={0.1}
-              onChange={setTtsPitch}
-              display={ttsPitch.toFixed(1)}
-              disabled={ttsState === "playing"}
-            />
+
+            {/* Audio Modulation Sliders */}
+            <div className="flex flex-col gap-2.5 pt-1">
+              <SliderRow
+                label="Volume"
+                value={ttsVolume}
+                min={0}
+                max={1}
+                step={0.05}
+                onChange={setTtsVolume}
+                display={`${Math.round(ttsVolume * 100)}%`}
+                disabled={ttsState === "playing"}
+              />
+              <SliderRow
+                label="Speed Rate"
+                value={ttsRate}
+                min={0.5}
+                max={2}
+                step={0.1}
+                onChange={setTtsRate}
+                display={`${ttsRate.toFixed(1)}×`}
+                disabled={ttsState === "playing"}
+              />
+              <SliderRow
+                label="Pitch"
+                value={ttsPitch}
+                min={0.5}
+                max={2}
+                step={0.1}
+                onChange={setTtsPitch}
+                display={ttsPitch.toFixed(1)}
+                disabled={ttsState === "playing"}
+              />
+            </div>
           </div>
 
           <Divider />
 
-          {/* Playback */}
-          <div className="flex flex-col gap-3">
-            <SectionTitle>Playback</SectionTitle>
+          {/* Playback Automation */}
+          <div className="flex flex-col gap-2">
+            <SectionTitle>Playback Automation</SectionTitle>
             <SwitchRow
               id="auto-next"
               label="Auto-advance pages"
               checked={autoNextPage}
               onCheckedChange={setAutoNextPage}
-              description="Turn to the next page automatically when reading finishes"
+              description="Automatically turn to the next page when narration completes"
             />
           </div>
 
-          {/* PDF-only: Header & Footer */}
+          {/* PDF-only: Header & Footer exclusions */}
           {sourceMode === "pdf" && (
             <>
               <Divider />
-              <div className="flex flex-col gap-3">
-                <SectionTitle>Header &amp; Footer</SectionTitle>
-                <HFCard zone="Header" text={headerText} checked={readHeader} onCheckedChange={setReadHeader} pct={headerPct} onPct={setHeaderPct} />
-                <HFCard zone="Footer" text={footerText} checked={readFooter} onCheckedChange={setReadFooter} pct={footerPct} onPct={setFooterPct} />
-                {!headerText && !footerText && pdfDoc && <p className="text-[11px] text-center" style={{ color: textMut }}>No header or footer detected</p>}
+              <div className="flex flex-col gap-2.5">
+                <SectionTitle>Header &amp; Footer Zones</SectionTitle>
+                <HFCard
+                  zone="Header"
+                  text={headerText}
+                  checked={readHeader}
+                  onCheckedChange={setReadHeader}
+                  pct={headerPct}
+                  onPct={setHeaderPct}
+                />
+                <HFCard
+                  zone="Footer"
+                  text={footerText}
+                  checked={readFooter}
+                  onCheckedChange={setReadFooter}
+                  pct={footerPct}
+                  onPct={setFooterPct}
+                />
+                {!headerText && !footerText && pdfDoc && (
+                  <p className="text-[11px] text-center italic" style={{ color: textMut }}>
+                    No recurring header or footer detected
+                  </p>
+                )}
               </div>
             </>
           )}
@@ -388,21 +461,36 @@ export const Sidebar: FC<SidebarProps> = ({
             <>
               <Divider />
               <div className="flex flex-col gap-2">
-                <SectionTitle>
-                  {sourceMode === "web" ? "Article" : "Page"} Content · {paragraphs.length} paragraphs
-                </SectionTitle>
-                <div ref={paraListRef} className="flex flex-col gap-0.5">
+                <div className="flex items-center justify-between">
+                  <SectionTitle>
+                    {sourceMode === "web" ? "Article" : "Page"} Content
+                  </SectionTitle>
+                  <span
+                    className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded"
+                    style={{ background: bgInput, color: textMut }}
+                  >
+                    {paragraphs.length} paragraphs
+                  </span>
+                </div>
+
+                <div ref={paraListRef} className="flex flex-col gap-1 mt-1">
                   {paragraphs.map((p, i) => {
                     const active = activePara === i;
                     return (
                       <div
                         key={i}
                         data-para={i}
-                        className="w-full text-left px-3 py-2 rounded-lg text-xs leading-relaxed border-l-2 transition-all duration-150 cursor-pointer"
+                        className={`w-full text-left px-3 py-2.5 rounded-xl text-xs leading-relaxed transition-all duration-150 cursor-pointer border-l-3 ${
+                          active ? "shadow-xs" : ""
+                        }`}
                         style={{
                           borderLeftColor: active ? "#f59e0b" : "transparent",
                           color: active ? textMain : textMut,
-                          background: active ? (d ? "rgba(245,158,11,0.1)" : "rgba(254,243,199,0.6)") : "transparent",
+                          background: active
+                            ? d
+                              ? "rgba(245,158,11,0.12)"
+                              : "rgba(254,243,199,0.75)"
+                            : "transparent",
                         }}
                         onClick={() => !active && startReading(i)}
                         onMouseEnter={(e) => {
@@ -415,13 +503,19 @@ export const Sidebar: FC<SidebarProps> = ({
                         {active && (
                           <span className="flex items-center gap-2 mb-1.5">
                             <Waveform paused={ttsState === "paused"} />
-                            <span className="text-[9px] text-amber-500 font-semibold tracking-widest uppercase">
+                            <span className="text-[9px] text-amber-500 font-extrabold tracking-widest uppercase">
                               {ttsState === "paused" ? "Paused" : "Now Reading"}
                             </span>
                           </span>
                         )}
-                        {p}
-                        {active && <SeekBar progress={paraProgress} ttsState={ttsState} onSeek={(r) => seekTo(i, r)} />}
+                        <span className="line-clamp-4">{p}</span>
+                        {active && (
+                          <SeekBar
+                            progress={paraProgress}
+                            ttsState={ttsState}
+                            onSeek={(r) => seekTo(i, r)}
+                          />
+                        )}
                       </div>
                     );
                   })}
@@ -445,3 +539,4 @@ export const Sidebar: FC<SidebarProps> = ({
     </aside>
   );
 };
+
