@@ -7,6 +7,7 @@ import { usePdfJs } from "./hooks/usePdfJs";
 import { useTheme, DarkCtx } from "./hooks/useTheme";
 import { useAudioKeepAlive } from "./hooks/useAudioKeepAlive";
 import { useResizableSidebar } from "./hooks/useResizableSidebar";
+import { useDocumentSearch } from "./hooks/useDocumentSearch";
 import { Header } from "./components/reader/Header";
 import { Sidebar } from "./components/reader/Sidebar";
 import { PdfViewer } from "./components/reader/PdfViewer";
@@ -20,6 +21,17 @@ import {
   setPageTokenCount,
   setCachedTokenCount,
 } from "./utils/tokenCache";
+import {
+  getSavedVoiceName,
+  saveTtsVoicePreference,
+  getSavedTtsRate,
+  saveTtsRate,
+  getSavedTtsPitch,
+  saveTtsPitch,
+  getSavedAutoNext,
+  saveAutoNext,
+  resolveBestVoice,
+} from "./utils/ttsUtils";
 import { IcoChevR, IcoSparklesFilled } from "./components/common/Icons";
 
 export default function PDFReader(): ReactElement {
@@ -82,13 +94,34 @@ export default function PDFReader(): ReactElement {
   /* TTS State */
   const [paragraphs, setParagraphs] = useState<string[]>([]);
   const [ttsState, setTtsState] = useState<TtsState>("idle");
-  const [ttsRate, setTtsRate] = useState(1);
-  const [ttsPitch, setTtsPitch] = useState(1);
+  const [ttsRate, setTtsRateState] = useState<number>(() => getSavedTtsRate());
+  const [ttsPitch, setTtsPitchState] = useState<number>(() => getSavedTtsPitch());
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState("");
+  const [selectedVoice, setSelectedVoiceState] = useState<string>(() => getSavedVoiceName());
   const [activePara, setActivePara] = useState(-1);
   const [paraProgress, setParaProgress] = useState(0);
-  const [autoNextPage, setAutoNextPage] = useState(false);
+  const [autoNextPage, setAutoNextPageState] = useState<boolean>(() => getSavedAutoNext());
+
+  const setSelectedVoice = useCallback((v: string) => {
+    setSelectedVoiceState(v);
+    const matched = voices.find((item) => item.name === v);
+    saveTtsVoicePreference(v, matched?.lang);
+  }, [voices]);
+
+  const setTtsRate = useCallback((r: number) => {
+    setTtsRateState(r);
+    saveTtsRate(r);
+  }, []);
+
+  const setTtsPitch = useCallback((p: number) => {
+    setTtsPitchState(p);
+    saveTtsPitch(p);
+  }, []);
+
+  const setAutoNextPage = useCallback((a: boolean) => {
+    setAutoNextPageState(a);
+    saveAutoNext(a);
+  }, []);
 
   /* Clear single-page markdown and token cache when document changes */
   useEffect(() => {
@@ -209,26 +242,6 @@ export default function PDFReader(): ReactElement {
 
   const hasDocument = sourceMode === "pdf" ? !!(pdfDoc && pdfBytes) : webLoaded;
 
-  /* Keyboard shortcut: Ctrl+B / Cmd+B for Left Sidebar, Ctrl+J / Cmd+J for AI Sidebar */
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-        return;
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
-        e.preventDefault();
-        setSidebarOpen((prev) => !prev);
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
-        e.preventDefault();
-        if (hasDocument) {
-          setAiSidebarOpen((prev) => !prev);
-        }
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [setSidebarOpen, setAiSidebarOpen, hasDocument]);
 
   /* Extract and cache document Markdown using anydoc-wasm for AI context (runs once per loaded document) */
   useEffect(() => {
@@ -290,16 +303,28 @@ export default function PDFReader(): ReactElement {
   /* Voices */
   useEffect(() => {
     const load = () => {
+      if (typeof window === "undefined" || !window.speechSynthesis) return;
       const v = window.speechSynthesis.getVoices();
-      if (v.length) {
+      if (v && v.length > 0) {
         setVoices(v);
-        setSelectedVoice(v[0]?.name ?? "");
+        setSelectedVoiceState((prevVoice) => {
+          const resolved = resolveBestVoice(v, prevVoice);
+          const bestName = resolved?.name ?? "";
+          if (bestName) {
+            saveTtsVoicePreference(bestName, resolved?.lang);
+          }
+          return bestName;
+        });
       }
     };
     load();
-    window.speechSynthesis.onvoiceschanged = load;
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = load;
+    }
     return () => {
-      window.speechSynthesis.onvoiceschanged = null;
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
     };
   }, []);
 
@@ -649,6 +674,85 @@ export default function PDFReader(): ReactElement {
     [totalPages, viewMode, scrollToPage, stopTts]
   );
 
+  /* Document Search in PDF / Web */
+  const {
+    isOpen: isSearchOpen,
+    openSearch,
+    closeSearch,
+    searchQuery,
+    setSearchQuery,
+    isSearching,
+    options: searchOptions,
+    setMatchCase,
+    setWholeWord,
+    matches: searchMatches,
+    totalMatches,
+    activeMatchIndex,
+    goToNextMatch,
+    goToPrevMatch,
+    getPageMatches,
+  } = useDocumentSearch({
+    sourceMode,
+    pdfDoc,
+    pdfBytes,
+    totalPages,
+    currentPage: pageNum,
+    paragraphs,
+    onNavigateToPage: changePage,
+  });
+
+  /* Global Keyboard shortcuts: Ctrl+F for Search, Ctrl+B for Left Sidebar, Ctrl+J for AI Sidebar, F3/Ctrl+G for match jump */
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Global Ctrl+F / Cmd+F shortcut to open search
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        if (hasDocument) {
+          e.preventDefault();
+          openSearch();
+        }
+        return;
+      }
+
+      // Escape shortcut to close search
+      if (e.key === "Escape" && isSearchOpen) {
+        e.preventDefault();
+        closeSearch();
+        return;
+      }
+
+      // F3 / Shift+F3 or Ctrl+G / Ctrl+Shift+G to jump between search matches
+      if (e.key === "F3" || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "g")) {
+        if (isSearchOpen && totalMatches > 0) {
+          e.preventDefault();
+          if (e.shiftKey) {
+            goToPrevMatch();
+          } else {
+            goToNextMatch();
+          }
+        }
+        return;
+      }
+
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        setSidebarOpen((prev) => !prev);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        if (hasDocument) {
+          setAiSidebarOpen((prev) => !prev);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [setSidebarOpen, setAiSidebarOpen, hasDocument, isSearchOpen, openSearch, closeSearch, totalMatches, goToNextMatch, goToPrevMatch]);
+
+
   const doAutoNext = useCallback(() => {
     setPageNum((p) => {
       const next = p + 1;
@@ -690,7 +794,7 @@ export default function PDFReader(): ReactElement {
       const utter = new SpeechSynthesisUtterance(text);
       utter.rate = ttsRate;
       utter.pitch = ttsPitch;
-      const voice = voices.find((v) => v.name === selectedVoice);
+      const voice = voices.find((v) => v.name === selectedVoice) || resolveBestVoice(voices, selectedVoice);
       if (voice) utter.voice = voice;
       utter.onboundary = (e: SpeechSynthesisEvent) => {
         if (e.name !== "word") return;
@@ -816,6 +920,9 @@ export default function PDFReader(): ReactElement {
           setSidebarOpen={setSidebarOpen}
           aiSidebarOpen={aiSidebarOpen}
           setAiSidebarOpen={setAiSidebarOpen}
+          isSearchOpen={isSearchOpen}
+          onOpenSearch={openSearch}
+          onCloseSearch={closeSearch}
           hasDocument={hasDocument}
           displayTitle={displayTitle}
           sourceMode={sourceMode}
@@ -938,6 +1045,21 @@ export default function PDFReader(): ReactElement {
             rendering={rendering}
             setIsEditorOpen={setIsEditorOpen}
             onExportMarkdown={() => setIsMarkdownModalOpen(true)}
+            isSearchOpen={isSearchOpen}
+            onOpenSearch={openSearch}
+            onCloseSearch={closeSearch}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            isSearching={isSearching}
+            searchOptions={searchOptions}
+            onToggleMatchCase={() => setMatchCase((v) => !v)}
+            onToggleWholeWord={() => setWholeWord((v) => !v)}
+            activeMatchIndex={activeMatchIndex}
+            totalMatches={totalMatches}
+            onNextMatch={goToNextMatch}
+            onPrevMatch={goToPrevMatch}
+            getPageMatches={getPageMatches}
+            searchMatches={searchMatches}
             webUrl={webUrl}
             webTitle={webTitle}
             webLoading={webLoading}

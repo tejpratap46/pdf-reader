@@ -7,6 +7,7 @@ import { HFCard } from "./HFCard";
 import { Waveform } from "../common/Waveform";
 import { SeekBar } from "../common/SeekBar";
 import { SidebarResizer } from "./SidebarResizer";
+import { TtsVoiceSelector } from "./TtsVoiceSelector";
 import {
   IcoFile,
   IcoGlobe,
@@ -151,8 +152,6 @@ export const Sidebar: FC<SidebarProps> = ({
   textMut,
 }) => {
   const d = useDark();
-  const offline = voices.filter((v) => v.localService);
-  const online = voices.filter((v) => !v.localService);
 
   return (
     <aside
@@ -308,33 +307,18 @@ export const Sidebar: FC<SidebarProps> = ({
                 <IcoStop />
               </IconBtn>
             </div>
-            {voices.length > 0 && (
-              <select
-                value={selectedVoice}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedVoice(e.target.value)}
-                className="w-full rounded-md text-xs px-2.5 py-2 cursor-pointer focus:outline-none"
-                style={{ border: `1px solid ${border}`, background: bgInput, color: textMain }}
-              >
-                {offline.length > 0 && (
-                  <optgroup label="📴 Offline">
-                    {offline.map((v) => (
-                      <option key={v.name} value={v.name}>
-                        {v.name} ({v.lang})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {online.length > 0 && (
-                  <optgroup label="🌐 Online">
-                    {online.map((v) => (
-                      <option key={v.name} value={v.name}>
-                        {v.name} ({v.lang})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            )}
+            <TtsVoiceSelector
+              voices={voices}
+              selectedVoice={selectedVoice}
+              onSelectVoice={setSelectedVoice}
+              ttsRate={ttsRate}
+              ttsPitch={ttsPitch}
+              border={border}
+              bgInput={bgInput}
+              bgHover={bgHover}
+              textMain={textMain}
+              textMut={textMut}
+            />
             <SliderRow label="Speed" value={ttsRate} min={0.5} max={2} step={0.1} onChange={setTtsRate} display={`${ttsRate.toFixed(1)}×`} />
             <SliderRow label="Pitch" value={ttsPitch} min={0.5} max={2} step={0.1} onChange={setTtsPitch} display={ttsPitch.toFixed(1)} />
           </div>

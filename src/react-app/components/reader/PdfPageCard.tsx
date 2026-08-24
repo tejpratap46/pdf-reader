@@ -1,5 +1,6 @@
 import { FC, useRef, useState, useEffect, RefObject } from "react";
 import { PageSize } from "../../types/reader";
+import { SearchMatch } from "../../types/search";
 
 interface PdfPageCardProps {
   doc: any;
@@ -11,6 +12,8 @@ interface PdfPageCardProps {
   scrollContainerRef: RefObject<HTMLDivElement | null>;
   onPageClick: (pageNum: number) => void;
   dark: boolean;
+  pageMatches?: SearchMatch[];
+  activeMatchIndex?: number;
 }
 
 export const PdfPageCard: FC<PdfPageCardProps> = ({
@@ -23,6 +26,8 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
   scrollContainerRef,
   onPageClick,
   dark,
+  pageMatches = [],
+  activeMatchIndex = -1,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -139,10 +144,10 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
         )}
 
         {isNearViewport && (
-          <>
+          <div className="relative" style={{ width: scaledWidth, height: scaledHeight }}>
             {rendering && (
               <div
-                className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-[1px]"
+                className="absolute inset-0 z-20 flex items-center justify-center backdrop-blur-[1px]"
                 style={{ background: dark ? "rgba(15,23,42,0.3)" : "rgba(255,255,255,0.3)" }}
               >
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-medium shadow-lg">
@@ -152,7 +157,33 @@ export const PdfPageCard: FC<PdfPageCardProps> = ({
               </div>
             )}
             <canvas ref={canvasRef} className="block transition-opacity duration-150" style={{ opacity: rendering ? 0.6 : 1 }} />
-          </>
+
+            {/* Search Highlights Overlay */}
+            {pageMatches && pageMatches.length > 0 && (
+              <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+                {pageMatches.map((match) => {
+                  const isActiveMatch = match.globalIndex === activeMatchIndex;
+                  return match.rects.map((rect, rIdx) => (
+                    <div
+                      key={`${match.id}-${rIdx}`}
+                      id={isActiveMatch && rIdx === 0 ? `search-match-${match.globalIndex}` : undefined}
+                      className={`absolute transition-all duration-150 ${
+                        isActiveMatch
+                          ? "bg-amber-500/80 ring-2 ring-amber-400 shadow-md rounded-[2px] z-20 animate-pulse"
+                          : "bg-yellow-300/45 dark:bg-yellow-400/35 border border-yellow-500/50 rounded-[2px] z-10"
+                      }`}
+                      style={{
+                        left: `${rect.x}%`,
+                        top: `${rect.y}%`,
+                        width: `${rect.width}%`,
+                        height: `${rect.height}%`,
+                      }}
+                    />
+                  ));
+                })}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

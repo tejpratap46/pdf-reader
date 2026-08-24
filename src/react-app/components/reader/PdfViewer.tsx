@@ -1,8 +1,10 @@
 import { FC, RefObject, ChangeEvent } from "react";
 import { SourceMode, ViewMode, PageSize, TtsState } from "../../types/reader";
+import { SearchMatch, SearchOptions } from "../../types/search";
 import { useDark, dk } from "../../hooks/useTheme";
 import { IconBtn } from "../common/Primitives";
 import { PdfPageCard } from "./PdfPageCard";
+import { SearchBar } from "./SearchBar";
 import { Waveform } from "../common/Waveform";
 import { SeekBar } from "../common/SeekBar";
 import {
@@ -19,6 +21,7 @@ import {
   IcoUpload,
   IcoMarkdown,
   IcoSparkles,
+  IcoSearch,
 } from "../common/Icons";
 
 interface PdfViewerProps {
@@ -44,6 +47,23 @@ interface PdfViewerProps {
   rendering: boolean;
   setIsEditorOpen: (v: boolean) => void;
   onExportMarkdown?: () => void;
+
+  // Search props
+  isSearchOpen?: boolean;
+  onOpenSearch?: () => void;
+  onCloseSearch?: () => void;
+  searchQuery?: string;
+  setSearchQuery?: (q: string) => void;
+  isSearching?: boolean;
+  searchOptions?: SearchOptions;
+  onToggleMatchCase?: () => void;
+  onToggleWholeWord?: () => void;
+  activeMatchIndex?: number;
+  totalMatches?: number;
+  onNextMatch?: () => void;
+  onPrevMatch?: () => void;
+  getPageMatches?: (pageNum: number) => SearchMatch[];
+  searchMatches?: SearchMatch[];
 
   // Web view props
   webUrl: string;
@@ -89,6 +109,22 @@ export const PdfViewer: FC<PdfViewerProps> = ({
   fileInputRef,
   rendering,
   setIsEditorOpen,
+  onExportMarkdown,
+  isSearchOpen = false,
+  onOpenSearch,
+  onCloseSearch,
+  searchQuery = "",
+  setSearchQuery,
+  isSearching = false,
+  searchOptions = { matchCase: false, wholeWord: false },
+  onToggleMatchCase,
+  onToggleWholeWord,
+  activeMatchIndex = -1,
+  totalMatches = 0,
+  onNextMatch,
+  onPrevMatch,
+  getPageMatches,
+  searchMatches = [],
   webUrl,
   webTitle,
   webLoading,
@@ -106,7 +142,6 @@ export const PdfViewer: FC<PdfViewerProps> = ({
   bgCanvas,
   textMain,
   textMut,
-  onExportMarkdown,
 }) => {
   const d = useDark();
   const showPdfView = sourceMode === "pdf" && (pdfDoc || pdfLoading);
@@ -182,6 +217,31 @@ export const PdfViewer: FC<PdfViewerProps> = ({
 
           <div className="w-px h-5 mx-1" style={{ background: border }} />
 
+          {/* Search / Find Button */}
+          <button
+            onClick={() => (isSearchOpen ? onCloseSearch?.() : onOpenSearch?.())}
+            title="Find in document (Ctrl+F)"
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-md border transition-all duration-150 cursor-pointer shadow-xs ${
+              isSearchOpen
+                ? "bg-amber-500 text-white border-amber-500"
+                : d
+                ? "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <IcoSearch size={14} />
+            <span>Find</span>
+            {totalMatches > 0 && searchQuery && (
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  isSearchOpen ? "bg-white text-amber-600" : "bg-amber-500 text-white"
+                }`}
+              >
+                {totalMatches}
+              </span>
+            )}
+          </button>
+
           {/* Edit PDF Button */}
           {pdfBytes && (
             <button
@@ -226,6 +286,23 @@ export const PdfViewer: FC<PdfViewerProps> = ({
       )}
 
       <div ref={scrollContainerRef} className="relative flex-1 overflow-auto" style={{ background: bgCanvas }}>
+        {/* Floating Search Bar Widget */}
+        {isSearchOpen && (
+          <SearchBar
+            isOpen={isSearchOpen}
+            onClose={onCloseSearch || (() => {})}
+            query={searchQuery}
+            onQueryChange={setSearchQuery || (() => {})}
+            isSearching={isSearching}
+            options={searchOptions}
+            onToggleMatchCase={onToggleMatchCase || (() => {})}
+            onToggleWholeWord={onToggleWholeWord || (() => {})}
+            activeMatchIndex={activeMatchIndex}
+            totalMatches={totalMatches}
+            onNextMatch={onNextMatch || (() => {})}
+            onPrevMatch={onPrevMatch || (() => {})}
+          />
+        )}
         {/* PDF loading spinner */}
         {pdfLoading && (
           <div className="flex flex-col items-center justify-center gap-6 min-h-full py-16">
@@ -273,6 +350,8 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                     scrollContainerRef={scrollContainerRef}
                     onPageClick={changePage}
                     dark={d}
+                    pageMatches={getPageMatches ? getPageMatches(pNum) : []}
+                    activeMatchIndex={activeMatchIndex}
                   />
                 </div>
               );
@@ -310,8 +389,33 @@ export const PdfViewer: FC<PdfViewerProps> = ({
         {/* Single Page View Mode */}
         {!pdfLoading && showPdfView && viewMode === "single" && (
           <div className="flex justify-center p-8 min-h-full items-center">
-            <div className={`shadow-2xl transition-opacity duration-150 ${rendering ? "opacity-50" : "opacity-100"}`}>
+            <div className={`relative shadow-2xl transition-opacity duration-150 ${rendering ? "opacity-50" : "opacity-100"}`}>
               <canvas ref={canvasRef} className="block rounded-lg overflow-hidden" style={{ border: `1px solid ${border}` }} />
+              {/* Search Highlights Overlay for Current Page */}
+              {getPageMatches && getPageMatches(pageNum).length > 0 && (
+                <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-lg">
+                  {getPageMatches(pageNum).map((match) => {
+                    const isActiveMatch = match.globalIndex === activeMatchIndex;
+                    return match.rects.map((rect, rIdx) => (
+                      <div
+                        key={`${match.id}-${rIdx}`}
+                        id={isActiveMatch && rIdx === 0 ? `search-match-${match.globalIndex}` : undefined}
+                        className={`absolute transition-all duration-150 ${
+                          isActiveMatch
+                            ? "bg-amber-500/80 ring-2 ring-amber-400 shadow-md rounded-[2px] z-20 animate-pulse"
+                            : "bg-yellow-300/45 dark:bg-yellow-400/35 border border-yellow-500/50 rounded-[2px] z-10"
+                        }`}
+                        style={{
+                          left: `${rect.x}%`,
+                          top: `${rect.y}%`,
+                          width: `${rect.width}%`,
+                          height: `${rect.height}%`,
+                        }}
+                      />
+                    ));
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -337,23 +441,34 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                 </div>
                 {paragraphs.map((p, i) => {
                   const active = activePara === i;
+                  const isMatchingPara =
+                    searchMatches &&
+                    searchMatches.some(
+                      (m) => m.paragraphIndex === i && m.globalIndex === activeMatchIndex
+                    );
+
                   return (
                     <div
                       key={i}
-                      className="py-3 px-4 rounded-lg mb-1.5 text-sm leading-relaxed transition-all duration-150 cursor-pointer border-l-2"
+                      id={`web-para-${i}`}
+                      className={`py-3 px-4 rounded-lg mb-1.5 text-sm leading-relaxed transition-all duration-150 cursor-pointer border-l-2 ${
+                        isMatchingPara ? "ring-2 ring-amber-400 shadow-md" : ""
+                      }`}
                       style={{
-                        borderLeftColor: active ? "#f59e0b" : "transparent",
-                        background: active
+                        borderLeftColor: active || isMatchingPara ? "#f59e0b" : "transparent",
+                        background: isMatchingPara
+                          ? d ? "rgba(245,158,11,0.18)" : "rgba(254,243,199,0.8)"
+                          : active
                           ? d ? "rgba(245,158,11,0.08)" : "rgba(254,243,199,0.5)"
                           : d ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.8)",
-                        color: active ? textMain : textMut,
+                        color: active || isMatchingPara ? textMain : textMut,
                       }}
                       onClick={() => !active && startReading(i)}
                       onMouseEnter={(e) => {
-                        if (!active) (e.currentTarget as HTMLElement).style.background = d ? "rgba(255,255,255,0.04)" : bgHover;
+                        if (!active && !isMatchingPara) (e.currentTarget as HTMLElement).style.background = d ? "rgba(255,255,255,0.04)" : bgHover;
                       }}
                       onMouseLeave={(e) => {
-                        if (!active) (e.currentTarget as HTMLElement).style.background = d ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.8)";
+                        if (!active && !isMatchingPara) (e.currentTarget as HTMLElement).style.background = d ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.8)";
                       }}
                     >
                       {active && (

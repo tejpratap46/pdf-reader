@@ -37,6 +37,7 @@ import { ChatSession } from "firebase/ai";
 import { AiChatMessage } from "./AiChatMessage";
 import { SidebarResizer } from "../reader/SidebarResizer";
 import { markdownToSpeechText } from "../../utils/textExtractor";
+import { resolveBestVoice } from "../../utils/ttsUtils";
 import {
   IcoSparkles,
   IcoSparklesFilled,
@@ -226,7 +227,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
       const utter = new SpeechSynthesisUtterance(speechText);
       utter.rate = ttsRate;
       utter.pitch = ttsPitch;
-      const voice = voices.find((v) => v.name === selectedVoice);
+      const voice = voices.find((v) => v.name === selectedVoice) || resolveBestVoice(voices, selectedVoice);
       if (voice) utter.voice = voice;
 
       utter.onstart = () => {

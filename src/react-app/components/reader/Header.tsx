@@ -3,13 +3,16 @@ import { SourceMode, TtsState, Theme, BeforeInstallPromptEvent } from "../../typ
 import { useDark } from "../../hooks/useTheme";
 import { ThemeDropdown } from "../common/ThemeDropdown";
 import { UserMenu } from "../auth/UserMenu";
-import { IcoPanel, IcoGlobe, IcoFile, IcoDownload, IcoArrowR, IcoSparklesFilled } from "../common/Icons";
+import { IcoPanel, IcoGlobe, IcoFile, IcoDownload, IcoArrowR, IcoSparklesFilled, IcoSearch } from "../common/Icons";
 
 interface HeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (fn: (o: boolean) => boolean) => void;
   aiSidebarOpen?: boolean;
   setAiSidebarOpen?: (fn: (o: boolean) => boolean) => void;
+  isSearchOpen?: boolean;
+  onOpenSearch?: () => void;
+  onCloseSearch?: () => void;
   hasDocument?: boolean;
   displayTitle: string;
   sourceMode: SourceMode;
@@ -31,6 +34,9 @@ export const Header: FC<HeaderProps> = ({
   setSidebarOpen,
   aiSidebarOpen,
   setAiSidebarOpen,
+  isSearchOpen = false,
+  onOpenSearch,
+  onCloseSearch,
   hasDocument = false,
   displayTitle,
   sourceMode,
@@ -134,6 +140,29 @@ export const Header: FC<HeaderProps> = ({
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusDot, boxShadow: statusGlow }} />
           {statusLabel}
         </span>
+        {hasDocument && (onOpenSearch || onCloseSearch) && (
+          <button
+            onClick={() => (isSearchOpen ? onCloseSearch?.() : onOpenSearch?.())}
+            title={`${isSearchOpen ? "Close" : "Open"} Search (Ctrl+F)`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 hover:scale-105 cursor-pointer border"
+            style={{
+              background: isSearchOpen
+                ? "linear-gradient(135deg, #f59e0b, #d97706)"
+                : d
+                ? "rgba(245, 158, 11, 0.12)"
+                : "rgba(245, 158, 11, 0.08)",
+              borderColor: isSearchOpen
+                ? "transparent"
+                : d
+                ? "rgba(245, 158, 11, 0.4)"
+                : "rgba(245, 158, 11, 0.3)",
+              color: isSearchOpen ? "#ffffff" : d ? "#fbbf24" : "#d97706",
+            }}
+          >
+            <IcoSearch size={13} />
+            <span>Search</span>
+          </button>
+        )}
         {hasDocument && setAiSidebarOpen && (
           <button
             onClick={() => setAiSidebarOpen((o) => !o)}
