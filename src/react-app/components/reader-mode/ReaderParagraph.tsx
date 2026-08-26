@@ -87,10 +87,13 @@ export const ReaderParagraph: FC<ReaderParagraphProps> = memo(({
 
   const isSpeaking = isActive && ttsState === "playing";
   const isPaused = isActive && ttsState === "paused";
+  const isRestoredIdle = isActive && ttsState === "idle" && activeCharOffset > 0;
 
   const handleTogglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isSpeaking) {
+      onPause();
+    } else if (isPaused) {
       onPause();
     } else {
       onPlay(index);
@@ -124,13 +127,27 @@ export const ReaderParagraph: FC<ReaderParagraphProps> = memo(({
         <button
           type="button"
           onClick={handleTogglePlay}
-          title={isSpeaking ? "Pause reading (Space)" : "Read paragraph"}
-          aria-label={isSpeaking ? "Pause narration" : "Play narration from this paragraph"}
+          title={
+            isSpeaking
+              ? "Pause reading (Space)"
+              : isPaused
+              ? "Resume reading (Space)"
+              : isRestoredIdle
+              ? "Resume from last location (Space)"
+              : "Read paragraph"
+          }
+          aria-label={
+            isSpeaking
+              ? "Pause narration"
+              : isPaused || isRestoredIdle
+              ? "Resume narration from saved position"
+              : "Play narration from this paragraph"
+          }
           className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs ${
             isSpeaking
               ? "bg-amber-500 text-white shadow-md shadow-amber-500/30 scale-105"
-              : isPaused
-              ? "bg-amber-500/20 text-amber-500 border border-amber-500/50 scale-100"
+              : isPaused || isRestoredIdle
+              ? "bg-amber-500/20 text-amber-500 border border-amber-500/50 scale-100 ring-2 ring-amber-500/20"
               : "opacity-40 group-hover:opacity-100 text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500 hover:text-white border border-amber-500/20 hover:scale-105"
           }`}
         >
@@ -149,9 +166,13 @@ export const ReaderParagraph: FC<ReaderParagraphProps> = memo(({
         {/* Active Narration Badge */}
         {isActive && (
           <div className="flex items-center gap-2 mb-2 select-none animate-fadeIn">
-            <Waveform paused={ttsState === "paused"} />
+            <Waveform paused={ttsState !== "playing"} />
             <span className="text-[10px] text-amber-500 font-extrabold tracking-widest uppercase">
-              {ttsState === "paused" ? "Paused" : "Reading Now"}
+              {ttsState === "paused"
+                ? "Paused"
+                : ttsState === "playing"
+                ? "Reading Now"
+                : "Last Read Location"}
             </span>
           </div>
         )}

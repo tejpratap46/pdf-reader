@@ -9,6 +9,14 @@ export const STORAGE_TTS_RATE_KEY = "pdf_reader_tts_rate";
 export const STORAGE_TTS_PITCH_KEY = "pdf_reader_tts_pitch";
 export const STORAGE_TTS_VOLUME_KEY = "pdf_reader_tts_volume";
 export const STORAGE_TTS_AUTO_NEXT_KEY = "pdf_reader_tts_auto_next";
+export const STORAGE_READER_POS_PREFIX = "pdf_reader_pos_";
+
+export interface SavedReaderLocation {
+  paraIndex: number;
+  charOffset: number;
+  progress?: number;
+  updatedAt?: number;
+}
 
 export interface ParsedLanguage {
   langCode: string;
@@ -312,6 +320,49 @@ export function getSavedAutoNext(): boolean {
 export function saveAutoNext(autoNext: boolean): void {
   try {
     localStorage.setItem(STORAGE_TTS_AUTO_NEXT_KEY, String(autoNext));
+  } catch {
+    // Ignore storage failure
+  }
+}
+
+/**
+ * Reader Mode Location Persistence Helpers
+ */
+export function saveReaderPosition(docKey: string, pos: SavedReaderLocation): void {
+  if (!docKey) return;
+  try {
+    const data: SavedReaderLocation = {
+      paraIndex: Math.max(0, pos.paraIndex),
+      charOffset: Math.max(0, pos.charOffset),
+      progress: typeof pos.progress === "number" ? Math.max(0, Math.min(1, pos.progress)) : 0,
+      updatedAt: Date.now(),
+    };
+    localStorage.setItem(`${STORAGE_READER_POS_PREFIX}${docKey}`, JSON.stringify(data));
+  } catch {
+    // Ignore storage failure
+  }
+}
+
+export function getSavedReaderPosition(docKey: string): SavedReaderLocation | null {
+  if (!docKey) return null;
+  try {
+    const raw = localStorage.getItem(`${STORAGE_READER_POS_PREFIX}${docKey}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.paraIndex === "number" && typeof parsed.charOffset === "number") {
+        return parsed;
+      }
+    }
+  } catch {
+    // Ignore storage failure
+  }
+  return null;
+}
+
+export function clearSavedReaderPosition(docKey: string): void {
+  if (!docKey) return;
+  try {
+    localStorage.removeItem(`${STORAGE_READER_POS_PREFIX}${docKey}`);
   } catch {
     // Ignore storage failure
   }

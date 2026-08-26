@@ -1,5 +1,5 @@
-import { FC, useState, useMemo, useRef, useEffect, RefObject } from "react";
-import { SourceMode, TtsState, PageSize, ReaderTypographyConfig } from "../../types/reader";
+import { FC, useState, useMemo, useRef, useEffect, RefObject, Fragment } from "react";
+import { SourceMode, TtsState, ReaderTypographyConfig } from "../../types/reader";
 import { SearchMatch, SearchOptions } from "../../types/search";
 import { useDark, useThemeMode } from "../../hooks/useTheme";
 import { ReaderParagraph } from "./ReaderParagraph";
@@ -7,7 +7,6 @@ import { ReaderAiPlaceholder } from "./ReaderAiPlaceholder";
 import { SearchBar } from "../reader/SearchBar";
 import { TtsVoiceModal } from "../reader/TtsVoiceModal";
 import {
-  IcoArrowR,
   IcoSearch,
   IcoBookOpen,
   IcoType,
@@ -16,6 +15,8 @@ import {
   IcoFile,
   IcoGlobe,
   IcoStop,
+  IcoPlay,
+  IcoPause,
 } from "../common/Icons";
 
 interface ReaderModeViewProps {
@@ -40,8 +41,6 @@ interface ReaderModeViewProps {
   setTtsPitch: (p: number) => void;
   ttsVolume: number;
   setTtsVolume: (v: number) => void;
-  autoNextPage: boolean;
-  setAutoNextPage: (a: boolean) => void;
 
   // Loading states
   isLoading?: boolean;
@@ -49,11 +48,9 @@ interface ReaderModeViewProps {
   pdfLoading?: boolean;
   webLoading?: boolean;
 
-  // Pagination for PDF
-  pageNum: number;
-  totalPages: number;
-  changePage: (n: number) => void;
-  pageSizes?: PageSize[];
+  // Page Breaks
+  pageBreakIndices?: number[];
+  pageNumberMap?: Record<number, number>;
 
   // File loading
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -106,15 +103,12 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
   setTtsPitch,
   ttsVolume,
   setTtsVolume,
-  autoNextPage,
-  setAutoNextPage,
   isLoading = false,
   isExtractingMarkdown = false,
   pdfLoading = false,
   webLoading = false,
-  pageNum,
-  totalPages,
-  changePage,
+  pageBreakIndices = [],
+  pageNumberMap = {},
   fileInputRef,
   onLoadSample,
   onExportMarkdown,
@@ -265,31 +259,6 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
             </span>
           ) : null}
         </div>
-
-        {/* Center: PDF Pagination (if multipage) */}
-        {hasDocument && sourceMode === "pdf" && totalPages > 1 && (
-          <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/5 px-2.5 py-1 rounded-xl border" style={{ borderColor: border }}>
-            <button
-              onClick={() => changePage(pageNum - 1)}
-              disabled={pageNum <= 1}
-              className="px-2 py-0.5 rounded text-xs font-bold disabled:opacity-30 hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer"
-              style={{ color: textMain }}
-            >
-              Prev
-            </button>
-            <span className="text-xs font-medium px-1" style={{ color: textMut }}>
-              Page <span className="font-bold" style={{ color: textMain }}>{pageNum}</span> of {totalPages}
-            </span>
-            <button
-              onClick={() => changePage(pageNum + 1)}
-              disabled={pageNum >= totalPages}
-              className="px-2 py-0.5 rounded text-xs font-bold disabled:opacity-30 hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer"
-              style={{ color: textMain }}
-            >
-              Next
-            </button>
-          </div>
-        )}
 
         {/* Right: Typography Controls, Voice, Search */}
         <div className="flex items-center gap-2">
@@ -476,43 +445,58 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                     />
                   </div>
                 </div>
-
-                {/* Auto Next Page Toggle */}
-                {sourceMode === "pdf" && totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: border }}>
-                    <span className="text-[11px] font-semibold" style={{ color: textMut }}>
-                      Auto-Turn Page
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setAutoNextPage(!autoNextPage)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                        autoNextPage
-                          ? "border-amber-500 bg-amber-500 text-white"
-                          : "hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
-                      style={{ borderColor: autoNextPage ? "#f59e0b" : border }}
-                    >
-                      {autoNextPage ? "ON" : "OFF"}
-                    </button>
-                  </div>
-                )}
               </div>
             )}
           </div>
 
-          {/* TTS Reading Controls (When speaking / paused) */}
-          {ttsState !== "idle" && (
-            <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-xl">
-              {/* Stop Narration */}
+          {/* TTS Reading Controls (Play/Pause/Resume, Stop, Speed) */}
+          {hasDocument && (
+            <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 px-1.5 py-1 rounded-xl shadow-2xs">
+              {/* Play / Pause Toggle Button */}
               <button
                 type="button"
-                onClick={() => stopTts()}
-                title="Stop Narration (Escape)"
-                className="p-1 rounded-lg text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                onClick={
+                  ttsState === "playing"
+                    ? pauseTts
+                    : () => {
+                        if (activePara >= 0) {
+                          startReading(activePara);
+                        } else {
+                          pauseTts();
+                        }
+                      }
+                }
+                title={
+                  ttsState === "playing"
+                    ? "Pause Narration (Space)"
+                    : ttsState === "paused"
+                    ? "Resume Narration (Space)"
+                    : activePara >= 0
+                    ? `Resume Narration at Para ${activePara + 1} (Space)`
+                    : "Start Narration (Space)"
+                }
+                className={`p-1.5 rounded-lg transition-all duration-150 cursor-pointer ${
+                  ttsState === "playing"
+                    ? "bg-amber-500 text-white shadow-xs scale-105"
+                    : ttsState === "paused"
+                    ? "bg-amber-500/20 text-amber-500 border border-amber-500/50 ring-1 ring-amber-500/30"
+                    : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 hover:scale-105"
+                }`}
               >
-                <IcoStop size={14} />
+                {ttsState === "playing" ? <IcoPause size={13} /> : <IcoPlay size={13} />}
               </button>
+
+              {/* Stop Narration */}
+              {ttsState !== "idle" && (
+                <button
+                  type="button"
+                  onClick={() => stopTts()}
+                  title="Stop Narration (Escape)"
+                  className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                >
+                  <IcoStop size={13} />
+                </button>
+              )}
 
               {/* Speed Button */}
               <button
@@ -523,7 +507,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   setTtsRate(rates[nextIdx >= 0 ? nextIdx : 0]);
                 }}
                 title="Playback speed"
-                className="text-[11px] font-bold text-amber-600 dark:text-amber-400 px-1 py-0.5 rounded hover:bg-amber-500/20 transition-colors cursor-pointer"
+                className="text-[11px] font-bold text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded hover:bg-amber-500/20 transition-colors cursor-pointer"
               >
                 {ttsRate}x
               </button>
@@ -696,12 +680,21 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                 <span>{totalWords.toLocaleString()} words</span>
                 <span>•</span>
                 <span>~{estReadMinutes} min reading time</span>
-                {ttsState !== "idle" && (
-                  <span className="inline-flex items-center gap-1.5 font-bold text-amber-500">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                    Audio Narration Active
+                {ttsState === "playing" ? (
+                  <span className="inline-flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>Reading Active {activePara >= 0 ? `(Para ${activePara + 1})` : ""}</span>
                   </span>
-                )}
+                ) : ttsState === "paused" && activePara >= 0 ? (
+                  <span className="inline-flex items-center gap-1.5 font-bold text-amber-500">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    <span>Paused at Para {activePara + 1}</span>
+                  </span>
+                ) : activePara >= 0 ? (
+                  <span className="inline-flex items-center gap-1.5 font-medium text-amber-600 dark:text-amber-400">
+                    <span>Last Read Location: Para {activePara + 1}</span>
+                  </span>
+                ) : null}
               </div>
             </div>
 
@@ -714,51 +707,65 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   searchMatches.some(
                     (m) => m.paragraphIndex === idx && m.globalIndex === activeMatchIndex
                   );
+                const isPageBreak = pageBreakIndices.includes(idx);
+                const pageNum = pageNumberMap[idx];
 
                 return (
-                  <ReaderParagraph
-                    key={idx}
-                    index={idx}
-                    text={p}
-                    isActive={isActive}
-                    ttsState={ttsState}
-                    activeCharOffset={isActive ? activeCharOffset : 0}
-                    paraProgress={isActive ? paraProgress : 0}
-                    onPlay={startReading}
-                    onPause={pauseTts}
-                    onSeek={seekTo}
-                    isDark={isDark}
-                    isAmoled={isAmoled}
-                    textMain={textMain}
-                    textMut={textMut}
-                    fontSizeClass={fontSizeClass}
-                    fontFamilyClass={fontFamilyClass}
-                    lineHeightClass={lineHeightClass}
-                    isMatch={isMatch}
-                  />
+                  <Fragment key={idx}>
+                    {isPageBreak && (
+                      <div
+                        className="relative my-8 flex items-center justify-center select-none"
+                        aria-hidden="true"
+                      >
+                        <hr className="w-full border-t" style={{ borderColor: border }} />
+                        {pageNum ? (
+                          <div
+                            className="absolute px-3 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-full border shadow-2xs flex items-center gap-1.5"
+                            style={{
+                              background: isAmoled ? "#000000" : isDark ? "#0f172a" : "#ffffff",
+                              borderColor: border,
+                              color: textMut,
+                            }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
+                            <span>Page {pageNum}</span>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                    <ReaderParagraph
+                      index={idx}
+                      text={p}
+                      isActive={isActive}
+                      ttsState={ttsState}
+                      activeCharOffset={isActive ? activeCharOffset : 0}
+                      paraProgress={isActive ? paraProgress : 0}
+                      onPlay={startReading}
+                      onPause={pauseTts}
+                      onSeek={seekTo}
+                      isDark={isDark}
+                      isAmoled={isAmoled}
+                      textMain={textMain}
+                      textMut={textMut}
+                      fontSizeClass={fontSizeClass}
+                      fontFamilyClass={fontFamilyClass}
+                      lineHeightClass={lineHeightClass}
+                      isMatch={isMatch}
+                    />
+                  </Fragment>
                 );
               })}
             </div>
 
-            {/* End of Document / Page Controls */}
-            <div className="mt-12 pt-8 border-t flex flex-col items-center gap-4 text-center" style={{ borderColor: border }}>
-              <p className="text-xs font-semibold" style={{ color: textMut }}>
-                {sourceMode === "pdf" && totalPages > 1
-                  ? `End of Page ${pageNum} of ${totalPages}`
-                  : "End of Document"}
+            {/* End of Document Section */}
+            <div className="mt-12 pt-8 border-t flex flex-col items-center gap-2 text-center" style={{ borderColor: border }}>
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                <IcoBookOpen size={14} />
+                <span>End of Document</span>
+              </div>
+              <p className="text-xs" style={{ color: textMut }}>
+                Full document loaded ({paragraphs.length} paragraphs • {totalWords.toLocaleString()} words)
               </p>
-
-              {sourceMode === "pdf" && totalPages > 1 && pageNum < totalPages && (
-                <button
-                  type="button"
-                  onClick={() => changePage(pageNum + 1)}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
-                  style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
-                >
-                  <span>Continue to Page {pageNum + 1}</span>
-                  <IcoArrowR size={14} />
-                </button>
-              )}
             </div>
           </article>
         ) : (
