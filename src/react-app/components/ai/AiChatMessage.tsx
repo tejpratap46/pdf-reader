@@ -195,7 +195,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
                   : "#2563eb",
               }}
             >
-              {isUser ? "You" : "Folio AI"}
+              {isUser ? "You" : "Pdf Reader AI"}
             </span>
 
             {isAssistant && message.provider === "chrome-builtin" && (

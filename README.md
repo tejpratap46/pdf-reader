@@ -1,4 +1,4 @@
-# Folio – Modern PDF & Document Reader with Markdown Export & AI Integration
+# Pdf Reader – Modern PDF & Document Reader with Markdown Export & AI Integration
 
 A high-performance, private, and feature-rich Web application for reading, editing, listening to, and converting documents. Built with **React 19**, **Vite**, **TypeScript**, **Hono**, and **Cloudflare Workers**.
 
@@ -28,7 +28,7 @@ A high-performance, private, and feature-rich Web application for reading, editi
 
 ## 📝 Markdown Export via `@firecrawl/anydoc-wasm`
 
-Folio integrates **`@firecrawl/anydoc-wasm`**, a Rust-based WebAssembly compilation of [anydoc](https://github.com/firecrawl/anydoc), to convert documents into clean **GitHub-Flavored Markdown (GFM)** directly in the browser.
+Pdf Reader integrates **`@firecrawl/anydoc-wasm`**, a Rust-based WebAssembly compilation of [anydoc](https://github.com/firecrawl/anydoc), to convert documents into clean **GitHub-Flavored Markdown (GFM)** directly in the browser.
 
 ### Supported Input Formats
 - **PDF Documents** (`.pdf`)
@@ -50,7 +50,7 @@ Folio integrates **`@firecrawl/anydoc-wasm`**, a Rust-based WebAssembly compilat
 
 ## 🤖 AI & LLM Integration Architecture
 
-The Markdown export engine forms the foundational layer for upcoming AI-powered features in Folio.
+The Markdown export engine forms the foundational layer for upcoming AI-powered features in Pdf Reader.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -66,7 +66,7 @@ The Markdown export engine forms the foundational layer for upcoming AI-powered 
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                 Folio Markdown & AI Bridge                  │
+│               Pdf Reader Markdown & AI Bridge               │
 │        - Real-Time Token Estimator (~Tokens / Word Count)   │
 │        - Structured Heading & Table Preserver               │
 │        - Context-Window Chunker for RAG Pipelines           │
@@ -98,14 +98,14 @@ The Markdown export engine forms the foundational layer for upcoming AI-powered 
 - **RAG & Chunking Ready**: Clean line-based markdown allows semantic chunking without losing table headers or list contexts.
 
 ### Built-in AI Prompt Presets
-The interactive **Export as Markdown** modal and **Folio AI Chat** include ready-to-use prompt wrappers:
+The interactive **Export as Markdown** modal and **Pdf Reader AI Chat** include ready-to-use prompt wrappers:
 - 📝 **Executive Summary**: Generates TL;DR, core findings, and key takeaways.
 - ❓ **Q&A & Knowledge Base**: Formats the document as system context for accurate, hallucination-free question answering.
 - 🔍 **Structured JSON Extraction**: Instructs the model to output parsed dates, entities, and financial tables into strict Markdown/JSON tables.
 - 💡 **Key Takeaways & Study Quizzes**: Creates 5-point summaries or interactive multiple-choice study questions.
 
 ### 🧠 Dual AI Engines: In-Browser AI & Cloud AI
-Folio provides seamless switching between on-device and cloud document intelligence:
+Pdf Reader provides seamless switching between on-device and cloud document intelligence:
 1. **⚡ In-Browser AI (Chrome Built-in Gemini Nano)**:
    - Powered by Google Chrome's native **Prompt API** (`ai.languageModel` / `LanguageModel`).
    - **100% On-Device & Private**: Zero server roundtrips, no user data ever leaves your device.

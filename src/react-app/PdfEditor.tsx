@@ -16,6 +16,7 @@ import { EditorSidebar } from "./components/editor/EditorSidebar";
 import { EditorCanvas } from "./components/editor/canvas/EditorCanvas";
 import { ResizeHandleType } from "./components/editor/canvas/ImageOverlays";
 import { SignatureModal } from "./components/editor/SignatureModal";
+import { EditorAiPlaceholder } from "./components/editor/EditorAiPlaceholder";
 import { useResizableSidebar } from "./hooks/useResizableSidebar";
 import { useThemeMode } from "./hooks/useTheme";
 import { IcoChevR } from "./components/common/Icons";
@@ -46,7 +47,7 @@ export const PdfEditor: FC<PdfEditorProps> = ({
     handleMouseDown: handleSidebarMouseDown,
     handleTouchStart: handleSidebarTouchStart,
   } = useResizableSidebar({
-    storageKeyPrefix: "folio_editor_sidebar",
+    storageKeyPrefix: "pdf_editor_sidebar",
     defaultWidth: 320,
     minWidth: 260,
     maxWidth: 700,
@@ -1222,6 +1223,14 @@ export const PdfEditor: FC<PdfEditorProps> = ({
         bgCard={bgCard}
         border={border}
         isDark={isDark}
+      />
+
+      <EditorAiPlaceholder
+        pdfBytes={pdfFileBytes}
+        fileName={fileName}
+        activePageIndex={activePageIndex}
+        totalPages={pages.length}
+        isVisible={false}
       />
     </div>
   );

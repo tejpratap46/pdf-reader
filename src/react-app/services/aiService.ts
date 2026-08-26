@@ -121,7 +121,7 @@ export function buildDocumentSystemInstruction(options: {
     ? `PAGE ${pageContext.current} OF ${pageContext.total} CONTEXT`
     : `FULL DOCUMENT CONTEXT (${pageContext?.total || 1} PAGES)`;
 
-  return `You are Folio AI, an advanced and accurate document intelligence assistant in Folio Reader.
+  return `You are Pdf Reader AI, an advanced and accurate document intelligence assistant in Pdf Reader.
 Your role is to answer questions, explain concepts, extract data/tables, and provide deep insights about the document context provided below.
 
 ================ DOCUMENT METADATA ================

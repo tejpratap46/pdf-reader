@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { SourceMode, TtsState, Theme, BeforeInstallPromptEvent } from "../../types/reader";
+import { SourceMode, TtsState, Theme, BeforeInstallPromptEvent, AppMode } from "../../types/reader";
 import { useDark, useThemeMode } from "../../hooks/useTheme";
 import { ThemeDropdown } from "../common/ThemeDropdown";
 import { UserMenu } from "../auth/UserMenu";
@@ -12,9 +12,14 @@ import {
   IcoSparklesFilled,
   IcoSearch,
   IcoBookOpen,
+  IcoEye,
+  IcoEdit,
 } from "../common/Icons";
 
 interface HeaderProps {
+  activeMode: AppMode;
+  onModeChange: (mode: AppMode) => void;
+  canOpenEditor?: boolean;
   sidebarOpen: boolean;
   setSidebarOpen: (fn: (o: boolean) => boolean) => void;
   aiSidebarOpen?: boolean;
@@ -39,6 +44,9 @@ interface HeaderProps {
 }
 
 export const Header: FC<HeaderProps> = ({
+  activeMode = "viewer",
+  onModeChange,
+  canOpenEditor = true,
   sidebarOpen,
   setSidebarOpen,
   aiSidebarOpen,
@@ -153,38 +161,12 @@ export const Header: FC<HeaderProps> = ({
           <IcoPanel size={16} />
         </button>
 
-        {/* Wordmark Emblem */}
-        <div className="flex items-center gap-2.5 select-none">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-600 via-amber-500 to-amber-400 flex items-center justify-center text-white shadow-sm shadow-amber-500/20 shrink-0">
-            <IcoBookOpen size={15} />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 leading-none">
-              <h1 className="text-sm font-extrabold tracking-[0.15em] text-amber-500 uppercase">
-                FOLIO
-              </h1>
-              <span
-                className="text-[8px] font-bold uppercase tracking-[0.2em] px-1 py-0.5 rounded"
-                style={{
-                  background: isAmoled ? "#18181b" : d ? "#1f2937" : "#f1f5f9",
-                  color: textMut,
-                }}
-              >
-                STUDIO
-              </span>
-            </div>
-            <p className="text-[9px] font-medium tracking-wider mt-0.5 opacity-60" style={{ color: textMut }}>
-              Reading &amp; TTS Engine
-            </p>
-          </div>
-        </div>
-
         <div className="h-6 w-px mx-1 hidden sm:block" style={{ background: border }} />
 
         {/* Open Document Pill */}
         {displayTitle ? (
           <span
-            className="flex items-center gap-2 text-xs rounded-full px-3 py-1 max-w-[180px] sm:max-w-[280px] shadow-2xs border transition-all"
+            className="hidden lg:flex items-center gap-2 text-xs rounded-full px-3 py-1 max-w-[180px] sm:max-w-[240px] shadow-2xs border transition-all"
             style={{
               color: d ? "#f1f5f9" : "#1e293b",
               background: isAmoled ? "#09090b" : d ? "#1e293b" : "#f8fafc",
@@ -198,7 +180,7 @@ export const Header: FC<HeaderProps> = ({
           </span>
         ) : (
           <span
-            className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full"
+            className="hidden xl:inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full"
             style={{
               color: textMut,
               background: isAmoled ? "#09090b" : d ? "#1e293b" : "#f1f5f9",
@@ -208,6 +190,63 @@ export const Header: FC<HeaderProps> = ({
             Studio Ready
           </span>
         )}
+      </div>
+
+      {/* Center: Mode Switcher Segmented Control (Viewer | Reader | Editor) */}
+      <div
+        className="flex items-center p-1 rounded-full border shadow-2xs select-none transition-all"
+        style={{
+          background: isAmoled ? "#0a0a0c" : d ? "#0f172a" : "#f1f5f9",
+          borderColor: border,
+        }}
+      >
+        {[
+          {
+            id: "viewer",
+            label: "Viewer",
+            icon: <IcoEye size={13} />,
+            desc: "Default on-device PDF viewer & AI companion (Alt+1)",
+            disabled: false,
+          },
+          {
+            id: "reader",
+            label: "Reader",
+            icon: <IcoBookOpen size={13} />,
+            desc: "Distraction-free Markdown reading with word-highlighted TTS (Alt+2)",
+            disabled: false,
+          },
+          {
+            id: "editor",
+            label: "Editor",
+            icon: <IcoEdit size={13} />,
+            desc: canOpenEditor
+              ? "PDF Studio annotations, stamps, signatures & page management (Alt+3)"
+              : "Open a PDF document first to enable Editor mode",
+            disabled: !canOpenEditor,
+          },
+        ].map((item) => {
+          const isActive = activeMode === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              disabled={item.disabled}
+              onClick={() => onModeChange(item.id as AppMode)}
+              title={item.desc}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed ${
+                isActive
+                  ? "bg-amber-500 text-white shadow-sm font-bold scale-[1.02]"
+                  : "hover:text-amber-500 active:scale-95"
+              }`}
+              style={{
+                color: isActive ? "#ffffff" : textMut,
+              }}
+            >
+              <span className={isActive ? "text-white" : ""}>{item.icon}</span>
+              <span className="inline">{item.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Right Controls */}
@@ -222,7 +261,7 @@ export const Header: FC<HeaderProps> = ({
                 setInstallPrompt(null);
               }
             }}
-            title="Install Folio App on your OS"
+            title="Install Pdf Reader App on your OS"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
             style={{
               background: "linear-gradient(135deg, #f59e0b, #d97706)",

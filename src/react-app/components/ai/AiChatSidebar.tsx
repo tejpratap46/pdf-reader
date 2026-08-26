@@ -92,7 +92,7 @@ interface AiChatSidebarProps {
   textMut: string;
 }
 
-const STORAGE_PROVIDER_KEY = "folio_reader_ai_provider";
+const STORAGE_PROVIDER_KEY = "pdf_reader_ai_provider";
 
 export const AiChatSidebar: FC<AiChatSidebarProps> = ({
   sidebarOpen,
@@ -725,7 +725,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-bold tracking-wide" style={{ color: textMain }}>
-                  Folio AI
+                  Pdf Reader AI
                 </span>
                 <span
                   className="px-1.5 py-0.2 text-[9px] font-semibold rounded-full border"

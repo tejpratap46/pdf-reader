@@ -34,7 +34,7 @@ export const resolveIsDark = (t: Theme): boolean => {
 export function useTheme(): [boolean, Theme, (t: Theme) => void, ResolvedTheme] {
   const [theme, setThemeState] = useState<Theme>(() => {
     try {
-      return (localStorage.getItem("folio-theme") as Theme) || "system";
+      return (localStorage.getItem("pdf-reader-theme") as Theme) || (localStorage.getItem("folio-theme") as Theme) || "system";
     } catch {
       return "system";
     }
@@ -48,7 +48,7 @@ export function useTheme(): [boolean, Theme, (t: Theme) => void, ResolvedTheme] 
     setResolvedTheme(resolved);
     setIsDark(resolved === "dark" || resolved === "amoled");
     try {
-      localStorage.setItem("folio-theme", t);
+      localStorage.setItem("pdf-reader-theme", t);
     } catch {
       // Ignore storage write errors (e.g. private browsing)
     }

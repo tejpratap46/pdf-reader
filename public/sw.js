@@ -1,4 +1,4 @@
-const CACHE_NAME = 'folio-pwa-v1';
+const CACHE_NAME = 'pdf-reader-pwa-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

@@ -3,12 +3,12 @@
  * Handles voice persistence, locale formatting, preview playback, and voice resolution.
  */
 
-export const STORAGE_TTS_VOICE_KEY = "folio_tts_voice";
-export const STORAGE_TTS_LANG_KEY = "folio_tts_lang";
-export const STORAGE_TTS_RATE_KEY = "folio_tts_rate";
-export const STORAGE_TTS_PITCH_KEY = "folio_tts_pitch";
-export const STORAGE_TTS_VOLUME_KEY = "folio_tts_volume";
-export const STORAGE_TTS_AUTO_NEXT_KEY = "folio_tts_auto_next";
+export const STORAGE_TTS_VOICE_KEY = "pdf_reader_tts_voice";
+export const STORAGE_TTS_LANG_KEY = "pdf_reader_tts_lang";
+export const STORAGE_TTS_RATE_KEY = "pdf_reader_tts_rate";
+export const STORAGE_TTS_PITCH_KEY = "pdf_reader_tts_pitch";
+export const STORAGE_TTS_VOLUME_KEY = "pdf_reader_tts_volume";
+export const STORAGE_TTS_AUTO_NEXT_KEY = "pdf_reader_tts_auto_next";
 
 export interface ParsedLanguage {
   langCode: string;
@@ -199,7 +199,7 @@ export function getVoicePreviewText(voice: SpeechSynthesisVoice): string {
  */
 export function getSavedVoiceName(): string {
   try {
-    return localStorage.getItem(STORAGE_TTS_VOICE_KEY) || "";
+    return localStorage.getItem(STORAGE_TTS_VOICE_KEY) || localStorage.getItem("folio_tts_voice") || "";
   } catch {
     return "";
   }
@@ -207,7 +207,7 @@ export function getSavedVoiceName(): string {
 
 export function getSavedLanguageCode(): string {
   try {
-    return localStorage.getItem(STORAGE_TTS_LANG_KEY) || "";
+    return localStorage.getItem(STORAGE_TTS_LANG_KEY) || localStorage.getItem("folio_tts_lang") || "";
   } catch {
     return "";
   }
@@ -238,7 +238,7 @@ export function saveTtsLanguagePreference(langCode: string): void {
 
 export function getSavedTtsRate(): number {
   try {
-    const val = localStorage.getItem(STORAGE_TTS_RATE_KEY);
+    const val = localStorage.getItem(STORAGE_TTS_RATE_KEY) || localStorage.getItem("folio_tts_rate");
     if (val) {
       const num = parseFloat(val);
       if (!isNaN(num) && num >= 0.5 && num <= 2.5) return num;
@@ -259,7 +259,7 @@ export function saveTtsRate(rate: number): void {
 
 export function getSavedTtsPitch(): number {
   try {
-    const val = localStorage.getItem(STORAGE_TTS_PITCH_KEY);
+    const val = localStorage.getItem(STORAGE_TTS_PITCH_KEY) || localStorage.getItem("folio_tts_pitch");
     if (val) {
       const num = parseFloat(val);
       if (!isNaN(num) && num >= 0.5 && num <= 2) return num;
@@ -280,7 +280,7 @@ export function saveTtsPitch(pitch: number): void {
 
 export function getSavedTtsVolume(): number {
   try {
-    const val = localStorage.getItem(STORAGE_TTS_VOLUME_KEY);
+    const val = localStorage.getItem(STORAGE_TTS_VOLUME_KEY) || localStorage.getItem("folio_tts_volume");
     if (val !== null) {
       const num = parseFloat(val);
       if (!isNaN(num) && num >= 0 && num <= 1) return num;
@@ -301,7 +301,7 @@ export function saveTtsVolume(volume: number): void {
 
 export function getSavedAutoNext(): boolean {
   try {
-    const val = localStorage.getItem(STORAGE_TTS_AUTO_NEXT_KEY);
+    const val = localStorage.getItem(STORAGE_TTS_AUTO_NEXT_KEY) ?? localStorage.getItem("folio_tts_auto_next");
     if (val !== null) return val === "true";
   } catch {
     // Ignore storage failure

@@ -181,7 +181,7 @@ export function buildChromeAiSystemPrompt(options: {
       ? `${docMarkdown.slice(0, maxChars)}\n\n[... Remaining content truncated for fast local on-device inference ...]`
       : docMarkdown;
 
-  return `You are Folio AI running 100% locally on-device via Chrome Built-in Gemini Nano.
+  return `You are Pdf Reader AI running 100% locally on-device via Chrome Built-in Gemini Nano.
 Answer questions accurately based on the document text provided below.
 
 DOCUMENT: ${docTitle || "Active Document"}

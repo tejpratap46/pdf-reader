@@ -24,7 +24,7 @@ export interface ResizableSidebarState {
 
 export function useResizableSidebar(options: UseResizableSidebarOptions = {}): ResizableSidebarState {
   const {
-    storageKeyPrefix = "folio_sidebar",
+    storageKeyPrefix = "pdf_sidebar",
     defaultWidth = 320,
     minWidth = 240,
     maxWidth = 720,

@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, useCallback, ReactElement } from "react";
-import { PdfEditor } from "./PdfEditor";
-import { SourceMode, ViewMode, TtsState, PageSize, BeforeInstallPromptEvent } from "./types/reader";
+import { useState, useEffect, useRef, useCallback, ReactElement, lazy, Suspense } from "react";
+import { SourceMode, ViewMode, TtsState, PageSize, BeforeInstallPromptEvent, AppMode } from "./types/reader";
 import { DEFAULT_HEADER_PCT, DEFAULT_FOOTER_PCT, CORS_PROXY } from "./constants/reader";
 import { splitParagraphs, getParagraphStarts, snapToWord, extractTextFromHtml } from "./utils/textExtractor";
 import { usePdfJs } from "./hooks/usePdfJs";
@@ -11,9 +10,13 @@ import { useDocumentSearch } from "./hooks/useDocumentSearch";
 import { Header } from "./components/reader/Header";
 import { Sidebar } from "./components/reader/Sidebar";
 import { PdfViewer } from "./components/reader/PdfViewer";
-import { AiChatSidebar } from "./components/ai/AiChatSidebar";
-import { MarkdownExportModal } from "./components/common/MarkdownExportModal";
 import { convertBytesToMarkdown, convertWebToMarkdown } from "./utils/markdownExport";
+
+// Lazy-loaded Mode Views for memory and performance optimization
+const PdfEditor = lazy(() => import("./PdfEditor").then((m) => ({ default: m.PdfEditor })));
+const ReaderModeView = lazy(() => import("./components/reader-mode/ReaderModeView"));
+const AiChatSidebar = lazy(() => import("./components/ai/AiChatSidebar").then((m) => ({ default: m.AiChatSidebar })));
+const MarkdownExportModal = lazy(() => import("./components/common/MarkdownExportModal").then((m) => ({ default: m.MarkdownExportModal })));
 import {
   clearTokenCache,
   getAllPagesTokenCount,
@@ -66,6 +69,9 @@ export default function PDFReader(): ReactElement {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
 
+  /* App Modes: "viewer" (Default) | "reader" (Markdown + Word-highlight TTS) | "editor" (PDF studio) */
+  const [activeMode, setActiveMode] = useState<AppMode>("viewer");
+
   /* Source mode & View Mode */
   const [sourceMode, setSourceMode] = useState<SourceMode>("pdf");
   const [viewMode, setViewMode] = useState<ViewMode>("scroll");
@@ -92,8 +98,8 @@ export default function PDFReader(): ReactElement {
   const [globalDrag, setGlobalDrag] = useState(false);
   const [rendering, setRendering] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [pageTextLoading, setPageTextLoading] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isMarkdownModalOpen, setIsMarkdownModalOpen] = useState(false);
 
   /* AI Context & Document Markdown */
@@ -112,6 +118,7 @@ export default function PDFReader(): ReactElement {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoiceState] = useState<string>(() => getSavedVoiceName());
   const [activePara, setActivePara] = useState(-1);
+  const [activeCharOffset, setActiveCharOffset] = useState(0);
   const [paraProgress, setParaProgress] = useState(0);
   const [autoNextPage, setAutoNextPageState] = useState<boolean>(() => getSavedAutoNext());
 
@@ -212,7 +219,7 @@ export default function PDFReader(): ReactElement {
     handleMouseDown: handleSidebarMouseDown,
     handleTouchStart: handleSidebarTouchStart,
   } = useResizableSidebar({
-    storageKeyPrefix: "folio_reader_sidebar",
+    storageKeyPrefix: "pdf_reader_sidebar",
     defaultWidth: 320,
     minWidth: 240,
     maxWidth: 720,
@@ -231,7 +238,7 @@ export default function PDFReader(): ReactElement {
     handleMouseDown: handleAiSidebarMouseDown,
     handleTouchStart: handleAiSidebarTouchStart,
   } = useResizableSidebar({
-    storageKeyPrefix: "folio_reader_ai_sidebar",
+    storageKeyPrefix: "pdf_reader_ai_sidebar",
     defaultWidth: 360,
     minWidth: 260,
     maxWidth: 720,
@@ -297,7 +304,7 @@ export default function PDFReader(): ReactElement {
   /* SEO */
   useEffect(() => {
     const name = sourceMode === "web" ? webTitle : fileName;
-    document.title = name ? `${name} – Folio Reader` : "Folio – Free PDF & Web Reader with Text-to-Speech";
+    document.title = name ? `${name} – Pdf Reader` : "Pdf Reader – Free PDF & Web Reader with Text-to-Speech";
   }, [fileName, webTitle, sourceMode]);
 
   /* Voices */
@@ -387,13 +394,17 @@ export default function PDFReader(): ReactElement {
   const loadPageText = useCallback(
     async (doc: any, num: number, hPct: number, fPct: number) => {
       if (!doc || num < 1 || num > doc.numPages) return;
+      setPageTextLoading(true);
       try {
         const page = await doc.getPage(num);
         const { header, footer, body } = await extractPageText(page, hPct, fPct);
         setHeaderText(header);
         setFooterText(footer);
         setParagraphs(splitParagraphs(body));
-      } catch (_) {}
+      } catch (_) {
+      } finally {
+        setPageTextLoading(false);
+      }
     },
     [extractPageText]
   );
@@ -494,6 +505,7 @@ export default function PDFReader(): ReactElement {
       setTtsState("idle");
       ttsStateRef.current = "idle";
       setActivePara(-1);
+      setActiveCharOffset(0);
       setParaProgress(0);
       currentReadingPosRef.current = { paraIndex: 0, charOffset: 0 };
     },
@@ -550,7 +562,7 @@ export default function PDFReader(): ReactElement {
     const blob = new Blob([copy], { type: "application/pdf" });
     const nameToUse = newName || fileName || "edited.pdf";
     const file = new File([blob], nameToUse, { type: "application/pdf" });
-    setIsEditorOpen(false);
+    setActiveMode("viewer");
     loadPdf(file);
   };
 
@@ -597,7 +609,7 @@ export default function PDFReader(): ReactElement {
       const fontItalic = await sampleDoc.embedFont(StandardFonts.HelveticaOblique);
 
       // Header Brand
-      page.drawText("FOLIO STUDIO", {
+      page.drawText("PDF READER", {
         x: 50,
         y: 775,
         size: 20,
@@ -623,11 +635,11 @@ export default function PDFReader(): ReactElement {
       const sections = [
         {
           heading: "1. Welcome to your Browser-Native Reading Sanctuary",
-          body: "Folio is an in-browser document studio designed for deep focus, fluid speech narration, and local AI intelligence. Every file you open remains 100% private, executed locally in a client-side WebAssembly environment without sending data to external servers.",
+          body: "Pdf Reader is an in-browser document studio designed for deep focus, fluid speech narration, and local AI intelligence. Every file you open remains 100% private, executed locally in a client-side WebAssembly environment without sending data to external servers.",
         },
         {
           heading: "2. Synchronized Text-to-Speech Narration",
-          body: "Click 'Read Document' in the left sidebar to activate speech synthesis. Folio highlights each paragraph in real-time as it is spoken. You can modulate reading speed, pitch, and choose from dozens of natural voices.",
+          body: "Click 'Read Document' in the left sidebar to activate speech synthesis. Pdf Reader highlights each paragraph in real-time as it is spoken. You can modulate reading speed, pitch, and choose from dozens of natural voices.",
         },
         {
           heading: "3. Dual AI Intelligence (Local & Cloud)",
@@ -664,7 +676,7 @@ export default function PDFReader(): ReactElement {
 
       const pdfBytesData = await sampleDoc.save();
       const blob = new Blob([pdfBytesData], { type: "application/pdf" });
-      const sampleFile = new File([blob], "Folio_Guide.pdf", { type: "application/pdf" });
+      const sampleFile = new File([blob], "Pdf_Reader_Guide.pdf", { type: "application/pdf" });
       loadPdf(sampleFile);
     } catch (err) {
       console.error("Failed to generate sample PDF:", err);
@@ -804,58 +816,6 @@ export default function PDFReader(): ReactElement {
     onNavigateToPage: changePage,
   });
 
-  /* Global Keyboard shortcuts: Ctrl+F for Search, Ctrl+B for Left Sidebar, Ctrl+J for AI Sidebar, F3/Ctrl+G for match jump */
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-
-      // Global Ctrl+F / Cmd+F shortcut to open search
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
-        if (hasDocument) {
-          e.preventDefault();
-          openSearch();
-        }
-        return;
-      }
-
-      // Escape shortcut to close search
-      if (e.key === "Escape" && isSearchOpen) {
-        e.preventDefault();
-        closeSearch();
-        return;
-      }
-
-      // F3 / Shift+F3 or Ctrl+G / Ctrl+Shift+G to jump between search matches
-      if (e.key === "F3" || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "g")) {
-        if (isSearchOpen && totalMatches > 0) {
-          e.preventDefault();
-          if (e.shiftKey) {
-            goToPrevMatch();
-          } else {
-            goToNextMatch();
-          }
-        }
-        return;
-      }
-
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-        return;
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
-        e.preventDefault();
-        setSidebarOpen((prev) => !prev);
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
-        e.preventDefault();
-        if (hasDocument) {
-          setAiSidebarOpen((prev) => !prev);
-        }
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [setSidebarOpen, setAiSidebarOpen, hasDocument, isSearchOpen, openSearch, closeSearch, totalMatches, goToNextMatch, goToPrevMatch]);
-
-
   const doAutoNext = useCallback(() => {
     setPageNum((p) => {
       const next = p + 1;
@@ -917,6 +877,7 @@ export default function PDFReader(): ReactElement {
         const charInLocal = c - localStarts[li];
         const actualCharOffset = li === 0 ? charOffset + charInLocal : charInLocal;
         currentReadingPosRef.current = { paraIndex: actualIdx, charOffset: actualCharOffset };
+        setActiveCharOffset(actualCharOffset);
         const fullParaText = paragraphs[actualIdx] ?? "";
         setParaProgress(Math.min(1, actualCharOffset / (fullParaText.length || 1)));
       };
@@ -925,6 +886,7 @@ export default function PDFReader(): ReactElement {
         setTtsState("idle");
         ttsStateRef.current = "idle";
         setActivePara(-1);
+        setActiveCharOffset(0);
         setParaProgress(0);
         currentReadingPosRef.current = { paraIndex: 0, charOffset: 0 };
         if (autoNextRef.current) {
@@ -937,6 +899,7 @@ export default function PDFReader(): ReactElement {
         setTtsState("idle");
         ttsStateRef.current = "idle";
         setActivePara(-1);
+        setActiveCharOffset(0);
         setParaProgress(0);
         currentReadingPosRef.current = { paraIndex: 0, charOffset: 0 };
         autoNextRef.current = false;
@@ -1032,11 +995,149 @@ export default function PDFReader(): ReactElement {
       const targetText = paragraphs[pIdx] ?? "";
       const snapped = snapToWord(targetText, charOffset);
       buildAndSpeak(pIdx, snapped);
+    } else if (paragraphs.length > 0) {
+      const pIdx = activePara >= 0 ? activePara : 0;
+      buildAndSpeak(pIdx, 0);
     }
   };
 
   const prevPage = () => changePage(pageNum - 1);
   const nextPage = () => changePage(pageNum + 1);
+
+  /* Global Keyboard shortcuts: Space (Play/Pause TTS), ArrowLeft/Right (Page navigation), Ctrl+F (Search), Ctrl+B, Ctrl+J, Alt+1/2/3 */
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Global Ctrl+F / Cmd+F shortcut to open search
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        if (hasDocument) {
+          e.preventDefault();
+          openSearch();
+        }
+        return;
+      }
+
+      // Escape shortcut to close search
+      if (e.key === "Escape" && isSearchOpen) {
+        e.preventDefault();
+        closeSearch();
+        return;
+      }
+
+      // F3 / Shift+F3 or Ctrl+G / Ctrl+Shift+G to jump between search matches
+      if (e.key === "F3" || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "g")) {
+        if (isSearchOpen && totalMatches > 0) {
+          e.preventDefault();
+          if (e.shiftKey) {
+            goToPrevMatch();
+          } else {
+            goToNextMatch();
+          }
+        }
+        return;
+      }
+
+      // Ignore regular typing keys when focused inside inputs, textareas, or editable elements
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+
+      // Alt+1 / Alt+2 / Alt+3 Mode Switcher shortcuts
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (e.key === "1") {
+          e.preventDefault();
+          setActiveMode("viewer");
+          return;
+        }
+        if (e.key === "2") {
+          e.preventDefault();
+          setActiveMode("reader");
+          return;
+        }
+        if (e.key === "3") {
+          e.preventDefault();
+          if (pdfBytes) setActiveMode("editor");
+          return;
+        }
+      }
+
+      // Space key shortcut to play/pause TTS reading (viewer & reader mode)
+      if (
+        (e.code === "Space" || e.key === " " || e.key === "Spacebar") &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        activeMode !== "editor"
+      ) {
+        if (hasDocument && paragraphs.length > 0) {
+          e.preventDefault();
+          pauseTts();
+          return;
+        }
+      }
+
+      // ArrowLeft / PageUp: Previous page in PDF mode
+      if (
+        (e.key === "ArrowLeft" || e.key === "PageUp") &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        activeMode !== "editor"
+      ) {
+        if (sourceMode === "pdf" && totalPages > 1 && pageNum > 1) {
+          e.preventDefault();
+          changePage(pageNum - 1);
+          return;
+        }
+      }
+
+      // ArrowRight / PageDown: Next page in PDF mode
+      if (
+        (e.key === "ArrowRight" || e.key === "PageDown") &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        activeMode !== "editor"
+      ) {
+        if (sourceMode === "pdf" && totalPages > 1 && pageNum < totalPages) {
+          e.preventDefault();
+          changePage(pageNum + 1);
+          return;
+        }
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        setSidebarOpen((prev) => !prev);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        if (hasDocument) {
+          setAiSidebarOpen((prev) => !prev);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [
+    setSidebarOpen,
+    setAiSidebarOpen,
+    hasDocument,
+    isSearchOpen,
+    openSearch,
+    closeSearch,
+    totalMatches,
+    goToNextMatch,
+    goToPrevMatch,
+    pdfBytes,
+    activeMode,
+    paragraphs.length,
+    pauseTts,
+    sourceMode,
+    totalPages,
+    pageNum,
+    changePage,
+  ]);
 
   /* Colour tokens */
   const isAmoled = resolvedTheme === "amoled";
@@ -1090,8 +1191,14 @@ export default function PDFReader(): ReactElement {
             </div>
           )}
 
-          {/* Header */}
+          {/* Header with 3-Mode Switcher */}
           <Header
+            activeMode={activeMode}
+            onModeChange={(m) => {
+              if (m === "editor" && !pdfBytes) return;
+              setActiveMode(m);
+            }}
+            canOpenEditor={Boolean(pdfBytes)}
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
             aiSidebarOpen={aiSidebarOpen}
@@ -1115,230 +1222,318 @@ export default function PDFReader(): ReactElement {
             textMut={textMut}
           />
 
-          <div className="relative flex flex-1 overflow-hidden">
-            {/* Floating trigger button to expand Left sidebar when collapsed */}
-            {!sidebarOpen && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                title="Expand left sidebar (Ctrl+B)"
-                className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 group cursor-pointer"
-                style={{
-                  background: isAmoled ? "rgba(0, 0, 0, 0.95)" : isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.94)",
-                  borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
-                  color: textMain,
-                }}
+          {/* 1. Mode: Editor (PDF Studio Fullscreen Editor) */}
+          {activeMode === "editor" && pdfBytes ? (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <Suspense
+                fallback={
+                  <div className="flex-1 flex items-center justify-center gap-3" style={{ background: bgCanvas }}>
+                    <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm font-semibold text-amber-500">Loading PDF Studio Editor...</span>
+                  </div>
+                }
               >
-              <span className="text-amber-500 transition-transform duration-150 group-hover:translate-x-0.5">
-                <IcoChevR size={13} />
-              </span>
-              <span className="text-xs font-bold text-amber-500">Sidebar</span>
-            </button>
-          )}
+                <PdfEditor
+                  pdfFileBytes={pdfBytes}
+                  fileName={fileName}
+                  onClose={() => setActiveMode("viewer")}
+                  onSave={handleSaveEditedPdf}
+                  isDark={isDark}
+                />
+              </Suspense>
+            </div>
+          ) : activeMode === "reader" ? (
+            /* 2. Mode: Reader (Clean Markdown View + Left-Gutter TTS + Live Word Highlighting) */
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <Suspense
+                fallback={
+                  <div className="flex-1 flex items-center justify-center gap-3" style={{ background: bgCanvas }}>
+                    <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm font-semibold text-amber-500">Preparing Reader View...</span>
+                  </div>
+                }
+              >
+                <ReaderModeView
+                  sourceMode={sourceMode}
+                  docTitle={displayTitle}
+                  docMarkdown={docMarkdown}
+                  paragraphs={paragraphs}
+                  activePara={activePara}
+                  activeCharOffset={activeCharOffset}
+                  paraProgress={paraProgress}
+                  ttsState={ttsState}
+                  startReading={startReading}
+                  pauseTts={pauseTts}
+                  stopTts={stopTts}
+                  seekTo={seekTo}
+                  voices={voices}
+                  selectedVoice={selectedVoice}
+                  setSelectedVoice={setSelectedVoice}
+                  ttsRate={ttsRate}
+                  setTtsRate={setTtsRate}
+                  ttsPitch={ttsPitch}
+                  setTtsPitch={setTtsPitch}
+                  ttsVolume={ttsVolume}
+                  setTtsVolume={setTtsVolume}
+                  autoNextPage={autoNextPage}
+                  setAutoNextPage={setAutoNextPage}
+                  isLoading={pdfLoading || webLoading || isExtractingMarkdown || pageTextLoading}
+                  isExtractingMarkdown={isExtractingMarkdown}
+                  pdfLoading={pdfLoading}
+                  webLoading={webLoading}
+                  pageNum={pageNum}
+                  totalPages={totalPages}
+                  changePage={changePage}
+                  pageSizes={pageSizes}
+                  fileInputRef={fileInputRef}
+                  onLoadSample={handleLoadSampleDocument}
+                  onExportMarkdown={() => setIsMarkdownModalOpen(true)}
+                  isSearchOpen={isSearchOpen}
+                  onOpenSearch={openSearch}
+                  onCloseSearch={closeSearch}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  isSearching={isSearching}
+                  searchOptions={searchOptions}
+                  onToggleMatchCase={() => setMatchCase((v) => !v)}
+                  onToggleWholeWord={() => setWholeWord((v) => !v)}
+                  activeMatchIndex={activeMatchIndex}
+                  totalMatches={totalMatches}
+                  onNextMatch={goToNextMatch}
+                  onPrevMatch={goToPrevMatch}
+                  searchMatches={searchMatches}
+                  border={border}
+                  bgInput={bgInput}
+                  bgCanvas={bgCanvas}
+                  textMain={textMain}
+                  textMut={textMut}
+                />
+              </Suspense>
+            </div>
+          ) : (
+            /* 3. Mode: Viewer (Default On-Device PDF Viewer & AI Companion) */
+            <div className="relative flex flex-1 overflow-hidden">
+              {/* Floating trigger button to expand Left sidebar when collapsed */}
+              {!sidebarOpen && (
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  title="Expand left sidebar (Ctrl+B)"
+                  className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 group cursor-pointer"
+                  style={{
+                    background: isAmoled ? "rgba(0, 0, 0, 0.95)" : isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.94)",
+                    borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
+                    color: textMain,
+                  }}
+                >
+                  <span className="text-amber-500 transition-transform duration-150 group-hover:translate-x-0.5">
+                    <IcoChevR size={13} />
+                  </span>
+                  <span className="text-xs font-bold text-amber-500">Sidebar</span>
+                </button>
+              )}
 
-          {/* Left Sidebar (Document & TTS Controls) */}
-          <Sidebar
-            sidebarOpen={sidebarOpen}
-            setSidebarOpen={setSidebarOpen}
-            sidebarWidth={sidebarWidth}
-            isDragging={isSidebarDragging}
-            onResizeMouseDown={handleSidebarMouseDown}
-            onResizeTouchStart={handleSidebarTouchStart}
-            onResetWidth={resetSidebarWidth}
-            sourceMode={sourceMode}
-            setSourceMode={setSourceMode}
-            pdfReady={pdfReady}
-            pdfDoc={pdfDoc}
-            pdfBytes={pdfBytes}
-            setIsEditorOpen={setIsEditorOpen}
-            fileInputRef={fileInputRef}
-            handleFile={handleFile}
-            localDrag={localDrag}
-            setLocalDrag={setLocalDrag}
-            fetchWebPage={fetchWebPage}
-            webLoading={webLoading}
-            webLoaded={webLoaded}
-            webTitle={webTitle}
-            webError={webError}
-            clearWeb={clearWeb}
-            hasContent={hasContent}
-            ttsState={ttsState}
-            startReading={startReading}
-            pauseTts={pauseTts}
-            stopTts={stopTts}
-            voices={voices}
-            selectedVoice={selectedVoice}
-            setSelectedVoice={setSelectedVoice}
-            ttsRate={ttsRate}
-            setTtsRate={setTtsRate}
-            ttsPitch={ttsPitch}
-            setTtsPitch={setTtsPitch}
-            ttsVolume={ttsVolume}
-            setTtsVolume={setTtsVolume}
-            autoNextPage={autoNextPage}
-            setAutoNextPage={setAutoNextPage}
-            headerText={headerText}
-            readHeader={readHeader}
-            setReadHeader={setReadHeader}
-            headerPct={headerPct}
-            setHeaderPct={setHeaderPct}
-            footerText={footerText}
-            readFooter={readFooter}
-            setReadFooter={setReadFooter}
-            footerPct={footerPct}
-            setFooterPct={setFooterPct}
-            paragraphs={paragraphs}
-            activePara={activePara}
-            paraProgress={paraProgress}
-            seekTo={seekTo}
-            paraListRef={paraListRef}
-            border={border}
-            bgSide={bgSide}
-            bgInput={bgInput}
-            bgHover={bgHover}
-            textMain={textMain}
-            textMut={textMut}
-          />
+              {/* Left Sidebar (Document & TTS Controls) */}
+              <Sidebar
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                sidebarWidth={sidebarWidth}
+                isDragging={isSidebarDragging}
+                onResizeMouseDown={handleSidebarMouseDown}
+                onResizeTouchStart={handleSidebarTouchStart}
+                onResetWidth={resetSidebarWidth}
+                sourceMode={sourceMode}
+                setSourceMode={setSourceMode}
+                pdfReady={pdfReady}
+                pdfDoc={pdfDoc}
+                pdfBytes={pdfBytes}
+                setIsEditorOpen={(open) => setActiveMode(open ? "editor" : "viewer")}
+                fileInputRef={fileInputRef}
+                handleFile={handleFile}
+                localDrag={localDrag}
+                setLocalDrag={setLocalDrag}
+                fetchWebPage={fetchWebPage}
+                webLoading={webLoading}
+                webLoaded={webLoaded}
+                webTitle={webTitle}
+                webError={webError}
+                clearWeb={clearWeb}
+                hasContent={hasContent}
+                ttsState={ttsState}
+                startReading={startReading}
+                pauseTts={pauseTts}
+                stopTts={stopTts}
+                voices={voices}
+                selectedVoice={selectedVoice}
+                setSelectedVoice={setSelectedVoice}
+                ttsRate={ttsRate}
+                setTtsRate={setTtsRate}
+                ttsPitch={ttsPitch}
+                setTtsPitch={setTtsPitch}
+                ttsVolume={ttsVolume}
+                setTtsVolume={setTtsVolume}
+                autoNextPage={autoNextPage}
+                setAutoNextPage={setAutoNextPage}
+                headerText={headerText}
+                readHeader={readHeader}
+                setReadHeader={setReadHeader}
+                headerPct={headerPct}
+                setHeaderPct={setHeaderPct}
+                footerText={footerText}
+                readFooter={readFooter}
+                setReadFooter={setReadFooter}
+                footerPct={footerPct}
+                setFooterPct={setFooterPct}
+                paragraphs={paragraphs}
+                activePara={activePara}
+                paraProgress={paraProgress}
+                seekTo={seekTo}
+                paraListRef={paraListRef}
+                border={border}
+                bgSide={bgSide}
+                bgInput={bgInput}
+                bgHover={bgHover}
+                textMain={textMain}
+                textMut={textMut}
+              />
 
-          {/* Main viewer */}
-          <PdfViewer
-            sourceMode={sourceMode}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            pdfDoc={pdfDoc}
-            pdfLoading={pdfLoading}
-            pdfBytes={pdfBytes}
-            pageNum={pageNum}
-            totalPages={totalPages}
-            scale={scale}
-            setScale={setScale}
-            prevPage={prevPage}
-            nextPage={nextPage}
-            changePage={changePage}
-            autoNextPage={autoNextPage}
-            pageSizes={pageSizes}
-            scrollContainerRef={scrollContainerRef}
-            pageRefs={pageRefs}
-            canvasRef={canvasRef}
-            fileInputRef={fileInputRef}
-            rendering={rendering}
-            setIsEditorOpen={setIsEditorOpen}
-            onExportMarkdown={() => setIsMarkdownModalOpen(true)}
-            onLoadSample={handleLoadSampleDocument}
-            isSearchOpen={isSearchOpen}
-            onOpenSearch={openSearch}
-            onCloseSearch={closeSearch}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            isSearching={isSearching}
-            searchOptions={searchOptions}
-            onToggleMatchCase={() => setMatchCase((v) => !v)}
-            onToggleWholeWord={() => setWholeWord((v) => !v)}
-            activeMatchIndex={activeMatchIndex}
-            totalMatches={totalMatches}
-            onNextMatch={goToNextMatch}
-            onPrevMatch={goToPrevMatch}
-            getPageMatches={getPageMatches}
-            searchMatches={searchMatches}
-            webUrl={webUrl}
-            webTitle={webTitle}
-            webLoading={webLoading}
-            webLoaded={webLoaded}
-            paragraphs={paragraphs}
-            activePara={activePara}
-            ttsState={ttsState}
-            paraProgress={paraProgress}
-            startReading={startReading}
-            seekTo={seekTo}
-            border={border}
-            bgCard={bgCard}
-            bgInput={bgInput}
-            bgHover={bgHover}
-            bgCanvas={bgCanvas}
-            textMain={textMain}
-            textMut={textMut}
-          />
+              {/* Main viewer */}
+              <PdfViewer
+                sourceMode={sourceMode}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                pdfDoc={pdfDoc}
+                pdfLoading={pdfLoading}
+                pdfBytes={pdfBytes}
+                pageNum={pageNum}
+                totalPages={totalPages}
+                scale={scale}
+                setScale={setScale}
+                prevPage={prevPage}
+                nextPage={nextPage}
+                changePage={changePage}
+                autoNextPage={autoNextPage}
+                pageSizes={pageSizes}
+                scrollContainerRef={scrollContainerRef}
+                pageRefs={pageRefs}
+                canvasRef={canvasRef}
+                fileInputRef={fileInputRef}
+                rendering={rendering}
+                setIsEditorOpen={(open) => setActiveMode(open ? "editor" : "viewer")}
+                onExportMarkdown={() => setIsMarkdownModalOpen(true)}
+                onLoadSample={handleLoadSampleDocument}
+                isSearchOpen={isSearchOpen}
+                onOpenSearch={openSearch}
+                onCloseSearch={closeSearch}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                isSearching={isSearching}
+                searchOptions={searchOptions}
+                onToggleMatchCase={() => setMatchCase((v) => !v)}
+                onToggleWholeWord={() => setWholeWord((v) => !v)}
+                activeMatchIndex={activeMatchIndex}
+                totalMatches={totalMatches}
+                onNextMatch={goToNextMatch}
+                onPrevMatch={goToPrevMatch}
+                getPageMatches={getPageMatches}
+                searchMatches={searchMatches}
+                webUrl={webUrl}
+                webTitle={webTitle}
+                webLoading={webLoading}
+                webLoaded={webLoaded}
+                paragraphs={paragraphs}
+                activePara={activePara}
+                ttsState={ttsState}
+                paraProgress={paraProgress}
+                startReading={startReading}
+                seekTo={seekTo}
+                border={border}
+                bgCard={bgCard}
+                bgInput={bgInput}
+                bgHover={bgHover}
+                bgCanvas={bgCanvas}
+                textMain={textMain}
+                textMut={textMut}
+              />
 
-          {/* Right Sidebar (Firebase AI Chat & Document Intelligence) - Shown only after document is loaded */}
-          {hasDocument && (
-            <AiChatSidebar
-              sidebarOpen={aiSidebarOpen}
-              setSidebarOpen={setAiSidebarOpen}
-              sidebarWidth={aiSidebarWidth}
-              isDragging={isAiSidebarDragging}
-              onResizeMouseDown={handleAiSidebarMouseDown}
-              onResizeTouchStart={handleAiSidebarTouchStart}
-              onResetWidth={resetAiSidebarWidth}
-              docTitle={sourceMode === "web" ? webTitle : fileName}
-              docMarkdown={docMarkdown}
-              currentPageMarkdown={currentPageMarkdown}
-              getPageMarkdown={getPageMarkdown}
-              isExtractingMarkdown={isExtractingMarkdown}
-              currentPage={pageNum}
-              totalPages={totalPages}
-              sourceMode={sourceMode}
-              voices={voices}
-              selectedVoice={selectedVoice}
-              ttsRate={ttsRate}
-              ttsPitch={ttsPitch}
-              ttsVolume={ttsVolume}
-              border={border}
-              bgSide={bgSide}
-              bgInput={bgInput}
-              bgHover={bgHover}
-              textMain={textMain}
-              textMut={textMut}
-            />
-          )}
+              {/* Right Sidebar (Firebase AI Chat & Document Intelligence) - Shown only after document is loaded */}
+              {hasDocument && (
+                <Suspense fallback={null}>
+                  <AiChatSidebar
+                    sidebarOpen={aiSidebarOpen}
+                    setSidebarOpen={setAiSidebarOpen}
+                    sidebarWidth={aiSidebarWidth}
+                    isDragging={isAiSidebarDragging}
+                    onResizeMouseDown={handleAiSidebarMouseDown}
+                    onResizeTouchStart={handleAiSidebarTouchStart}
+                    onResetWidth={resetAiSidebarWidth}
+                    docTitle={sourceMode === "web" ? webTitle : fileName}
+                    docMarkdown={docMarkdown}
+                    currentPageMarkdown={currentPageMarkdown}
+                    getPageMarkdown={getPageMarkdown}
+                    isExtractingMarkdown={isExtractingMarkdown}
+                    currentPage={pageNum}
+                    totalPages={totalPages}
+                    sourceMode={sourceMode}
+                    voices={voices}
+                    selectedVoice={selectedVoice}
+                    ttsRate={ttsRate}
+                    ttsPitch={ttsPitch}
+                    ttsVolume={ttsVolume}
+                    border={border}
+                    bgSide={bgSide}
+                    bgInput={bgInput}
+                    bgHover={bgHover}
+                    textMain={textMain}
+                    textMut={textMut}
+                  />
+                </Suspense>
+              )}
 
-          {/* Floating trigger button to expand AI sidebar when collapsed - Shown only after document is loaded */}
-          {hasDocument && !aiSidebarOpen && (
-            <button
-              onClick={() => setAiSidebarOpen(true)}
-              title="Expand AI Chat (Ctrl+J)"
-              className="absolute right-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 group cursor-pointer"
-              style={{
-                background: isAmoled
-                  ? "rgba(0, 0, 0, 0.95)"
-                  : isDark
-                  ? "rgba(30, 41, 59, 0.9)"
-                  : "rgba(255, 255, 255, 0.94)",
-                borderColor: isAmoled
-                  ? "rgba(37, 99, 235, 0.5)"
-                  : isDark
-                  ? "rgba(66, 133, 244, 0.4)"
-                  : "#60a5fa",
-                color: textMain,
-              }}
-            >
-              <span className="text-blue-500 transition-transform duration-150 group-hover:scale-110">
-                <IcoSparklesFilled size={13} />
-              </span>
-              <span className="text-xs font-bold text-blue-500">Ask AI</span>
-            </button>
+              {/* Floating trigger button to expand AI sidebar when collapsed - Shown only after document is loaded */}
+              {hasDocument && !aiSidebarOpen && (
+                <button
+                  onClick={() => setAiSidebarOpen(true)}
+                  title="Expand AI Chat (Ctrl+J)"
+                  className="absolute right-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 group cursor-pointer"
+                  style={{
+                    background: isAmoled
+                      ? "rgba(0, 0, 0, 0.95)"
+                      : isDark
+                      ? "rgba(30, 41, 59, 0.9)"
+                      : "rgba(255, 255, 255, 0.94)",
+                    borderColor: isAmoled
+                      ? "rgba(37, 99, 235, 0.5)"
+                      : isDark
+                      ? "rgba(66, 133, 244, 0.4)"
+                      : "#60a5fa",
+                    color: textMain,
+                  }}
+                >
+                  <span className="text-blue-500 transition-transform duration-150 group-hover:scale-110">
+                    <IcoSparklesFilled size={13} />
+                  </span>
+                  <span className="text-xs font-bold text-blue-500">Ask AI</span>
+                </button>
+              )}
+            </div>
           )}
         </div>
-      </div>
-      {isEditorOpen && pdfBytes && (
-        <PdfEditor
-          pdfFileBytes={pdfBytes}
-          fileName={fileName}
-          onClose={() => setIsEditorOpen(false)}
-          onSave={handleSaveEditedPdf}
-          isDark={isDark}
-        />
-      )}
-      <MarkdownExportModal
-        isOpen={isMarkdownModalOpen}
-        onClose={() => setIsMarkdownModalOpen(false)}
-        pdfBytes={pdfBytes}
-        fileName={fileName}
-        sourceMode={sourceMode}
-        currentPage={pageNum}
-        totalPages={totalPages}
-        webTitle={webTitle}
-        webUrl={webUrl}
-        webParagraphs={paragraphs}
-      />
+        {isMarkdownModalOpen && (
+          <Suspense fallback={null}>
+            <MarkdownExportModal
+              isOpen={isMarkdownModalOpen}
+              onClose={() => setIsMarkdownModalOpen(false)}
+              pdfBytes={pdfBytes}
+              fileName={fileName}
+              sourceMode={sourceMode}
+              currentPage={pageNum}
+              totalPages={totalPages}
+              webTitle={webTitle}
+              webUrl={webUrl}
+              webParagraphs={paragraphs}
+            />
+          </Suspense>
+        )}
       </ThemeCtx.Provider>
     </DarkCtx.Provider>
   );

@@ -327,6 +327,13 @@ export const Sidebar: FC<SidebarProps> = ({
               <button
                 disabled={!hasContent}
                 onClick={ttsState === "idle" ? () => startReading(0) : pauseTts}
+                title={
+                  ttsState === "playing"
+                    ? "Pause Narration (Space)"
+                    : ttsState === "paused"
+                    ? "Resume Reading (Space)"
+                    : "Start Reading (Space)"
+                }
                 className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2 px-4 text-xs font-bold tracking-wide transition-all duration-150 active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-sm cursor-pointer"
                 style={{
                   background:
