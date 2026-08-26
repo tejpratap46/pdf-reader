@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useRef, useEffect, RefObject, Fragment } from "react";
+import { FC, useState, useMemo, useRef, useEffect, useCallback, RefObject, Fragment } from "react";
 import { SourceMode, TtsState, ReaderTypographyConfig } from "../../types/reader";
 import { SearchMatch, SearchOptions } from "../../types/search";
 import { useDark, useThemeMode } from "../../hooks/useTheme";
@@ -17,6 +17,11 @@ import {
   IcoStop,
   IcoPlay,
   IcoPause,
+  IcoSkipBack,
+  IcoSkipForward,
+  IcoVolume,
+  IcoVolume1,
+  IcoVolumeX,
 } from "../common/Icons";
 
 interface ReaderModeViewProps {
@@ -221,6 +226,38 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
       el.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }, [activePara]);
+
+  // Paragraph navigation handlers for the bottom reader dock
+  const onPrevPara = useCallback(() => {
+    if (paragraphs.length === 0) return;
+    const current = activePara >= 0 ? activePara : 0;
+    const prev = Math.max(0, current - 1);
+    startReading(prev);
+  }, [paragraphs, activePara, startReading]);
+
+  const onNextPara = useCallback(() => {
+    if (paragraphs.length === 0) return;
+    const current = activePara >= 0 ? activePara : -1;
+    const next = Math.min(paragraphs.length - 1, current + 1);
+    startReading(next);
+  }, [paragraphs, activePara, startReading]);
+
+  const handleBottomPlayPause = useCallback(() => {
+    pauseTts();
+  }, [pauseTts]);
+
+  // Volume state & mute toggle for bottom bar
+  const [showVolumePopover, setShowVolumePopover] = useState(false);
+  const prevVolumeRef = useRef(ttsVolume > 0 ? ttsVolume : 1);
+
+  const toggleMute = useCallback(() => {
+    if (ttsVolume > 0) {
+      prevVolumeRef.current = ttsVolume;
+      setTtsVolume(0);
+    } else {
+      setTtsVolume(prevVolumeRef.current || 1);
+    }
+  }, [ttsVolume, setTtsVolume]);
 
   return (
     <main
@@ -455,17 +492,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
               {/* Play / Pause Toggle Button */}
               <button
                 type="button"
-                onClick={
-                  ttsState === "playing"
-                    ? pauseTts
-                    : () => {
-                        if (activePara >= 0) {
-                          startReading(activePara);
-                        } else {
-                          pauseTts();
-                        }
-                      }
-                }
+                onClick={pauseTts}
                 title={
                   ttsState === "playing"
                     ? "Pause Narration (Space)"
@@ -810,6 +837,296 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Bottom Floating Reader Player Dock */}
+      {hasDocument && paragraphs.length > 0 && (
+        <div
+          className="shrink-0 sticky bottom-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3 border-t backdrop-blur-xl transition-all select-none"
+          style={{
+            borderColor: border,
+            background: isAmoled
+              ? "rgba(0, 0, 0, 0.94)"
+              : isDark
+              ? "rgba(15, 23, 42, 0.92)"
+              : "rgba(255, 255, 255, 0.95)",
+            boxShadow: isDark
+              ? "0 -4px 24px rgba(0, 0, 0, 0.4)"
+              : "0 -4px 20px rgba(0, 0, 0, 0.06)",
+          }}
+        >
+          {/* Top subtle reading progress line across the document */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-black/5 dark:bg-white/5 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-300 ease-out"
+              style={{
+                width: `${
+                  paragraphs.length > 0
+                    ? Math.round(
+                        ((Math.max(0, activePara) + (ttsState !== "idle" ? paraProgress : 0)) /
+                          paragraphs.length) *
+                          100
+                      )
+                    : 0
+                }%`,
+              }}
+            />
+          </div>
+
+          <div className="max-w-4xl mx-auto flex items-center justify-between gap-3 sm:gap-6">
+            {/* Left: Paragraph info and active snippet */}
+            <div className="flex items-center gap-2.5 min-w-0 flex-1 sm:flex-initial">
+              <button
+                type="button"
+                onClick={() => {
+                  if (activePara >= 0 && containerRef.current) {
+                    const el = containerRef.current.querySelector<HTMLElement>(`[data-para="${activePara}"]`);
+                    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+                  }
+                }}
+                title="Scroll to active paragraph"
+                className="flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs font-semibold hover:border-amber-500/50 transition-all cursor-pointer truncate shadow-2xs"
+                style={{ borderColor: border, background: bgInput, color: textMain }}
+              >
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{
+                    background:
+                      ttsState === "playing"
+                        ? "#22c55e"
+                        : ttsState === "paused"
+                        ? "#f59e0b"
+                        : activePara >= 0
+                        ? "#f59e0b"
+                        : textMut,
+                    boxShadow: ttsState === "playing" ? "0 0 8px #22c55e" : undefined,
+                  }}
+                />
+                <span className="font-mono text-[11px] whitespace-nowrap">
+                  {activePara >= 0 ? `Para ${activePara + 1} / ${paragraphs.length}` : `Ready (${paragraphs.length} paras)`}
+                </span>
+              </button>
+
+              {/* Active paragraph preview snippet */}
+              {activePara >= 0 && paragraphs[activePara] && (
+                <span
+                  className="hidden md:inline-block text-xs truncate max-w-[200px] lg:max-w-[340px] italic opacity-80"
+                  style={{ color: textMut }}
+                  title={paragraphs[activePara]}
+                >
+                  "{paragraphs[activePara]}"
+                </span>
+              )}
+            </div>
+
+            {/* Center: Main Playback & Paragraph Skip Controls */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {/* Skip to Previous Paragraph */}
+              <button
+                type="button"
+                onClick={onPrevPara}
+                disabled={activePara <= 0}
+                title="Previous Paragraph (Alt+Up or [)"
+                aria-label="Skip to previous paragraph"
+                className="p-2 sm:p-2.5 rounded-full border transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer shadow-2xs"
+                style={{
+                  borderColor: border,
+                  background: bgInput,
+                  color: textMain,
+                }}
+              >
+                <IcoSkipBack size={15} />
+              </button>
+
+              {/* Main Play / Pause Button */}
+              <button
+                type="button"
+                onClick={handleBottomPlayPause}
+                title={
+                  ttsState === "playing"
+                    ? "Pause Narration (Space)"
+                    : ttsState === "paused"
+                    ? "Resume Narration (Space)"
+                    : activePara >= 0
+                    ? `Resume Narration at Para ${activePara + 1} (Space)`
+                    : "Start Narration (Space)"
+                }
+                aria-label={ttsState === "playing" ? "Pause reading" : "Play reading"}
+                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md ${
+                  ttsState === "playing"
+                    ? "bg-gradient-to-tr from-amber-500 to-amber-400 text-white shadow-amber-500/25 scale-105"
+                    : ttsState === "paused"
+                    ? "bg-amber-500/20 text-amber-500 border border-amber-500/60 ring-2 ring-amber-500/20 hover:bg-amber-500 hover:text-white"
+                    : "bg-amber-500 text-white hover:bg-amber-600 hover:scale-105 shadow-amber-500/20"
+                }`}
+              >
+                {ttsState === "playing" ? (
+                  <IcoPause size={17} />
+                ) : (
+                  <span className="ml-0.5">
+                    <IcoPlay size={16} />
+                  </span>
+                )}
+              </button>
+
+              {/* Skip to Next Paragraph */}
+              <button
+                type="button"
+                onClick={onNextPara}
+                disabled={activePara >= paragraphs.length - 1}
+                title="Next Paragraph (Alt+Down or ])"
+                aria-label="Skip to next paragraph"
+                className="p-2 sm:p-2.5 rounded-full border transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer shadow-2xs"
+                style={{
+                  borderColor: border,
+                  background: bgInput,
+                  color: textMain,
+                }}
+              >
+                <IcoSkipForward size={15} />
+              </button>
+            </div>
+
+            {/* Right: Volume, Speed & Stop Controls */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Real-time Volume Control Widget */}
+              <div className="relative flex items-center">
+                {/* Desktop / Tablet: Inline Volume Pill */}
+                <div
+                  className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all shadow-2xs group hover:border-amber-500/40"
+                  style={{ borderColor: border, background: bgInput, color: textMain }}
+                >
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    title={ttsVolume === 0 ? "Unmute (Click)" : "Mute (Click)"}
+                    aria-label={ttsVolume === 0 ? "Unmute narration" : "Mute narration"}
+                    className="cursor-pointer text-amber-600 dark:text-amber-400 hover:scale-110 active:scale-95 transition-transform"
+                  >
+                    {ttsVolume === 0 ? (
+                      <IcoVolumeX size={15} />
+                    ) : ttsVolume < 0.5 ? (
+                      <IcoVolume1 size={15} />
+                    ) : (
+                      <IcoVolume size={15} />
+                    )}
+                  </button>
+
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={ttsVolume}
+                    onChange={(e) => setTtsVolume(parseFloat(e.target.value))}
+                    title={`Volume: ${Math.round(ttsVolume * 100)}%`}
+                    aria-label="Narration volume"
+                    className="w-16 sm:w-20 lg:w-24 h-1.5 accent-amber-500 rounded-lg cursor-pointer bg-black/10 dark:bg-white/15"
+                  />
+
+                  <span className="font-mono text-[10px] w-7 text-right select-none opacity-80" style={{ color: textMut }}>
+                    {Math.round(ttsVolume * 100)}%
+                  </span>
+                </div>
+
+                {/* Mobile / Small Screen: Popover Volume Button */}
+                <div className="relative md:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowVolumePopover((v) => !v)}
+                    title={`Volume: ${Math.round(ttsVolume * 100)}%`}
+                    aria-label="Adjust narration volume"
+                    className={`p-2 rounded-xl border transition-all active:scale-95 cursor-pointer shadow-2xs ${
+                      showVolumePopover || ttsVolume === 0
+                        ? "border-amber-500 bg-amber-500/15 text-amber-500"
+                        : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                    }`}
+                    style={{ borderColor: showVolumePopover ? "#f59e0b" : border, background: bgInput }}
+                  >
+                    {ttsVolume === 0 ? (
+                      <IcoVolumeX size={14} />
+                    ) : ttsVolume < 0.5 ? (
+                      <IcoVolume1 size={14} />
+                    ) : (
+                      <IcoVolume size={14} />
+                    )}
+                  </button>
+
+                  {/* Popover slider on mobile */}
+                  {showVolumePopover && (
+                    <div
+                      className="absolute bottom-full right-0 mb-2 p-3 rounded-2xl border shadow-xl backdrop-blur-xl z-50 flex flex-col items-center gap-2 animate-scaleUp"
+                      style={{
+                        background: isAmoled
+                          ? "rgba(10, 10, 12, 0.98)"
+                          : isDark
+                          ? "rgba(17, 24, 39, 0.98)"
+                          : "rgba(255, 255, 255, 0.98)",
+                        borderColor: border,
+                        color: textMain,
+                      }}
+                    >
+                      <div className="flex items-center justify-between w-full gap-3 text-xs font-semibold">
+                        <span className="text-[11px]" style={{ color: textMut }}>Volume</span>
+                        <span className="font-mono text-amber-500 font-bold">{Math.round(ttsVolume * 100)}%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={toggleMute}
+                          className="p-1 text-amber-500 hover:bg-amber-500/10 rounded-lg cursor-pointer"
+                        >
+                          {ttsVolume === 0 ? <IcoVolumeX size={14} /> : <IcoVolume size={14} />}
+                        </button>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          value={ttsVolume}
+                          onChange={(e) => setTtsVolume(parseFloat(e.target.value))}
+                          className="w-28 h-1.5 accent-amber-500 rounded-lg cursor-pointer bg-black/10 dark:bg-white/15"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Speed Cycler Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const rates = [1, 1.25, 1.5, 1.75, 2];
+                  const nextIdx = (rates.indexOf(ttsRate) + 1) % rates.length;
+                  setTtsRate(rates[nextIdx >= 0 ? nextIdx : 0]);
+                }}
+                title="Playback speed"
+                className="px-2.5 py-1 rounded-xl text-xs font-bold border transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 shadow-2xs"
+                style={{
+                  borderColor: border,
+                  background: bgInput,
+                  color: ttsState === "playing" ? "#f59e0b" : textMain,
+                }}
+              >
+                <span>{ttsRate}x</span>
+              </button>
+
+              {/* Stop button when active */}
+              {ttsState !== "idle" && (
+                <button
+                  type="button"
+                  onClick={() => stopTts()}
+                  title="Stop Narration (Escape)"
+                  aria-label="Stop narration"
+                  className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/15 border border-rose-500/20 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                >
+                  <IcoStop size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Reader AI Architecture Slot (Hidden for now, ready for future AI capabilities) */}
       <ReaderAiPlaceholder

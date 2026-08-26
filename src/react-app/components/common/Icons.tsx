@@ -10,6 +10,8 @@ export const IcoUpload    = ({ size = 28 }: { size?: number } = {}) => <Ico size
 export const IcoPlay      = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M5 3l14 9-14 9V3z" />;
 export const IcoPause     = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M6 4h4v16H6zM14 4h4v16h-4z" />;
 export const IcoStop      = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M6 6h12v12H6z" />;
+export const IcoSkipBack  = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M19 20L9 12l10-8v16zM5 19V5" />;
+export const IcoSkipForward = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M5 4l10 8-10 8V4zM19 5v14" />;
 export const IcoChevL     = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M15 18l-6-6 6-6" />;
 export const IcoChevR     = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M9 18l6-6-6-6" />;
 export const IcoZoomIn    = ({ size = 16 }: { size?: number } = {}) => <Ico size={size} d="M11 5a6 6 0 1 0 0 12A6 6 0 0 0 11 5zm10 10l-3-3M11 8v6M8 11h6" />;
