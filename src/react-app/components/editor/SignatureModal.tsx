@@ -457,56 +457,56 @@ export const SignatureModal: FC<SignatureModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
       <div
-        className="flex flex-col gap-4 p-5 rounded-2xl border shadow-2xl w-full max-w-[540px] transition-all"
+        className="flex flex-col gap-4 p-5 rounded-none border shadow-2xl w-full max-w-[540px] transition-all"
         style={{ background: bgCard, borderColor: border }}
       >
         {/* Header */}
         <div className="flex justify-between items-center pb-1">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500">
+            <span className="p-1.5 rounded-none border border-amber-500/30 bg-amber-500/10 text-amber-500">
               <IcoPen />
             </span>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-100">Digital Signature</span>
-              <span className="text-[11px] text-slate-400">Draw, type, or upload your personalized signature</span>
+              <span className="text-sm font-bold font-mono text-slate-100 uppercase">[ DIGITAL SIGNATURE ]</span>
+              <span className="text-[11px] font-mono text-slate-400">Draw, type, or upload personalized signature</span>
             </div>
           </div>
           <button
             onClick={() => setShowSigModal(false)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-none text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <IcoX size={16} />
           </button>
         </div>
 
         {/* Tab Selection */}
-        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold">
+        <div className="grid grid-cols-3 gap-1 p-0.5 rounded-none bg-slate-900 border border-slate-800 text-xs font-mono font-semibold">
           <button
             onClick={() => setActiveTab("draw")}
-            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-none transition-colors border cursor-pointer ${
               activeTab === "draw"
-                ? "bg-amber-500 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800"
             }`}
           >
             <IcoPen /> Draw
           </button>
           <button
             onClick={() => setActiveTab("type")}
-            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-none transition-colors border cursor-pointer ${
               activeTab === "type"
-                ? "bg-amber-500 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800"
             }`}
           >
             <IcoText /> Type
           </button>
           <button
             onClick={() => setActiveTab("upload")}
-            className={`flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 rounded-none transition-colors border cursor-pointer ${
               activeTab === "upload"
-                ? "bg-amber-500 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800"
             }`}
           >
             <IcoUpload size={14} /> Upload
@@ -517,7 +517,7 @@ export const SignatureModal: FC<SignatureModalProps> = ({
         {activeTab === "draw" && (
           <div className="flex flex-col gap-3">
             {/* Canvas Container */}
-            <div className="relative border-2 border-dashed rounded-xl overflow-hidden bg-white shadow-inner select-none touch-none cursor-crosshair">
+            <div className="relative border-2 border-dashed border-slate-700 rounded-none overflow-hidden bg-white shadow-inner select-none touch-none cursor-crosshair">
               <canvas
                 ref={canvasRef}
                 className="w-full h-[200px] block"
@@ -528,8 +528,8 @@ export const SignatureModal: FC<SignatureModalProps> = ({
                 onPointerCancel={handlePointerUp}
               />
               {!hasDrawn && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-400 text-xs font-medium tracking-wide">
-                  Sign here with mouse, finger, or stylus
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-400 text-xs font-mono font-medium tracking-wider uppercase">
+                  [ Sign here with mouse, finger, or stylus ]
                 </div>
               )}
             </div>
@@ -538,16 +538,16 @@ export const SignatureModal: FC<SignatureModalProps> = ({
             <div className="flex items-center justify-between gap-3 text-xs">
               {/* Color Presets */}
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] text-slate-400 font-semibold mr-0.5">Ink:</span>
+                <span className="text-[11px] font-mono text-slate-400 font-semibold mr-0.5">Ink:</span>
                 {INK_COLORS.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => setSelectedColor(c.hex)}
                     title={c.label}
-                    className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                    className={`w-5 h-5 rounded-none border transition-colors cursor-pointer ${
                       selectedColor === c.hex
-                        ? "border-amber-500 scale-110 shadow"
-                        : "border-transparent hover:scale-105 opacity-80"
+                        ? "border-amber-500 shadow"
+                        : "border-slate-700 opacity-80"
                     }`}
                     style={{ background: c.hex }}
                   />
@@ -555,16 +555,16 @@ export const SignatureModal: FC<SignatureModalProps> = ({
               </div>
 
               {/* Stroke Width Selector */}
-              <div className="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
-                <span className="text-[11px] text-slate-400 font-semibold mr-1">Pen:</span>
+              <div className="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-none border border-slate-800">
+                <span className="text-[11px] font-mono text-slate-400 font-semibold mr-1">Pen:</span>
                 {STROKE_WIDTHS.map((w) => (
                   <button
                     key={w.id}
                     onClick={() => setSelectedWidth(w.value)}
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                    className={`px-2 py-0.5 rounded-none text-[10px] font-mono font-bold transition-colors cursor-pointer border ${
                       selectedWidth === w.value
-                        ? "bg-amber-500 text-white"
-                        : "text-slate-400 hover:text-slate-200"
+                        ? "bg-amber-500 border-amber-600 text-white"
+                        : "border-transparent text-slate-400 hover:text-slate-200"
                     }`}
                   >
                     {w.label}
@@ -578,7 +578,7 @@ export const SignatureModal: FC<SignatureModalProps> = ({
                   onClick={undoLastStroke}
                   disabled={!hasDrawn}
                   title="Undo last stroke"
-                  className="p-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="p-1.5 rounded-none border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
                   <IcoUndo />
                 </button>
@@ -586,7 +586,7 @@ export const SignatureModal: FC<SignatureModalProps> = ({
                   onClick={clearCanvas}
                   disabled={!hasDrawn}
                   title="Clear all"
-                  className="p-1.5 rounded-lg border border-slate-700 bg-slate-800 text-red-400 hover:text-red-300 hover:bg-red-500/20 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="p-1.5 rounded-none border border-slate-700 bg-slate-800 text-red-400 hover:text-red-300 hover:bg-red-500/20 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
                   <IcoTrash />
                 </button>
@@ -599,32 +599,32 @@ export const SignatureModal: FC<SignatureModalProps> = ({
         {activeTab === "type" && (
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-slate-400">Type Your Name</label>
+              <label className="text-xs font-mono font-semibold text-slate-400 uppercase">[ TYPE YOUR NAME ]</label>
               <input
                 type="text"
                 value={typedName}
                 onChange={(e) => setTypedName(e.target.value)}
                 placeholder="Enter full name..."
                 maxLength={40}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-amber-500 font-medium"
+                className="w-full px-3 py-2 rounded-none bg-slate-900 border border-slate-700 text-slate-100 text-sm font-mono focus:outline-none focus:border-amber-500"
               />
             </div>
 
             {/* Font Style Options */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold text-slate-400">Select Signature Style</span>
+              <span className="text-xs font-mono font-semibold text-slate-400 uppercase">[ SELECT SIGNATURE STYLE ]</span>
               <div className="grid grid-cols-2 gap-2">
                 {FONT_STYLES.map((f) => (
                   <button
                     key={f.id}
                     onClick={() => setSelectedFont(f.id)}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border bg-white text-slate-900 transition-all ${
+                    className={`flex flex-col items-center justify-center p-3 rounded-none border bg-white text-slate-900 transition-colors cursor-pointer ${
                       selectedFont === f.id
-                        ? "border-amber-500 ring-2 ring-amber-500/40 shadow-lg scale-[1.02]"
+                        ? "border-amber-500 ring-2 ring-amber-500/40 shadow-sm"
                         : "border-slate-300 hover:border-amber-400 opacity-90"
                     }`}
                   >
-                    <span className="text-xs font-semibold text-slate-500 tracking-wider mb-1">
+                    <span className="text-xs font-mono font-semibold text-slate-500 tracking-wider mb-1">
                       {f.name}
                     </span>
                     <span
@@ -640,16 +640,16 @@ export const SignatureModal: FC<SignatureModalProps> = ({
 
             {/* Color Presets for Typed Signature */}
             <div className="flex items-center gap-1.5 pt-1">
-              <span className="text-[11px] text-slate-400 font-semibold mr-1">Ink Color:</span>
+              <span className="text-[11px] font-mono text-slate-400 font-semibold mr-1">Ink Color:</span>
               {INK_COLORS.map((c) => (
                 <button
                   key={c.id}
                   onClick={() => setSelectedColor(c.hex)}
                   title={c.label}
-                  className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                  className={`w-5 h-5 rounded-none border transition-colors cursor-pointer ${
                     selectedColor === c.hex
-                      ? "border-amber-500 scale-110 shadow"
-                      : "border-transparent hover:scale-105 opacity-80"
+                      ? "border-amber-500 shadow"
+                      : "border-slate-700 opacity-80"
                   }`}
                   style={{ background: c.hex }}
                 />
@@ -663,15 +663,15 @@ export const SignatureModal: FC<SignatureModalProps> = ({
           <div className="flex flex-col gap-3">
             <div
               onClick={() => uploadInputRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-slate-700 hover:border-amber-500/80 rounded-xl bg-slate-900/60 hover:bg-slate-900 cursor-pointer transition-all text-center"
+              className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-slate-700 hover:border-amber-500/80 rounded-none bg-slate-900/60 hover:bg-slate-900 cursor-pointer transition-colors text-center"
             >
-              <div className="p-3 rounded-full bg-amber-500/10 text-amber-400">
+              <div className="p-3 rounded-none border border-amber-500/30 bg-amber-500/10 text-amber-400">
                 <IcoUpload size={22} />
               </div>
-              <span className="text-xs font-bold text-slate-200">
-                {uploadedImage ? "Change Signature Image" : "Upload Scanned Signature (PNG/JPG)"}
+              <span className="text-xs font-mono font-bold text-slate-200 uppercase">
+                {uploadedImage ? "[ CHANGE SIGNATURE IMAGE ]" : "[ UPLOAD SCANNED SIGNATURE (PNG/JPG) ]"}
               </span>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] font-mono text-slate-400">
                 Drop your signature file here or click to browse
               </span>
             </div>
@@ -685,9 +685,9 @@ export const SignatureModal: FC<SignatureModalProps> = ({
             />
 
             {uploadedImage && (
-              <div className="flex flex-col gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-xs font-semibold text-slate-400">Preview</span>
-                <div className="flex items-center justify-center p-3 rounded-lg bg-white overflow-hidden max-h-32">
+              <div className="flex flex-col gap-2 p-3 rounded-none bg-slate-900 border border-slate-800">
+                <span className="text-xs font-mono font-semibold text-slate-400 uppercase">[ PREVIEW ]</span>
+                <div className="flex items-center justify-center p-3 rounded-none bg-white overflow-hidden max-h-32 border border-slate-300">
                   <img src={uploadedImage} alt="signature preview" className="max-h-24 object-contain" />
                 </div>
                 <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer pt-1">
@@ -695,7 +695,7 @@ export const SignatureModal: FC<SignatureModalProps> = ({
                     type="checkbox"
                     checked={removeBg}
                     onChange={(e) => setRemoveBg(e.target.checked)}
-                    className="accent-amber-500 rounded"
+                    className="accent-amber-500 rounded-none"
                   />
                   <span>Automatically transparentize white background</span>
                 </label>
@@ -708,7 +708,7 @@ export const SignatureModal: FC<SignatureModalProps> = ({
         <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: border }}>
           <button
             onClick={() => setShowSigModal(false)}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="px-4 py-2 rounded-none text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700 cursor-pointer"
           >
             Cancel
           </button>
@@ -719,9 +719,9 @@ export const SignatureModal: FC<SignatureModalProps> = ({
               (activeTab === "type" && !typedName.trim()) ||
               (activeTab === "upload" && !uploadedImage)
             }
-            className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 text-white shadow-lg hover:bg-amber-600 active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all"
+            className="flex items-center gap-1.5 px-5 py-2 rounded-none text-xs font-bold bg-amber-500 hover:bg-amber-600 border border-amber-600 text-white shadow-xs disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer"
           >
-            <IcoCheck size={14} /> Insert Signature
+            <IcoCheck size={14} /> [ INSERT SIGNATURE ]
           </button>
         </div>
       </div>

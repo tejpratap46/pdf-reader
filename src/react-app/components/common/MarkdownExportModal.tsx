@@ -196,7 +196,7 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-5xl max-h-[92vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border transition-all animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-5xl max-h-[92vh] rounded-none shadow-2xl flex flex-col overflow-hidden border transition-all animate-in fade-in duration-200"
         style={{ background: bgModal, borderColor: borderCol, color: textMain }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -206,27 +206,27 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
           style={{ borderColor: borderCol, background: bgCard }}
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 text-white shadow-md">
+            <div className="p-2 rounded-none border border-amber-600 bg-amber-500 text-white shadow-xs">
               <IcoMarkdown size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-bold leading-tight">Export as Markdown</h3>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                  <IcoSparkles size={11} /> LLM Ready
+                <h3 className="text-base font-bold font-mono uppercase leading-tight">[ EXPORT AS MARKDOWN ]</h3>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[10px] font-mono font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                  <IcoSparkles size={11} /> [ LLM READY ]
                 </span>
                 {result?.detectedFormat && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    {result.detectedFormat}
+                  <span className="px-2 py-0.5 rounded-none text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    [{result.detectedFormat}]
                   </span>
                 )}
                 {result?.pagesLabel && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    {result.pagesLabel}
+                  <span className="px-2 py-0.5 rounded-none text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    [{result.pagesLabel}]
                   </span>
                 )}
               </div>
-              <p className="text-xs truncate max-w-md mt-0.5" style={{ color: textMut }}>
+              <p className="text-xs truncate max-w-md mt-0.5 font-mono" style={{ color: textMut }}>
                 Powered by <code className="text-amber-400 font-mono text-[11px]">@firecrawl/anydoc-wasm</code> · {docTitle}
               </p>
             </div>
@@ -235,7 +235,7 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:opacity-80 transition-colors cursor-pointer"
+              className="p-1.5 rounded-none border border-transparent hover:border-slate-700 hover:bg-slate-500/10 transition-colors cursor-pointer"
               style={{ color: textMut }}
               title="Close modal"
             >
@@ -252,19 +252,19 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
           >
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-amber-500">Page Selection:</span>
+                <span className="text-xs font-mono font-semibold text-amber-500 uppercase">[ PAGE SELECTION ]:</span>
                 <div
-                  className="flex items-center p-0.5 rounded-lg border text-xs"
+                  className="flex items-center p-0.5 rounded-none border text-xs font-mono"
                   style={{ borderColor: borderCol, background: bgCard }}
                 >
                   <button
                     onClick={() => {
                       setPageSelectionMode("all");
                     }}
-                    className={`px-2.5 py-1 rounded font-medium transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-none border font-medium transition-colors cursor-pointer ${
                       pageSelectionMode === "all"
-                        ? "bg-amber-500 text-white shadow-sm"
-                        : "hover:text-amber-400"
+                        ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                        : "border-transparent hover:text-amber-400"
                     }`}
                     style={pageSelectionMode !== "all" ? { color: textMut } : undefined}
                   >
@@ -274,10 +274,10 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
                     onClick={() => {
                       setPageSelectionMode("current");
                     }}
-                    className={`px-2.5 py-1 rounded font-medium transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-none border font-medium transition-colors cursor-pointer ${
                       pageSelectionMode === "current"
-                        ? "bg-amber-500 text-white shadow-sm"
-                        : "hover:text-amber-400"
+                        ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                        : "border-transparent hover:text-amber-400"
                     }`}
                     style={pageSelectionMode !== "current" ? { color: textMut } : undefined}
                   >
@@ -288,10 +288,10 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
                       setPageSelectionMode("custom");
                       if (!customRangeInput) setCustomRangeInput(`1-${Math.min(3, totalPages)}`);
                     }}
-                    className={`px-2.5 py-1 rounded font-medium transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-none border font-medium transition-colors cursor-pointer ${
                       pageSelectionMode === "custom"
-                        ? "bg-amber-500 text-white shadow-sm"
-                        : "hover:text-amber-400"
+                        ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                        : "border-transparent hover:text-amber-400"
                     }`}
                     style={pageSelectionMode !== "custom" ? { color: textMut } : undefined}
                   >
@@ -301,15 +301,15 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium" style={{ color: textMut }}>
+                <span className="text-xs font-mono font-medium" style={{ color: textMut }}>
                   Selected: <strong className="text-amber-400">{selectedPages.length}</strong> of {totalPages} pages ({selectedPagesSummary})
                 </span>
                 <button
                   onClick={handleApplySelection}
                   disabled={loading || selectedPages.length === 0}
-                  className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white shadow transition-all cursor-pointer"
+                  className="px-3 py-1 rounded-none border border-amber-600 text-xs font-mono font-bold bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white shadow-xs transition-colors cursor-pointer"
                 >
-                  {loading ? "Converting…" : "Re-convert Selection"}
+                  {loading ? "Converting…" : "[ RE-CONVERT SELECTION ]"}
                 </button>
               </div>
             </div>
@@ -318,7 +318,7 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
             {pageSelectionMode === "custom" && (
               <div className="flex items-center gap-3 pt-1 flex-wrap">
                 <div className="flex items-center gap-1.5 flex-1 min-w-[240px]">
-                  <label htmlFor="custom-range-input" className="text-xs shrink-0" style={{ color: textMut }}>
+                  <label htmlFor="custom-range-input" className="text-xs font-mono shrink-0" style={{ color: textMut }}>
                     Pages:
                   </label>
                   <input
@@ -327,7 +327,7 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
                     value={customRangeInput}
                     onChange={(e) => setCustomRangeInput(e.target.value)}
                     placeholder="e.g. 1-3, 5, 7-10"
-                    className="flex-1 px-3 py-1 text-xs rounded-lg border font-mono focus:outline-none focus:border-amber-500"
+                    className="flex-1 px-3 py-1 text-xs rounded-none border font-mono focus:outline-none focus:border-amber-500"
                     style={{ background: bgInner, borderColor: borderCol, color: textMain }}
                   />
                 </div>
@@ -341,9 +341,9 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
                         <button
                           key={p}
                           onClick={() => handleTogglePageChip(p)}
-                          className={`w-6 h-6 rounded text-[11px] font-bold font-mono transition-all cursor-pointer ${
+                          className={`w-6 h-6 rounded-none text-[11px] font-bold font-mono transition-colors cursor-pointer ${
                             isSelected
-                              ? "bg-amber-500 text-white shadow-xs"
+                              ? "bg-amber-500 border border-amber-600 text-white shadow-xs"
                               : "border hover:border-amber-400"
                           }`}
                           style={
@@ -367,11 +367,11 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
         {/* Loading / Error States */}
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20 gap-4">
-            <div className="p-4 rounded-2xl bg-amber-500/10 text-amber-500 animate-spin">
+            <div className="p-4 rounded-none border border-amber-500/30 bg-amber-500/10 text-amber-500 animate-spin">
               <IcoLoader size={32} />
             </div>
             <div className="text-center">
-              <p className="text-sm font-semibold">
+              <p className="text-sm font-mono font-semibold">
                 Converting {selectedPagesSummary || "document"} to Markdown…
               </p>
               <p className="text-xs mt-1" style={{ color: textMut }}>
@@ -381,16 +381,16 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
           </div>
         ) : error ? (
           <div className="flex-1 flex flex-col items-center justify-center py-16 px-6 gap-3 text-center">
-            <div className="p-3 rounded-full bg-red-500/10 text-red-400 text-2xl">⚠️</div>
-            <h4 className="text-base font-bold text-red-400">Conversion Failed</h4>
+            <div className="p-3 rounded-none border border-red-500/30 bg-red-500/10 text-red-400 text-2xl font-mono">⚠️</div>
+            <h4 className="text-base font-bold font-mono uppercase text-red-400">[ CONVERSION FAILED ]</h4>
             <p className="text-xs max-w-md" style={{ color: textMut }}>
               {error}
             </p>
             <button
               onClick={() => executeConversion(selectedPages)}
-              className="mt-2 px-4 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white transition-all cursor-pointer"
+              className="mt-2 px-4 py-1.5 rounded-none border border-amber-600 text-xs font-mono font-semibold bg-amber-500 hover:bg-amber-600 text-white transition-colors cursor-pointer"
             >
-              Try Again
+              [ TRY AGAIN ]
             </button>
           </div>
         ) : result ? (
@@ -400,10 +400,10 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
               className="px-6 py-2.5 border-b flex items-center justify-between flex-wrap gap-3 shrink-0"
               style={{ borderColor: borderCol, background: isAmoled ? "#000000" : isDark ? "#090d16" : "#f8fafc" }}
             >
-              <div className="flex items-center gap-4 text-xs font-medium flex-wrap">
+              <div className="flex items-center gap-4 text-xs font-mono font-medium flex-wrap">
                 <div className="flex items-center gap-1.5">
                   <span className="font-semibold text-amber-400">~{result.stats.estimatedTokens.toLocaleString()}</span>
-                  <span style={{ color: textMut }}>est. LLM Tokens</span>
+                  <span style={{ color: textMut }}>est. tokens</span>
                 </div>
                 <div className="w-px h-3.5" style={{ background: borderCol }} />
                 <div className="flex items-center gap-1.5">
@@ -413,7 +413,7 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
                 <div className="w-px h-3.5" style={{ background: borderCol }} />
                 <div className="flex items-center gap-1.5">
                   <span className="font-semibold">{result.stats.characters.toLocaleString()}</span>
-                  <span style={{ color: textMut }}>characters</span>
+                  <span style={{ color: textMut }}>chars</span>
                 </div>
                 {result.stats.headingCount > 0 && (
                   <>
@@ -435,26 +435,26 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
 
               {/* Tab Switcher */}
               <div
-                className="flex items-center p-0.5 rounded-lg border text-xs"
+                className="flex items-center p-0.5 rounded-none border text-xs font-mono"
                 style={{ borderColor: borderCol, background: bgCard }}
               >
                 <button
                   onClick={() => setActiveTab("preview")}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-none border font-medium transition-colors cursor-pointer ${
                     activeTab === "preview"
-                      ? "bg-amber-500 text-white shadow-sm"
-                      : "hover:text-amber-400"
+                      ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                      : "border-transparent hover:text-amber-400"
                   }`}
                   style={activeTab !== "preview" ? { color: textMut } : undefined}
                 >
-                  <IcoEye size={13} /> Rendered Preview
+                  <IcoEye size={13} /> Preview
                 </button>
                 <button
                   onClick={() => setActiveTab("raw")}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-none border font-medium transition-colors cursor-pointer ${
                     activeTab === "raw"
-                      ? "bg-amber-500 text-white shadow-sm"
-                      : "hover:text-amber-400"
+                      ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                      : "border-transparent hover:text-amber-400"
                   }`}
                   style={activeTab !== "raw" ? { color: textMut } : undefined}
                 >
@@ -462,10 +462,10 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
                 </button>
                 <button
                   onClick={() => setActiveTab("ai")}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-none border font-medium transition-colors cursor-pointer ${
                     activeTab === "ai"
-                      ? "bg-amber-500 text-white shadow-sm"
-                      : "hover:text-amber-400"
+                      ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                      : "border-transparent hover:text-amber-400"
                   }`}
                   style={activeTab !== "ai" ? { color: textMut } : undefined}
                 >
@@ -478,7 +478,7 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
             <div className="flex-1 overflow-y-auto p-6 min-h-[320px] max-h-[520px]">
               {activeTab === "preview" && (
                 <div
-                  className="p-6 rounded-xl border select-text selection:bg-amber-500/30 overflow-x-auto"
+                  className="p-6 rounded-none border select-text selection:bg-amber-500/30 overflow-x-auto"
                   style={{ background: bgInner, borderColor: borderCol }}
                 >
                   {result.markdown ? (
@@ -491,14 +491,14 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
 
               {activeTab === "raw" && (
                 <div
-                  className="rounded-xl border overflow-hidden font-mono text-xs select-text selection:bg-amber-500/30"
+                  className="rounded-none border overflow-hidden font-mono text-xs select-text selection:bg-amber-500/30"
                   style={{ background: bgInner, borderColor: borderCol }}
                 >
                   <div
-                    className="px-4 py-2 border-b flex items-center justify-between text-[11px]"
+                    className="px-4 py-2 border-b flex items-center justify-between text-[11px] font-mono"
                     style={{ borderColor: borderCol, background: bgCard, color: textMut }}
                   >
-                    <span>GitHub-Flavored Markdown (GFM)</span>
+                    <span>[ GITHUB-FLAVORED MARKDOWN (GFM) ]</span>
                     <span>{result.stats.lines} lines</span>
                   </div>
                   <pre
@@ -513,15 +513,15 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
               {activeTab === "ai" && (
                 <div className="flex flex-col gap-4">
                   <div
-                    className="p-4 rounded-xl border flex items-start gap-3"
+                    className="p-4 rounded-none border flex items-start gap-3"
                     style={{ background: isDark ? "rgba(245,158,11,0.06)" : "rgba(254,243,199,0.5)", borderColor: "rgba(245,158,11,0.3)" }}
                   >
                     <div className="text-amber-500 mt-0.5">
                       <IcoSparkles size={18} />
                     </div>
                     <div className="text-xs">
-                      <p className="font-semibold text-amber-500">Ready for LLM &amp; AI Pipelines</p>
-                      <p className="mt-0.5" style={{ color: textMut }}>
+                      <p className="font-semibold font-mono text-amber-500 uppercase">[ READY FOR LLM &amp; AI PIPELINES ]</p>
+                      <p className="mt-0.5 leading-relaxed" style={{ color: textMut }}>
                         The extracted Markdown preserves structural tables, document hierarchy, and clean text, making it ideal for feeding directly into OpenAI (GPT-4o), Anthropic (Claude), Google Gemini, DeepSeek, or Cloudflare Workers AI.
                       </p>
                     </div>
@@ -566,14 +566,14 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
               className="flex items-center justify-between px-6 py-4 border-t shrink-0 flex-wrap gap-3"
               style={{ borderColor: borderCol, background: bgCard }}
             >
-              <div className="flex items-center gap-2 text-xs" style={{ color: textMut }}>
-                <span>Exporting: <code className="font-mono text-amber-400">{selectedPagesSummary || docTitle}</code></span>
+              <div className="flex items-center gap-2 text-xs font-mono" style={{ color: textMut }}>
+                <span>Exporting: <code className="font-mono text-amber-400">[{selectedPagesSummary || docTitle}]</code></span>
               </div>
 
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleCopyMarkdown}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all duration-150 cursor-pointer hover:border-amber-400"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-none text-xs font-mono font-semibold border transition-colors cursor-pointer hover:border-amber-400"
                   style={{
                     borderColor: copied ? "#22c55e" : borderCol,
                     background: copied ? "rgba(34,197,94,0.1)" : bgInner,
@@ -581,15 +581,14 @@ export const MarkdownExportModal: FC<MarkdownExportModalProps> = ({
                   }}
                 >
                   {copied ? <IcoCheck size={14} /> : <IcoClipboard size={14} />}
-                  {copied ? "Copied Markdown!" : "Copy to Clipboard"}
+                  {copied ? "[ COPIED MARKDOWN! ]" : "[ COPY TO CLIPBOARD ]"}
                 </button>
 
                 <button
                   onClick={handleDownload}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
+                  className="flex items-center gap-2 px-5 py-2 rounded-none text-xs font-mono font-bold text-white shadow-xs border border-amber-600 bg-amber-500 hover:bg-amber-600 transition-colors cursor-pointer"
                 >
-                  <IcoDownload size={14} /> Download .md
+                  <IcoDownload size={14} /> [ DOWNLOAD .MD ]
                 </button>
               </div>
             </div>
@@ -610,21 +609,21 @@ const PromptCard: FC<{
 }> = ({ title, desc, isDark, copied, onCopy }) => {
   return (
     <div
-      className="p-4 rounded-xl border flex flex-col justify-between gap-3 transition-all hover:border-amber-500/50"
+      className="p-4 rounded-none border flex flex-col justify-between gap-3 transition-colors hover:border-amber-500/50"
       style={{
         background: isDark ? "#111827" : "#ffffff",
         borderColor: isDark ? "#374151" : "#e5e7eb",
       }}
     >
       <div>
-        <h4 className="text-xs font-bold text-amber-500">{title}</h4>
-        <p className="text-[11px] mt-1" style={{ color: isDark ? "#9ca3af" : "#64748b" }}>
+        <h4 className="text-xs font-mono font-bold text-amber-500 uppercase">[{title}]</h4>
+        <p className="text-[11px] mt-1 leading-relaxed" style={{ color: isDark ? "#9ca3af" : "#64748b" }}>
           {desc}
         </p>
       </div>
       <button
         onClick={onCopy}
-        className="self-start inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer"
+        className="self-start inline-flex items-center gap-1.5 px-3 py-1 rounded-none text-[11px] font-mono font-semibold border transition-colors cursor-pointer"
         style={{
           borderColor: copied ? "#22c55e" : isDark ? "#4b5563" : "#d1d5db",
           background: copied ? "rgba(34,197,94,0.15)" : isDark ? "#1f2937" : "#f3f4f6",
@@ -632,7 +631,7 @@ const PromptCard: FC<{
         }}
       >
         {copied ? <IcoCheck size={12} /> : <IcoClipboard size={12} />}
-        {copied ? "Prompt Copied!" : "Copy LLM Prompt"}
+        {copied ? "Prompt Copied!" : "Copy Prompt"}
       </button>
     </div>
   );
@@ -711,7 +710,7 @@ const EnhancedMarkdownRenderView: FC<{ text: string; isDark: boolean }> = ({ tex
       background: ${isDark ? "rgba(245, 158, 11, 0.07)" : "rgba(254, 243, 199, 0.5)"};
       padding: 0.5rem 1rem;
       margin: 0.75rem 0;
-      border-radius: 0 8px 8px 0;
+      border-radius: 0;
       font-style: italic;
       color: ${isDark ? "#cbd5e1" : "#475569"};
     }
@@ -733,7 +732,7 @@ const EnhancedMarkdownRenderView: FC<{ text: string; isDark: boolean }> = ({ tex
       border-collapse: collapse;
       margin: 1rem 0;
       font-size: 12.5px;
-      border-radius: 8px;
+      border-radius: 0;
       overflow: hidden;
       border: 1px solid ${isDark ? "#334155" : "#e2e8f0"};
     }
@@ -762,7 +761,7 @@ const EnhancedMarkdownRenderView: FC<{ text: string; isDark: boolean }> = ({ tex
       background: ${isDark ? "rgba(245, 158, 11, 0.12)" : "rgba(245, 158, 11, 0.15)"};
       color: ${isDark ? "#fbbf24" : "#b45309"};
       padding: 2px 6px;
-      border-radius: 4px;
+      border-radius: 0;
       font-family: monospace;
       font-size: 0.85em;
       border: 1px solid ${isDark ? "rgba(245, 158, 11, 0.25)" : "rgba(245, 158, 11, 0.3)"};
@@ -771,7 +770,7 @@ const EnhancedMarkdownRenderView: FC<{ text: string; isDark: boolean }> = ({ tex
       background: ${isDark ? "#070b13" : "#0f172a"};
       color: #f8fafc;
       padding: 1rem;
-      border-radius: 8px;
+      border-radius: 0;
       overflow-x: auto;
       margin: 0.75rem 0;
       border: 1px solid ${isDark ? "#1e293b" : "#334155"};

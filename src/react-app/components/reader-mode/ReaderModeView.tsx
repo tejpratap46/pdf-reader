@@ -278,18 +278,18 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
       >
         {/* Left: Mode Badge & Document Meta */}
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shadow-2xs">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-none text-xs font-mono font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-2xs">
             <IcoBookOpen size={13} />
-            <span>Reader Mode</span>
+            <span>[ READER MODE ]</span>
           </div>
 
           {isContentGenerating ? (
-            <div className="flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-              <span>Generating content...</span>
+            <div className="flex items-center gap-2 px-2.5 py-0.5 rounded-none text-xs font-mono font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+              <span className="w-1.5 h-1.5 rounded-none bg-amber-500 animate-ping" />
+              <span>GENERATING CONTENT...</span>
             </div>
           ) : hasDocument ? (
-            <span className="hidden md:inline-flex items-center gap-2 text-xs" style={{ color: textMut }}>
+            <span className="hidden md:inline-flex items-center gap-2 text-xs font-mono" style={{ color: textMut }}>
               <span>{totalWords.toLocaleString()} words</span>
               <span>•</span>
               <span>~{estReadMinutes} min read</span>
@@ -305,7 +305,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
               type="button"
               onClick={() => setShowTypographyMenu((v) => !v)}
               title="Adjust Reading Typography"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-none text-xs font-semibold border transition-colors cursor-pointer"
               style={{
                 borderColor: showTypographyMenu ? "#f59e0b" : border,
                 background: showTypographyMenu ? (isDark ? "rgba(245,158,11,0.15)" : "rgba(254,243,199,0.8)") : bgInput,
@@ -318,7 +318,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
 
             {showTypographyMenu && (
               <div
-                className="absolute right-0 top-full mt-2 w-72 p-4 rounded-2xl border shadow-xl backdrop-blur-xl z-50 animate-scaleUp text-xs flex flex-col gap-3.5"
+                className="absolute right-0 top-full mt-1.5 w-72 p-4 rounded-none border shadow-xl backdrop-blur-xl z-50 animate-fadeIn text-xs flex flex-col gap-3.5"
                 style={{
                   background: isAmoled ? "rgba(10, 10, 12, 0.98)" : isDark ? "rgba(17, 24, 39, 0.98)" : "rgba(255, 255, 255, 0.98)",
                   borderColor: border,
@@ -326,18 +326,18 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                 }}
               >
                 <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: border }}>
-                  <span className="font-bold text-xs">Reading Settings</span>
+                  <span className="font-bold font-mono uppercase tracking-wider text-xs">[ READING SETTINGS ]</span>
                   <button
                     onClick={() => setShowTypographyMenu(false)}
-                    className="text-xs opacity-60 hover:opacity-100 cursor-pointer"
+                    className="text-xs opacity-60 hover:opacity-100 cursor-pointer font-mono"
                   >
-                    ✕
+                    [✕]
                   </button>
                 </div>
 
                 {/* Font Family */}
                 <div>
-                  <label className="block text-[11px] font-semibold mb-1.5" style={{ color: textMut }}>
+                  <label className="block text-[11px] font-mono font-semibold mb-1.5" style={{ color: textMut }}>
                     Font Family
                   </label>
                   <div className="grid grid-cols-3 gap-1.5">
@@ -350,9 +350,9 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                         key={f.id}
                         type="button"
                         onClick={() => updateTypography({ fontFamily: f.id as any })}
-                        className={`py-1.5 rounded-lg border text-center font-medium transition-all cursor-pointer ${f.font} ${
+                        className={`py-1.5 rounded-none border text-center font-medium transition-colors cursor-pointer ${f.font} ${
                           typography.fontFamily === f.id
-                            ? "border-amber-500 bg-amber-500/15 text-amber-500 font-bold"
+                            ? "border-amber-500 bg-amber-500/15 text-amber-500 font-bold shadow-2xs"
                             : "hover:bg-black/5 dark:hover:bg-white/5"
                         }`}
                         style={{ borderColor: typography.fontFamily === f.id ? "#f59e0b" : border }}
@@ -365,7 +365,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
 
                 {/* Font Size */}
                 <div>
-                  <label className="block text-[11px] font-semibold mb-1.5" style={{ color: textMut }}>
+                  <label className="block text-[11px] font-mono font-semibold mb-1.5" style={{ color: textMut }}>
                     Font Size
                   </label>
                   <div className="grid grid-cols-4 gap-1">
@@ -379,7 +379,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                         key={s.id}
                         type="button"
                         onClick={() => updateTypography({ fontSize: s.id as any })}
-                        className={`py-1 rounded-lg border text-center font-bold transition-all cursor-pointer ${
+                        className={`py-1 rounded-none border text-center font-mono font-bold transition-colors cursor-pointer ${
                           typography.fontSize === s.id
                             ? "border-amber-500 bg-amber-500/15 text-amber-500"
                             : "hover:bg-black/5 dark:hover:bg-white/5"
@@ -394,7 +394,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
 
                 {/* Content Width */}
                 <div>
-                  <label className="block text-[11px] font-semibold mb-1.5" style={{ color: textMut }}>
+                  <label className="block text-[11px] font-mono font-semibold mb-1.5" style={{ color: textMut }}>
                     Column Width
                   </label>
                   <div className="grid grid-cols-3 gap-1.5">
@@ -407,7 +407,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                         key={w.id}
                         type="button"
                         onClick={() => updateTypography({ contentWidth: w.id as any })}
-                        className={`py-1.5 rounded-lg border text-center font-medium transition-all cursor-pointer ${
+                        className={`py-1.5 rounded-none border text-center font-medium transition-colors cursor-pointer ${
                           typography.contentWidth === w.id
                             ? "border-amber-500 bg-amber-500/15 text-amber-500 font-bold"
                             : "hover:bg-black/5 dark:hover:bg-white/5"
@@ -422,7 +422,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
 
                 {/* Line Spacing */}
                 <div>
-                  <label className="block text-[11px] font-semibold mb-1.5" style={{ color: textMut }}>
+                  <label className="block text-[11px] font-mono font-semibold mb-1.5" style={{ color: textMut }}>
                     Line Spacing
                   </label>
                   <div className="grid grid-cols-3 gap-1.5">
@@ -435,7 +435,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                         key={lh.id}
                         type="button"
                         onClick={() => updateTypography({ lineHeight: lh.id as any })}
-                        className={`py-1.5 rounded-lg border text-center font-medium transition-all cursor-pointer ${
+                        className={`py-1.5 rounded-none border text-center font-medium transition-colors cursor-pointer ${
                           typography.lineHeight === lh.id
                             ? "border-amber-500 bg-amber-500/15 text-amber-500 font-bold"
                             : "hover:bg-black/5 dark:hover:bg-white/5"
@@ -488,7 +488,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
 
           {/* TTS Reading Controls (Play/Pause/Resume, Stop, Speed) */}
           {hasDocument && (
-            <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 px-1.5 py-1 rounded-xl shadow-2xs">
+            <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 px-1 py-0.5 rounded-none shadow-2xs">
               {/* Play / Pause Toggle Button */}
               <button
                 type="button"
@@ -502,12 +502,12 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                     ? `Resume Narration at Para ${activePara + 1} (Space)`
                     : "Start Narration (Space)"
                 }
-                className={`p-1.5 rounded-lg transition-all duration-150 cursor-pointer ${
+                className={`p-1.5 rounded-none transition-colors cursor-pointer border ${
                   ttsState === "playing"
-                    ? "bg-amber-500 text-white shadow-xs scale-105"
+                    ? "bg-amber-500 text-white border-amber-600 shadow-xs"
                     : ttsState === "paused"
-                    ? "bg-amber-500/20 text-amber-500 border border-amber-500/50 ring-1 ring-amber-500/30"
-                    : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 hover:scale-105"
+                    ? "bg-amber-500/20 text-amber-500 border-amber-500/50"
+                    : "text-amber-600 dark:text-amber-400 border-transparent hover:bg-amber-500/20"
                 }`}
               >
                 {ttsState === "playing" ? <IcoPause size={13} /> : <IcoPlay size={13} />}
@@ -519,7 +519,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   type="button"
                   onClick={() => stopTts()}
                   title="Stop Narration (Escape)"
-                  className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-none border border-transparent text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer"
                 >
                   <IcoStop size={13} />
                 </button>
@@ -534,7 +534,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   setTtsRate(rates[nextIdx >= 0 ? nextIdx : 0]);
                 }}
                 title="Playback speed"
-                className="text-[11px] font-bold text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded hover:bg-amber-500/20 transition-colors cursor-pointer"
+                className="text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-none hover:bg-amber-500/20 transition-colors cursor-pointer"
               >
                 {ttsRate}x
               </button>
@@ -545,7 +545,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
           <button
             type="button"
             onClick={() => setShowVoiceModal(true)}
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-none text-xs font-semibold border transition-colors cursor-pointer"
             style={{ borderColor: border, background: bgInput, color: textMain }}
           >
             <span>🎙️</span>
@@ -557,7 +557,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
             <button
               onClick={() => (isSearchOpen ? onCloseSearch?.() : onOpenSearch?.())}
               title="Search in document (Ctrl+F)"
-              className="p-1.5 rounded-xl border transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="p-1.5 rounded-none border transition-colors cursor-pointer"
               style={{
                 borderColor: isSearchOpen ? "#f59e0b" : border,
                 background: isSearchOpen ? "rgba(245,158,11,0.15)" : bgInput,
@@ -573,7 +573,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
             <button
               onClick={onExportMarkdown}
               title="Export formatted Markdown"
-              className="p-1.5 rounded-xl border transition-all hover:scale-105 active:scale-95 cursor-pointer text-amber-500"
+              className="p-1.5 rounded-none border transition-colors cursor-pointer text-amber-500"
               style={{ borderColor: border, background: bgInput }}
             >
               <IcoMarkdown size={15} />
@@ -622,19 +622,19 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   </span>
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 animate-pulse">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  Preparing Reader
+                  <span className="w-1.5 h-1.5 rounded-none bg-amber-500" />
+                  [ PREPARING READER ]
                 </span>
               </div>
 
               {/* Title Skeleton */}
-              <div className="h-8 sm:h-10 w-4/5 rounded-xl bg-black/10 dark:bg-white/10 animate-pulse mb-4" />
+              <div className="h-8 sm:h-10 w-4/5 rounded-none bg-black/10 dark:bg-white/10 animate-pulse mb-4" />
 
               {/* Meta Pill Skeletons */}
               <div className="flex items-center gap-3">
-                <div className="h-3.5 w-24 rounded-md bg-black/10 dark:bg-white/10 animate-pulse" />
-                <div className="h-3.5 w-16 rounded-md bg-black/10 dark:bg-white/10 animate-pulse" />
-                <div className="h-3.5 w-28 rounded-md bg-black/10 dark:bg-white/10 animate-pulse" />
+                <div className="h-3.5 w-24 rounded-none bg-black/10 dark:bg-white/10 animate-pulse" />
+                <div className="h-3.5 w-16 rounded-none bg-black/10 dark:bg-white/10 animate-pulse" />
+                <div className="h-3.5 w-28 rounded-none bg-black/10 dark:bg-white/10 animate-pulse" />
               </div>
             </div>
 
@@ -649,7 +649,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
               ].map((lines, pIdx) => (
                 <div
                   key={pIdx}
-                  className="p-5 sm:p-6 rounded-2xl border transition-all"
+                  className="p-5 sm:p-6 rounded-none border transition-colors"
                   style={{
                     borderColor: isAmoled ? "#1a1a20" : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                     background: isAmoled ? "#070709" : isDark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.7)",
@@ -658,10 +658,10 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   {/* Paragraph gutter action bar placeholder */}
                   <div className="flex items-center justify-between mb-3 pb-2 border-b border-black/5 dark:border-white/5">
                     <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-md bg-amber-500/20 animate-pulse" />
-                      <div className="h-3 w-16 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+                      <div className="w-5 h-5 rounded-none bg-amber-500/20 animate-pulse border border-amber-500/30" />
+                      <div className="h-3 w-16 rounded-none bg-black/10 dark:bg-white/10 animate-pulse" />
                     </div>
-                    <div className="h-3 w-12 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+                    <div className="h-3 w-12 rounded-none bg-black/10 dark:bg-white/10 animate-pulse" />
                   </div>
 
                   {/* Skeleton lines */}
@@ -669,7 +669,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                     {lines.map((widthPct, lIdx) => (
                       <div
                         key={lIdx}
-                        className="h-4 rounded-md bg-black/10 dark:bg-white/10 animate-pulse"
+                        className="h-3.5 rounded-none bg-black/5 dark:bg-white/5 animate-pulse"
                         style={{
                           width: `${widthPct}%`,
                           animationDelay: `${pIdx * 120 + lIdx * 40}ms`,
@@ -747,15 +747,15 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                         <hr className="w-full border-t" style={{ borderColor: border }} />
                         {pageNum ? (
                           <div
-                            className="absolute px-3 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-full border shadow-2xs flex items-center gap-1.5"
+                            className="absolute px-3 py-0.5 text-[10px] font-mono font-bold tracking-widest uppercase rounded-none border shadow-2xs flex items-center gap-1.5"
                             style={{
                               background: isAmoled ? "#000000" : isDark ? "#0f172a" : "#ffffff",
                               borderColor: border,
                               color: textMut,
                             }}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
-                            <span>Page {pageNum}</span>
+                            <span className="w-1.5 h-1.5 rounded-none bg-amber-500" />
+                            <span>[ PAGE {pageNum} ]</span>
                           </div>
                         ) : null}
                       </div>
@@ -786,11 +786,11 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
 
             {/* End of Document Section */}
             <div className="mt-12 pt-8 border-t flex flex-col items-center gap-2 text-center" style={{ borderColor: border }}>
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                 <IcoBookOpen size={14} />
-                <span>End of Document</span>
+                <span>[ END OF DOCUMENT ]</span>
               </div>
-              <p className="text-xs" style={{ color: textMut }}>
+              <p className="text-xs font-mono" style={{ color: textMut }}>
                 Full document loaded ({paragraphs.length} paragraphs • {totalWords.toLocaleString()} words)
               </p>
             </div>
@@ -798,20 +798,20 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
         ) : (
           /* Empty State Desk */
           <div className="flex flex-col items-center justify-center max-w-xl w-full my-auto py-12 px-4 text-center">
-            <div className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center bg-gradient-to-tr from-amber-500/20 to-amber-400/20 text-amber-500 shadow-inner">
+            <div className="w-16 h-16 rounded-none border mx-auto mb-5 flex items-center justify-center bg-amber-500/10 text-amber-500" style={{ borderColor: border }}>
               <IcoBookOpen size={30} />
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2" style={{ color: textMain }}>
-              Reader Sanctuary
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 font-mono uppercase" style={{ color: textMain }}>
+              [ READER SANCTUARY ]
             </h2>
-            <p className="text-sm mb-8" style={{ color: textMut }}>
+            <p className="text-sm mb-8 leading-relaxed" style={{ color: textMut }}>
               Drop a PDF or document to experience distraction-free reading with synchronized voice narration and live word-level tracking.
             </p>
 
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="w-full p-8 rounded-2xl border-2 border-dashed transition-all hover:border-amber-500 cursor-pointer mb-6"
+              className="w-full p-8 rounded-none border-2 border-dashed transition-colors hover:border-amber-500 cursor-pointer mb-6"
               style={{
                 borderColor: isAmoled ? "#27272a" : isDark ? "#374151" : "#d1d5db",
                 background: isAmoled ? "rgba(255,255,255,0.02)" : isDark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.8)",
@@ -819,8 +819,8 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
             >
               <div className="flex flex-col items-center gap-3">
                 <IcoUpload size={24} />
-                <span className="text-sm font-bold" style={{ color: textMain }}>Choose Document</span>
-                <span className="text-xs" style={{ color: textMut }}>PDF, DOCX, EPUB, TXT</span>
+                <span className="text-sm font-bold font-mono uppercase" style={{ color: textMain }}>[ CHOOSE DOCUMENT ]</span>
+                <span className="text-xs font-mono" style={{ color: textMut }}>PDF, DOCX, EPUB, TXT</span>
               </div>
             </div>
 
@@ -828,10 +828,10 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
               <button
                 type="button"
                 onClick={onLoadSample}
-                className="px-4 py-2 rounded-xl text-xs font-bold border transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                className="px-4 py-2 rounded-none text-xs font-bold border transition-colors cursor-pointer font-mono uppercase"
                 style={{ borderColor: border, background: bgInput, color: textMain }}
               >
-                Load Sample Guide ✨
+                [ LOAD SAMPLE GUIDE ✨ ]
               </button>
             )}
           </div>
@@ -841,7 +841,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
       {/* Bottom Floating Reader Player Dock */}
       {hasDocument && paragraphs.length > 0 && (
         <div
-          className="shrink-0 sticky bottom-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3 border-t backdrop-blur-xl transition-all select-none"
+          className="shrink-0 sticky bottom-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3 border-t backdrop-blur-xl transition-all select-none rounded-none"
           style={{
             borderColor: border,
             background: isAmoled
@@ -857,7 +857,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
           {/* Top subtle reading progress line across the document */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-black/5 dark:bg-white/5 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-300 ease-out"
+              className="h-full bg-amber-500 transition-all duration-300 ease-out"
               style={{
                 width: `${
                   paragraphs.length > 0
@@ -884,11 +884,11 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   }
                 }}
                 title="Scroll to active paragraph"
-                className="flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs font-semibold hover:border-amber-500/50 transition-all cursor-pointer truncate shadow-2xs"
+                className="flex items-center gap-2 px-2.5 py-1 rounded-none border text-xs font-semibold hover:border-amber-500/50 transition-colors cursor-pointer truncate shadow-2xs"
                 style={{ borderColor: border, background: bgInput, color: textMain }}
               >
                 <span
-                  className="w-2 h-2 rounded-full shrink-0"
+                  className="w-2 h-2 rounded-none shrink-0"
                   style={{
                     background:
                       ttsState === "playing"
@@ -902,7 +902,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   }}
                 />
                 <span className="font-mono text-[11px] whitespace-nowrap">
-                  {activePara >= 0 ? `Para ${activePara + 1} / ${paragraphs.length}` : `Ready (${paragraphs.length} paras)`}
+                  {activePara >= 0 ? `PARA ${activePara + 1} / ${paragraphs.length}` : `READY (${paragraphs.length} PARAS)`}
                 </span>
               </button>
 
@@ -927,7 +927,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                 disabled={activePara <= 0}
                 title="Previous Paragraph (Alt+Up or [)"
                 aria-label="Skip to previous paragraph"
-                className="p-2 sm:p-2.5 rounded-full border transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer shadow-2xs"
+                className="p-2 sm:p-2.5 rounded-none border transition-colors disabled:opacity-30 disabled:pointer-events-none cursor-pointer shadow-2xs"
                 style={{
                   borderColor: border,
                   background: bgInput,
@@ -951,12 +951,12 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                     : "Start Narration (Space)"
                 }
                 aria-label={ttsState === "playing" ? "Pause reading" : "Play reading"}
-                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md ${
+                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-none border flex items-center justify-center transition-colors cursor-pointer shadow-md ${
                   ttsState === "playing"
-                    ? "bg-gradient-to-tr from-amber-500 to-amber-400 text-white shadow-amber-500/25 scale-105"
+                    ? "bg-amber-500 border-amber-600 text-white"
                     : ttsState === "paused"
-                    ? "bg-amber-500/20 text-amber-500 border border-amber-500/60 ring-2 ring-amber-500/20 hover:bg-amber-500 hover:text-white"
-                    : "bg-amber-500 text-white hover:bg-amber-600 hover:scale-105 shadow-amber-500/20"
+                    ? "bg-amber-500/20 text-amber-500 border-amber-500"
+                    : "bg-amber-500 border-amber-600 text-white hover:bg-amber-600"
                 }`}
               >
                 {ttsState === "playing" ? (
@@ -975,7 +975,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                 disabled={activePara >= paragraphs.length - 1}
                 title="Next Paragraph (Alt+Down or ])"
                 aria-label="Skip to next paragraph"
-                className="p-2 sm:p-2.5 rounded-full border transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer shadow-2xs"
+                className="p-2 sm:p-2.5 rounded-none border transition-colors disabled:opacity-30 disabled:pointer-events-none cursor-pointer shadow-2xs"
                 style={{
                   borderColor: border,
                   background: bgInput,
@@ -992,7 +992,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
               <div className="relative flex items-center">
                 {/* Desktop / Tablet: Inline Volume Pill */}
                 <div
-                  className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all shadow-2xs group hover:border-amber-500/40"
+                  className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-none border transition-colors shadow-2xs group hover:border-amber-500/40"
                   style={{ borderColor: border, background: bgInput, color: textMain }}
                 >
                   <button
@@ -1000,7 +1000,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                     onClick={toggleMute}
                     title={ttsVolume === 0 ? "Unmute (Click)" : "Mute (Click)"}
                     aria-label={ttsVolume === 0 ? "Unmute narration" : "Mute narration"}
-                    className="cursor-pointer text-amber-600 dark:text-amber-400 hover:scale-110 active:scale-95 transition-transform"
+                    className="cursor-pointer text-amber-600 dark:text-amber-400 transition-colors"
                   >
                     {ttsVolume === 0 ? (
                       <IcoVolumeX size={15} />
@@ -1020,7 +1020,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                     onChange={(e) => setTtsVolume(parseFloat(e.target.value))}
                     title={`Volume: ${Math.round(ttsVolume * 100)}%`}
                     aria-label="Narration volume"
-                    className="w-16 sm:w-20 lg:w-24 h-1.5 accent-amber-500 rounded-lg cursor-pointer bg-black/10 dark:bg-white/15"
+                    className="w-16 sm:w-20 lg:w-24 h-1.5 accent-amber-500 rounded-none cursor-pointer bg-black/10 dark:bg-white/15"
                   />
 
                   <span className="font-mono text-[10px] w-7 text-right select-none opacity-80" style={{ color: textMut }}>
@@ -1035,7 +1035,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                     onClick={() => setShowVolumePopover((v) => !v)}
                     title={`Volume: ${Math.round(ttsVolume * 100)}%`}
                     aria-label="Adjust narration volume"
-                    className={`p-2 rounded-xl border transition-all active:scale-95 cursor-pointer shadow-2xs ${
+                    className={`p-2 rounded-none border transition-colors cursor-pointer shadow-2xs ${
                       showVolumePopover || ttsVolume === 0
                         ? "border-amber-500 bg-amber-500/15 text-amber-500"
                         : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
@@ -1054,7 +1054,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   {/* Popover slider on mobile */}
                   {showVolumePopover && (
                     <div
-                      className="absolute bottom-full right-0 mb-2 p-3 rounded-2xl border shadow-xl backdrop-blur-xl z-50 flex flex-col items-center gap-2 animate-scaleUp"
+                      className="absolute bottom-full right-0 mb-2 p-3 rounded-none border shadow-xl backdrop-blur-xl z-50 flex flex-col items-center gap-2 animate-fadeIn"
                       style={{
                         background: isAmoled
                           ? "rgba(10, 10, 12, 0.98)"
@@ -1065,15 +1065,15 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                         color: textMain,
                       }}
                     >
-                      <div className="flex items-center justify-between w-full gap-3 text-xs font-semibold">
-                        <span className="text-[11px]" style={{ color: textMut }}>Volume</span>
+                      <div className="flex items-center justify-between w-full gap-3 text-xs font-semibold font-mono">
+                        <span className="text-[11px]" style={{ color: textMut }}>[ VOLUME ]</span>
                         <span className="font-mono text-amber-500 font-bold">{Math.round(ttsVolume * 100)}%</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={toggleMute}
-                          className="p-1 text-amber-500 hover:bg-amber-500/10 rounded-lg cursor-pointer"
+                          className="p-1 text-amber-500 hover:bg-amber-500/10 rounded-none cursor-pointer"
                         >
                           {ttsVolume === 0 ? <IcoVolumeX size={14} /> : <IcoVolume size={14} />}
                         </button>
@@ -1084,7 +1084,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                           step={0.05}
                           value={ttsVolume}
                           onChange={(e) => setTtsVolume(parseFloat(e.target.value))}
-                          className="w-28 h-1.5 accent-amber-500 rounded-lg cursor-pointer bg-black/10 dark:bg-white/15"
+                          className="w-28 h-1.5 accent-amber-500 rounded-none cursor-pointer bg-black/10 dark:bg-white/15"
                         />
                       </div>
                     </div>
@@ -1101,7 +1101,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   setTtsRate(rates[nextIdx >= 0 ? nextIdx : 0]);
                 }}
                 title="Playback speed"
-                className="px-2.5 py-1 rounded-xl text-xs font-bold border transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 shadow-2xs"
+                className="px-2.5 py-1 rounded-none text-xs font-mono font-bold border transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
                 style={{
                   borderColor: border,
                   background: bgInput,
@@ -1118,7 +1118,7 @@ export const ReaderModeView: FC<ReaderModeViewProps> = ({
                   onClick={() => stopTts()}
                   title="Stop Narration (Escape)"
                   aria-label="Stop narration"
-                  className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/15 border border-rose-500/20 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                  className="p-2 rounded-none text-rose-500 hover:bg-rose-500/15 border border-rose-500/30 transition-colors cursor-pointer shadow-2xs"
                 >
                   <IcoStop size={14} />
                 </button>

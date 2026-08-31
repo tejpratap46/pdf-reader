@@ -139,9 +139,9 @@ export const Header: FC<HeaderProps> = ({
         <button
           onClick={() => setSidebarOpen((o) => !o)}
           title={`${sidebarOpen ? "Collapse" : "Expand"} sidebar (Ctrl+B)`}
-          className="p-1.5 rounded-lg transition-all duration-150 active:scale-95 cursor-pointer flex items-center justify-center border"
+          className="p-1.5 rounded-none transition-colors duration-150 cursor-pointer flex items-center justify-center border"
           style={{
-            borderColor: sidebarOpen ? (d ? "rgba(245, 158, 11, 0.4)" : "rgba(245, 158, 11, 0.5)") : border,
+            borderColor: sidebarOpen ? (d ? "rgba(245, 158, 11, 0.5)" : "rgba(245, 158, 11, 0.6)") : border,
             color: sidebarOpen ? "#f59e0b" : textMut,
             background: sidebarOpen
               ? isAmoled
@@ -163,10 +163,22 @@ export const Header: FC<HeaderProps> = ({
 
         <div className="h-6 w-px mx-1 hidden sm:block" style={{ background: border }} />
 
-        {/* Open Document Pill */}
+        {/* App Branding with Yellow Icon */}
+        <div className="flex items-center gap-2 select-none">
+          <img
+            src="/favicon.svg"
+            alt="PDF Reader"
+            className="w-5 h-5 rounded-xs shrink-0 drop-shadow-xs"
+          />
+          <span className="hidden sm:inline-block font-mono font-bold text-xs uppercase tracking-wider text-amber-500">
+            PDF Reader
+          </span>
+        </div>
+
+        {/* Open Document Tag */}
         {displayTitle ? (
           <span
-            className="hidden lg:flex items-center gap-2 text-xs rounded-full px-3 py-1 max-w-[180px] sm:max-w-[240px] shadow-2xs border transition-all"
+            className="hidden lg:flex items-center gap-2 text-xs rounded-none px-2.5 py-1 max-w-[180px] sm:max-w-[240px] border transition-all font-mono"
             style={{
               color: d ? "#f1f5f9" : "#1e293b",
               background: isAmoled ? "#09090b" : d ? "#1e293b" : "#f8fafc",
@@ -180,21 +192,22 @@ export const Header: FC<HeaderProps> = ({
           </span>
         ) : (
           <span
-            className="hidden xl:inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full"
+            className="hidden xl:inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-none border"
             style={{
               color: textMut,
               background: isAmoled ? "#09090b" : d ? "#1e293b" : "#f1f5f9",
+              borderColor: border,
             }}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/70" />
-            Studio Ready
+            <span className="w-1.5 h-1.5 rounded-none bg-emerald-500" />
+            [ STUDIO READY ]
           </span>
         )}
       </div>
 
       {/* Center: Mode Switcher Segmented Control (Viewer | Reader | Editor) */}
       <div
-        className="flex items-center p-1 rounded-full border shadow-2xs select-none transition-all"
+        className="flex items-center p-0.5 rounded-none border select-none transition-all"
         style={{
           background: isAmoled ? "#0a0a0c" : d ? "#0f172a" : "#f1f5f9",
           borderColor: border,
@@ -233,10 +246,10 @@ export const Header: FC<HeaderProps> = ({
               disabled={item.disabled}
               onClick={() => onModeChange(item.id as AppMode)}
               title={item.desc}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-none text-xs font-semibold transition-colors duration-100 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed border ${
                 isActive
-                  ? "bg-amber-500 text-white shadow-sm font-bold scale-[1.02]"
-                  : "hover:text-amber-500 active:scale-95"
+                  ? "bg-amber-500 text-white border-amber-600 font-bold shadow-xs"
+                  : "border-transparent hover:text-amber-500 hover:bg-slate-500/10"
               }`}
               style={{
                 color: isActive ? "#ffffff" : textMut,
@@ -262,47 +275,47 @@ export const Header: FC<HeaderProps> = ({
               }
             }}
             title="Install Pdf Reader App on your OS"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-none text-xs font-bold border border-amber-600 shadow-xs transition-colors cursor-pointer"
             style={{
               background: "linear-gradient(135deg, #f59e0b, #d97706)",
               color: "#ffffff",
             }}
           >
             <IcoDownload size={13} />
-            <span className="hidden sm:inline">Install App</span>
+            <span className="hidden sm:inline">[ INSTALL APP ]</span>
           </button>
         )}
 
         {isStandalone && (
           <span
-            className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border"
+            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[10px] font-mono font-bold uppercase border"
             style={{
               color: "#10b981",
               borderColor: "rgba(16, 185, 129, 0.3)",
               background: isAmoled ? "rgba(16, 185, 129, 0.12)" : d ? "rgba(16, 185, 129, 0.1)" : "rgba(236, 253, 245, 1)",
             }}
           >
-            ✓ PWA App
+            [ PWA ]
           </span>
         )}
 
         {/* Auto-next Status Indicator */}
         {autoNextPage && ttsState !== "idle" && (
           <span
-            className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border"
+            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[10px] font-mono font-medium border"
             style={{
               color: "#818cf8",
               borderColor: "rgba(129, 140, 248, 0.3)",
               background: isAmoled ? "rgba(99, 102, 241, 0.12)" : d ? "rgba(99, 102, 241, 0.1)" : "rgba(238, 242, 255, 1)",
             }}
           >
-            <IcoArrowR size={12} /> Auto-next
+            <IcoArrowR size={11} /> Auto-turn
           </span>
         )}
 
-        {/* Audio State Status Pill */}
+        {/* Audio State Status Badge */}
         <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all"
+          className="inline-flex items-center gap-1.5 px-2 py-1 rounded-none text-[10px] font-mono font-bold uppercase border transition-all"
           style={{
             color: statusColor,
             borderColor: statusBC,
@@ -310,7 +323,7 @@ export const Header: FC<HeaderProps> = ({
           }}
         >
           <span
-            className={`w-1.5 h-1.5 rounded-full ${
+            className={`w-1.5 h-1.5 rounded-none ${
               ttsState === "playing" ? "animate-ping opacity-80" : ""
             }`}
             style={{ background: statusDot }}
@@ -323,17 +336,17 @@ export const Header: FC<HeaderProps> = ({
           <button
             onClick={() => (isSearchOpen ? onCloseSearch?.() : onOpenSearch?.())}
             title={`${isSearchOpen ? "Close" : "Open"} Search (Ctrl+F)`}
-            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold shadow-xs transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer border"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-none text-xs font-semibold shadow-xs transition-colors cursor-pointer border"
             style={{
               background: isSearchOpen
-                ? "linear-gradient(135deg, #f59e0b, #d97706)"
+                ? "#f59e0b"
                 : isAmoled
                 ? "rgba(245, 158, 11, 0.12)"
                 : d
                 ? "rgba(245, 158, 11, 0.1)"
                 : "rgba(254, 243, 199, 0.8)",
               borderColor: isSearchOpen
-                ? "transparent"
+                ? "#d97706"
                 : isAmoled
                 ? "rgba(245, 158, 11, 0.5)"
                 : d
@@ -352,17 +365,17 @@ export const Header: FC<HeaderProps> = ({
           <button
             onClick={() => setAiSidebarOpen((o) => !o)}
             title={`${aiSidebarOpen ? "Close" : "Open"} AI Chat (Ctrl+J)`}
-            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold shadow-xs transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer border"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-none text-xs font-semibold shadow-xs transition-colors cursor-pointer border"
             style={{
               background: aiSidebarOpen
-                ? "linear-gradient(135deg, #2563eb, #7c3aed)"
+                ? "#2563eb"
                 : isAmoled
                 ? "rgba(37, 99, 235, 0.15)"
                 : d
                 ? "rgba(37, 99, 235, 0.12)"
                 : "rgba(239, 246, 255, 0.9)",
               borderColor: aiSidebarOpen
-                ? "transparent"
+                ? "#1d4ed8"
                 : isAmoled
                 ? "rgba(37, 99, 235, 0.5)"
                 : d

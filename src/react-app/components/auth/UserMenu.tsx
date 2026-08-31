@@ -41,10 +41,10 @@ export const UserMenu: FC<UserMenuProps> = ({
   if (loading) {
     return (
       <div
-        className="w-8 h-8 rounded-full flex items-center justify-center animate-pulse"
-        style={{ background: bgHover }}
+        className="w-8 h-8 rounded-none flex items-center justify-center animate-pulse border"
+        style={{ background: bgHover, borderColor: border }}
       >
-        <span className="w-4 h-4 rounded-full bg-amber-500/30" />
+        <span className="w-4 h-4 rounded-none bg-amber-500/30" />
       </div>
     );
   }
@@ -56,7 +56,7 @@ export const UserMenu: FC<UserMenuProps> = ({
         <button
           onClick={signInWithGoogle}
           disabled={actionLoading}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-150 hover:scale-105 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-none text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
             backgroundColor: isAmoled ? "#09090b" : d ? "#27272a" : "#ffffff",
             border: `1px solid ${border}`,
@@ -77,7 +77,7 @@ export const UserMenu: FC<UserMenuProps> = ({
         {/* Error tooltip if sign-in fails */}
         {error && (
           <div
-            className="absolute right-0 top-full mt-2 w-72 p-2.5 rounded-xl text-xs shadow-xl z-50 flex items-start gap-2 animate-fadeIn"
+            className="absolute right-0 top-full mt-2 w-72 p-2.5 rounded-none text-xs shadow-xl z-50 flex items-start gap-2 animate-fadeIn"
             style={{
               backgroundColor: d ? "#271c1c" : "#fff1f2",
               border: "1px solid rgba(239, 68, 68, 0.4)",
@@ -90,7 +90,7 @@ export const UserMenu: FC<UserMenuProps> = ({
             <div className="flex-1 text-[11px] leading-tight">{error}</div>
             <button
               onClick={clearError}
-              className="shrink-0 p-0.5 rounded hover:opacity-75 text-current"
+              className="shrink-0 p-0.5 rounded-none hover:opacity-75 text-current"
               title="Dismiss"
             >
               <IcoX size={12} />
@@ -114,7 +114,7 @@ export const UserMenu: FC<UserMenuProps> = ({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setDropdownOpen((prev) => !prev)}
-        className="flex items-center gap-2 p-1 pr-2.5 rounded-full border transition-all hover:shadow-sm cursor-pointer"
+        className="flex items-center gap-2 p-1 pr-2.5 rounded-none border transition-colors cursor-pointer"
         style={{
           borderColor: border,
           backgroundColor: dropdownOpen ? bgHover : "transparent",
@@ -126,12 +126,12 @@ export const UserMenu: FC<UserMenuProps> = ({
             src={user.photoURL}
             alt={displayName}
             referrerPolicy="no-referrer"
-            className="w-7 h-7 rounded-full object-cover border"
+            className="w-7 h-7 rounded-none object-cover border"
             style={{ borderColor: border }}
           />
         ) : (
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-inner"
+            className="w-7 h-7 rounded-none flex items-center justify-center text-xs font-mono font-bold text-white shadow-inner"
             style={{ background: "linear-gradient(135deg, #4285F4, #34A853)" }}
           >
             {userInitials}
@@ -148,7 +148,7 @@ export const UserMenu: FC<UserMenuProps> = ({
       {/* Dropdown Menu */}
       {dropdownOpen && (
         <div
-          className="absolute right-0 mt-2 w-64 rounded-2xl shadow-xl py-2 z-50 animate-fadeIn"
+          className="absolute right-0 mt-1.5 w-64 rounded-none shadow-xl py-2 z-50 animate-fadeIn"
           style={{
             backgroundColor: bgCard,
             border: `1px solid ${border}`,
@@ -162,12 +162,12 @@ export const UserMenu: FC<UserMenuProps> = ({
                 src={user.photoURL}
                 alt={displayName}
                 referrerPolicy="no-referrer"
-                className="w-10 h-10 rounded-full object-cover border shrink-0"
+                className="w-10 h-10 rounded-none object-cover border shrink-0"
                 style={{ borderColor: border }}
               />
             ) : (
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                className="w-10 h-10 rounded-none flex items-center justify-center text-sm font-mono font-bold text-white shrink-0"
                 style={{ background: "linear-gradient(135deg, #4285F4, #34A853)" }}
               >
                 {userInitials}
@@ -180,7 +180,7 @@ export const UserMenu: FC<UserMenuProps> = ({
               >
                 {displayName}
               </p>
-              <p className="text-[11px] truncate mt-0.5" style={{ color: textMut }}>
+              <p className="text-[11px] font-mono truncate mt-0.5" style={{ color: textMut }}>
                 {user.email || "Google Account"}
               </p>
             </div>
@@ -191,8 +191,8 @@ export const UserMenu: FC<UserMenuProps> = ({
             <span className="flex items-center gap-1.5">
               <IcoGoogle size={13} /> Google Account
             </span>
-            <span className="inline-flex items-center gap-1 font-medium text-emerald-500">
-              <IcoCheck size={12} /> Connected
+            <span className="inline-flex items-center gap-1 font-mono font-medium text-emerald-500">
+              <IcoCheck size={12} /> [ CONNECTED ]
             </span>
           </div>
 
@@ -201,7 +201,7 @@ export const UserMenu: FC<UserMenuProps> = ({
             <button
               onClick={handleLogout}
               disabled={actionLoading}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl transition-colors text-red-500 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-none transition-colors text-red-500 hover:bg-red-500/10 cursor-pointer disabled:opacity-50"
             >
               {actionLoading ? (
                 <span className="animate-spin">

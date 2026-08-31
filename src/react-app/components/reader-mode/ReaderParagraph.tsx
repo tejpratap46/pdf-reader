@@ -104,22 +104,22 @@ export const ReaderParagraph: FC<ReaderParagraphProps> = memo(({
     <div
       id={`reader-para-${index}`}
       data-para={index}
-      className={`group relative flex items-start gap-3 sm:gap-4 py-3.5 px-3 sm:px-5 rounded-2xl transition-all duration-200 ${
+      className={`group relative flex items-start gap-3 sm:gap-4 py-3.5 px-3 sm:px-5 rounded-none border-l-2 border-r border-t border-b transition-colors duration-150 ${
         isActive
           ? isAmoled
-            ? "bg-zinc-950/80 ring-1 ring-amber-500/40 shadow-lg shadow-amber-500/5"
+            ? "bg-zinc-950/80 border-l-amber-500 border-r-zinc-800 border-t-zinc-800 border-b-zinc-800 shadow-md"
             : isDark
-            ? "bg-slate-900/80 ring-1 ring-amber-500/40 shadow-lg shadow-amber-500/5"
-            : "bg-amber-50/70 ring-1 ring-amber-400/50 shadow-md shadow-amber-500/5"
+            ? "bg-slate-900/80 border-l-amber-500 border-r-slate-800 border-t-slate-800 border-b-slate-800 shadow-md"
+            : "bg-amber-50/70 border-l-amber-500 border-r-stone-200 border-t-stone-200 border-b-stone-200 shadow-sm"
           : isMatch
           ? isDark
-            ? "bg-amber-950/30 ring-1 ring-amber-500/30"
-            : "bg-amber-100/50 ring-1 ring-amber-300"
+            ? "bg-amber-950/30 border-l-amber-500 border-r-amber-900/40 border-t-amber-900/40 border-b-amber-900/40"
+            : "bg-amber-100/50 border-l-amber-500 border-r-amber-300 border-t-amber-300 border-b-amber-300"
           : isAmoled
-          ? "hover:bg-zinc-900/40"
+          ? "border-transparent hover:border-zinc-800 hover:bg-zinc-900/40"
           : isDark
-          ? "hover:bg-slate-900/40"
-          : "hover:bg-stone-100/70"
+          ? "border-transparent hover:border-slate-800 hover:bg-slate-900/40"
+          : "border-transparent hover:border-stone-200 hover:bg-stone-100/70"
       }`}
     >
       {/* Left Gutter: Play / Pause Button */}
@@ -143,19 +143,19 @@ export const ReaderParagraph: FC<ReaderParagraphProps> = memo(({
               ? "Resume narration from saved position"
               : "Play narration from this paragraph"
           }
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs ${
+          className={`w-7 h-7 rounded-none border flex items-center justify-center transition-colors cursor-pointer shadow-2xs ${
             isSpeaking
-              ? "bg-amber-500 text-white shadow-md shadow-amber-500/30 scale-105"
+              ? "bg-amber-500 border-amber-600 text-white shadow-xs"
               : isPaused || isRestoredIdle
-              ? "bg-amber-500/20 text-amber-500 border border-amber-500/50 scale-100 ring-2 ring-amber-500/20"
-              : "opacity-40 group-hover:opacity-100 text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500 hover:text-white border border-amber-500/20 hover:scale-105"
+              ? "bg-amber-500/20 text-amber-500 border-amber-500"
+              : "opacity-40 group-hover:opacity-100 text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500 hover:text-white border-amber-500/30"
           }`}
         >
           {isSpeaking ? (
-            <IcoPause size={14} />
+            <IcoPause size={13} />
           ) : (
             <span className="ml-0.5">
-              <IcoPlay size={13} />
+              <IcoPlay size={12} />
             </span>
           )}
         </button>
@@ -167,12 +167,12 @@ export const ReaderParagraph: FC<ReaderParagraphProps> = memo(({
         {isActive && (
           <div className="flex items-center gap-2 mb-2 select-none animate-fadeIn">
             <Waveform paused={ttsState !== "playing"} />
-            <span className="text-[10px] text-amber-500 font-extrabold tracking-widest uppercase">
+            <span className="text-[9px] font-mono text-amber-500 font-bold tracking-widest uppercase">
               {ttsState === "paused"
-                ? "Paused"
+                ? "[ PAUSED ]"
                 : ttsState === "playing"
-                ? "Reading Now"
-                : "Last Read Location"}
+                ? "[ READING NOW ]"
+                : "[ LAST READ LOCATION ]"}
             </span>
           </div>
         )}
@@ -189,7 +189,7 @@ export const ReaderParagraph: FC<ReaderParagraphProps> = memo(({
                 <React.Fragment key={wIdx}>
                   {isCurrentWord ? (
                     <mark
-                      className="bg-amber-400/40 dark:bg-amber-400/35 text-inherit rounded px-1 py-0.5 font-semibold transition-all duration-75 shadow-xs"
+                      className="bg-amber-400/40 dark:bg-amber-400/35 text-inherit rounded-none px-1 py-0.5 font-semibold transition-colors duration-75 shadow-xs"
                       style={{
                         outline: isDark ? "1px solid rgba(245, 158, 11, 0.6)" : "1px solid rgba(245, 158, 11, 0.5)",
                       }}

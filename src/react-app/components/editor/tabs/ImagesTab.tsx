@@ -87,21 +87,21 @@ export const ImagesTab: FC<ImagesTabProps> = ({
 
   return (
     <div className="flex flex-col gap-4">
-      <span className="text-xs font-bold uppercase tracking-wider text-amber-500">Images &amp; Signatures</span>
+      <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-500">[ IMAGES &amp; SIGNATURES ]</span>
 
       {/* Action buttons */}
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg border-2 border-dashed border-amber-500/50 bg-amber-500/10 text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition-all text-center"
+          className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-none border-2 border-dashed border-amber-500/50 bg-amber-500/10 text-amber-400 text-xs font-mono font-bold hover:bg-amber-500/20 transition-colors text-center cursor-pointer"
         >
-          <IcoImage /> Upload Image
+          <IcoImage /> [ UPLOAD IMAGE ]
         </button>
         <button
           onClick={() => setShowSigModal(true)}
-          className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg border border-slate-700 bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 transition-all text-center"
+          className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-none border border-slate-700 bg-slate-800 text-slate-200 text-xs font-mono font-bold hover:bg-slate-700 transition-colors text-center cursor-pointer"
         >
-          <IcoSignature /> Signature
+          <IcoSignature /> [ SIGNATURE ]
         </button>
       </div>
 
@@ -116,20 +116,20 @@ export const ImagesTab: FC<ImagesTabProps> = ({
       {/* Selected Image Controls */}
       {selectedImage && (
         <div
-          className="flex flex-col gap-3.5 p-3.5 rounded-xl border border-amber-500/50 bg-slate-800/80 shadow-lg relative"
+          className="flex flex-col gap-3.5 p-3.5 rounded-none border border-amber-500/50 bg-slate-800/80 shadow-md relative"
           style={{ background: bgInput, borderColor: border }}
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b pb-2.5" style={{ borderColor: border }}>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-slate-900 border border-slate-700 p-0.5 flex items-center justify-center overflow-hidden">
+              <div className="w-8 h-8 rounded-none bg-slate-900 border border-slate-700 p-0.5 flex items-center justify-center overflow-hidden">
                 <img src={selectedImage.dataUrl} alt="selected" className="max-w-full max-h-full object-contain" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-bold text-amber-400">
+                <span className="text-xs font-mono font-bold text-amber-400">
                   Image #{selectedIndex + 1}
                 </span>
-                <span className="text-[10px]" style={{ color: textMut }}>
+                <span className="text-[10px] font-mono" style={{ color: textMut }}>
                   {Math.round(selectedImage.width)}% × {Math.round(selectedImage.height)}% • {Math.round(selectedImage.rotation || 0)}°
                 </span>
               </div>
@@ -138,14 +138,14 @@ export const ImagesTab: FC<ImagesTabProps> = ({
               <button
                 onClick={() => duplicateImage(selectedImage.id)}
                 title="Duplicate Image"
-                className="p-1.5 rounded bg-slate-700 hover:bg-amber-500 text-slate-300 hover:text-white transition-colors"
+                className="p-1.5 rounded-none bg-slate-700 hover:bg-amber-500 text-slate-300 hover:text-white transition-colors cursor-pointer"
               >
                 <IcoCopy size={13} />
               </button>
               <button
                 onClick={() => removeImage(selectedImage.id)}
                 title="Delete Image"
-                className="p-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors"
+                className="p-1.5 rounded-none bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
               >
                 <IcoTrash />
               </button>
@@ -155,7 +155,7 @@ export const ImagesTab: FC<ImagesTabProps> = ({
           {/* 1. Rotation Controls */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold" style={{ color: textMain }}>
+              <span className="text-xs font-mono font-semibold" style={{ color: textMain }}>
                 Rotation Angle
               </span>
               <div className="flex items-center gap-1">
@@ -168,10 +168,10 @@ export const ImagesTab: FC<ImagesTabProps> = ({
                     const val = parseInt(e.target.value) || 0;
                     updateImage(selectedImage.id, { rotation: val });
                   }}
-                  className="w-14 px-1.5 py-0.5 rounded text-xs border text-center font-mono focus:outline-none focus:border-amber-500"
+                  className="w-14 px-1.5 py-0.5 rounded-none text-xs border text-center font-mono focus:outline-none focus:border-amber-500"
                   style={{ background: bgSide, color: textMain, borderColor: border }}
                 />
-                <span className="text-xs font-bold" style={{ color: textMut }}>
+                <span className="text-xs font-mono font-bold" style={{ color: textMut }}>
                   °
                 </span>
               </div>
@@ -196,7 +196,7 @@ export const ImagesTab: FC<ImagesTabProps> = ({
                   updateImage(selectedImage.id, { rotation: r });
                 }}
                 title="Rotate 90° counter-clockwise"
-                className="flex items-center justify-center gap-1 py-1.5 px-1 rounded bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[11px] font-bold transition-colors"
+                className="flex items-center justify-center gap-1 py-1.5 px-1 rounded-none bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[11px] font-mono font-bold transition-colors cursor-pointer"
               >
                 <IcoRotateCcw size={12} /> -90°
               </button>
@@ -206,7 +206,7 @@ export const ImagesTab: FC<ImagesTabProps> = ({
                   updateImage(selectedImage.id, { rotation: r });
                 }}
                 title="Rotate 90° clockwise"
-                className="flex items-center justify-center gap-1 py-1.5 px-1 rounded bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[11px] font-bold transition-colors"
+                className="flex items-center justify-center gap-1 py-1.5 px-1 rounded-none bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[11px] font-mono font-bold transition-colors cursor-pointer"
               >
                 <IcoRotateCw size={12} /> +90°
               </button>
@@ -216,14 +216,14 @@ export const ImagesTab: FC<ImagesTabProps> = ({
                   updateImage(selectedImage.id, { rotation: r });
                 }}
                 title="Rotate 180°"
-                className="flex items-center justify-center py-1.5 px-1 rounded bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[11px] font-bold transition-colors"
+                className="flex items-center justify-center py-1.5 px-1 rounded-none bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[11px] font-mono font-bold transition-colors cursor-pointer"
               >
                 180°
               </button>
               <button
                 onClick={() => updateImage(selectedImage.id, { rotation: 0 })}
                 title="Reset angle to 0°"
-                className={`flex items-center justify-center py-1.5 px-1 rounded text-[11px] font-bold transition-colors ${
+                className={`flex items-center justify-center py-1.5 px-1 rounded-none text-[11px] font-mono font-bold transition-colors cursor-pointer ${
                   (selectedImage.rotation || 0) % 360 !== 0
                     ? "bg-amber-500 text-white hover:bg-amber-600"
                     : "bg-slate-700/50 text-slate-400"
@@ -239,12 +239,12 @@ export const ImagesTab: FC<ImagesTabProps> = ({
           {/* 2. Size & Proportions Controls */}
           <div className="flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold" style={{ color: textMain }}>
+              <span className="text-xs font-mono font-semibold" style={{ color: textMain }}>
                 Dimensions
               </span>
               <button
                 onClick={() => updateImage(selectedImage.id, { lockAspectRatio: selectedImage.lockAspectRatio === false ? true : false })}
-                className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded border transition-colors ${
+                className={`flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-none border transition-colors cursor-pointer ${
                   selectedImage.lockAspectRatio !== false
                     ? "bg-amber-500/20 text-amber-400 border-amber-500/50"
                     : "bg-slate-800 text-slate-400 border-slate-700"
@@ -265,7 +265,7 @@ export const ImagesTab: FC<ImagesTabProps> = ({
 
             {/* Width Slider & Input */}
             <div className="flex flex-col gap-1">
-              <div className="flex justify-between text-[11px]" style={{ color: textMut }}>
+              <div className="flex justify-between text-[11px] font-mono" style={{ color: textMut }}>
                 <span>Width (% page)</span>
                 <span className="font-mono text-amber-400 font-bold">{Math.round(selectedImage.width)}%</span>
               </div>
@@ -281,7 +281,7 @@ export const ImagesTab: FC<ImagesTabProps> = ({
 
             {/* Height Slider & Input */}
             <div className="flex flex-col gap-1">
-              <div className="flex justify-between text-[11px]" style={{ color: textMut }}>
+              <div className="flex justify-between text-[11px] font-mono" style={{ color: textMut }}>
                 <span>Height (% page)</span>
                 <span className="font-mono text-amber-400 font-bold">{Math.round(selectedImage.height)}%</span>
               </div>
@@ -299,25 +299,25 @@ export const ImagesTab: FC<ImagesTabProps> = ({
             <div className="grid grid-cols-4 gap-1.5 pt-1">
               <button
                 onClick={() => scaleByPercent(75)}
-                className="py-1 px-1 rounded bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[10px] font-bold transition-colors text-center"
+                className="py-1 px-1 rounded-none bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[10px] font-mono font-bold transition-colors text-center cursor-pointer"
               >
                 -25%
               </button>
               <button
                 onClick={() => scaleByPercent(125)}
-                className="py-1 px-1 rounded bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[10px] font-bold transition-colors text-center"
+                className="py-1 px-1 rounded-none bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[10px] font-mono font-bold transition-colors text-center cursor-pointer"
               >
                 +25%
               </button>
               <button
                 onClick={() => updateImage(selectedImage.id, { width: 40, height: 30 })}
-                className="py-1 px-1 rounded bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[10px] font-bold transition-colors text-center"
+                className="py-1 px-1 rounded-none bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[10px] font-mono font-bold transition-colors text-center cursor-pointer"
               >
                 Default
               </button>
               <button
                 onClick={centerImage}
-                className="py-1 px-1 rounded bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[10px] font-bold transition-colors text-center"
+                className="py-1 px-1 rounded-none bg-slate-700 hover:bg-amber-500 text-slate-200 hover:text-white text-[10px] font-mono font-bold transition-colors text-center cursor-pointer"
               >
                 Center
               </button>
@@ -330,13 +330,13 @@ export const ImagesTab: FC<ImagesTabProps> = ({
       {activePage && activePage.images.length > 0 && (
         <div className="flex flex-col gap-2 mt-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold" style={{ color: textMut }}>
-              Page Images ({activePage.images.length})
+            <span className="text-xs font-mono font-semibold uppercase" style={{ color: textMut }}>
+              [ PAGE IMAGES ({activePage.images.length}) ]
             </span>
             {selectedImageId && (
               <button
                 onClick={() => setSelectedImageId(null)}
-                className="text-[11px] text-amber-400 hover:underline"
+                className="text-[11px] font-mono text-amber-400 hover:underline cursor-pointer"
               >
                 Deselect
               </button>
@@ -350,18 +350,18 @@ export const ImagesTab: FC<ImagesTabProps> = ({
                 <div
                   key={img.id}
                   onClick={() => setSelectedImageId(img.id)}
-                  className={`flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer ${
+                  className={`flex items-center justify-between p-2 rounded-none border transition-colors cursor-pointer ${
                     isSelected
-                      ? "bg-amber-500/15 border-amber-500 shadow-sm"
+                      ? "bg-amber-500/15 border-amber-500 shadow-xs"
                       : "bg-slate-800 hover:bg-slate-700/80 border-slate-700"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-12 rounded bg-slate-900 border border-slate-700 p-0.5 flex items-center justify-center overflow-hidden">
+                    <div className="h-9 w-12 rounded-none bg-slate-900 border border-slate-700 p-0.5 flex items-center justify-center overflow-hidden">
                       <img src={img.dataUrl} alt="thumb" className="max-h-full max-w-full object-contain" />
                     </div>
                     <div className="flex flex-col">
-                      <span className={`text-xs font-bold ${isSelected ? "text-amber-400" : "text-slate-200"}`}>
+                      <span className={`text-xs font-mono font-bold ${isSelected ? "text-amber-400" : "text-slate-200"}`}>
                         Image #{i + 1}
                       </span>
                       <span className="text-[10px] text-slate-400 font-mono">
@@ -378,7 +378,7 @@ export const ImagesTab: FC<ImagesTabProps> = ({
                         duplicateImage(img.id);
                       }}
                       title="Duplicate"
-                      className="p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-600 transition-colors"
+                      className="p-1 rounded-none text-slate-400 hover:text-slate-200 hover:bg-slate-600 transition-colors cursor-pointer"
                     >
                       <IcoCopy size={12} />
                     </button>
@@ -388,7 +388,7 @@ export const ImagesTab: FC<ImagesTabProps> = ({
                         removeImage(img.id);
                       }}
                       title="Delete"
-                      className="p-1 rounded text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-colors"
+                      className="p-1 rounded-none text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-colors cursor-pointer"
                     >
                       <IcoTrash />
                     </button>

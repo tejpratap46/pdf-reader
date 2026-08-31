@@ -170,7 +170,7 @@ export const EditorSidebar: FC<EditorSidebarProps> = ({
         }}
       >
         {/* Navigation Tabs */}
-        <div className="flex items-center border-b overflow-x-auto p-1 gap-1" style={{ borderColor: border, background: isDark ? "#0f172a" : "#f1f5f9" }}>
+        <div className="flex items-center border-b overflow-x-auto p-0.5 gap-0.5" style={{ borderColor: border, background: isDark ? "#0f172a" : "#f1f5f9" }}>
           {[
             { id: "pages", label: "Pages", icon: <IcoPages /> },
             { id: "draw", label: "Draw", icon: <IcoPen /> },
@@ -185,8 +185,8 @@ export const EditorSidebar: FC<EditorSidebarProps> = ({
                 if (t.id === "draw" && tool === "select") setTool("pen");
                 if (t.id !== "draw") setTool("select");
               }}
-              className={`flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
-                activeTab === t.id ? "bg-amber-500 text-white shadow" : "text-slate-400 hover:text-slate-200"
+              className={`flex-1 flex flex-col items-center gap-1 py-1.5 px-1 rounded-none border text-[11px] font-mono font-medium transition-colors cursor-pointer ${
+                activeTab === t.id ? "bg-amber-500 text-white border-amber-600 shadow-xs font-bold" : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-500/10"
               }`}
             >
               {t.icon}
@@ -197,7 +197,7 @@ export const EditorSidebar: FC<EditorSidebarProps> = ({
             <button
               onClick={() => setSidebarOpen(false)}
               title="Collapse tools (Ctrl+B)"
-              className="p-2 rounded-md text-slate-400 hover:text-slate-200 transition-colors cursor-pointer shrink-0"
+              className="p-1.5 rounded-none border border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700 transition-colors cursor-pointer shrink-0"
             >
               <IcoChevL size={14} />
             </button>

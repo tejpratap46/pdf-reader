@@ -105,7 +105,7 @@ export const EditorCanvas: FC<EditorCanvasProps> = ({
       {!loading && activePage && (
         <div
           ref={pageContainerRef}
-          className="relative shadow-2xl rounded-lg overflow-hidden m-auto shrink-0"
+          className="relative shadow-2xl rounded-none overflow-hidden m-auto shrink-0"
           style={{
             width: canvasRef.current?.width || 600,
             height: canvasRef.current?.height || 800,

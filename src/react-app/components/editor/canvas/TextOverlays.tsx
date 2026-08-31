@@ -131,10 +131,10 @@ export const TextOverlays: FC<TextOverlaysProps> = ({
 
             {/* Top Bar Quick Controls on Hover (when not inline editing) */}
             {!isEditing && (
-              <div className="absolute -top-8 left-0 hidden group-hover:flex items-center gap-1 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-lg border border-amber-500/50 text-[10px] text-white shadow-xl pointer-events-auto z-30">
+              <div className="absolute -top-8 left-0 hidden group-hover:flex items-center gap-1 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-none border border-amber-500/50 text-[10px] font-mono text-white shadow-xl pointer-events-auto z-30">
                 {isOriginal && (
-                  <span className="text-[9px] font-semibold text-amber-400 bg-amber-500/20 px-1 py-0.2 rounded mr-0.5">
-                    Original
+                  <span className="text-[9px] font-mono font-semibold text-amber-400 bg-amber-500/20 px-1 py-0.2 rounded-none mr-0.5">
+                    [ORIGINAL]
                   </span>
                 )}
                 <button
@@ -143,7 +143,7 @@ export const TextOverlays: FC<TextOverlaysProps> = ({
                     handleSetEditing(t.id);
                   }}
                   title="Edit text inline"
-                  className="px-1.5 py-0.5 rounded hover:bg-amber-500 text-amber-300 hover:text-white font-semibold"
+                  className="px-1.5 py-0.5 rounded-none hover:bg-amber-500 text-amber-300 hover:text-white font-mono font-semibold transition-colors"
                 >
                   ✏️ Edit
                 </button>
@@ -154,7 +154,7 @@ export const TextOverlays: FC<TextOverlaysProps> = ({
                     updateText(t.id, { fontSize: Math.max(8, t.fontSize - 2) });
                   }}
                   title="Decrease font size"
-                  className="px-1.5 py-0.5 rounded hover:bg-amber-500 font-bold"
+                  className="px-1.5 py-0.5 rounded-none hover:bg-amber-500 font-mono font-bold transition-colors"
                 >
                   A-
                 </button>
@@ -165,7 +165,7 @@ export const TextOverlays: FC<TextOverlaysProps> = ({
                     updateText(t.id, { fontSize: Math.min(140, t.fontSize + 2) });
                   }}
                   title="Increase font size"
-                  className="px-1.5 py-0.5 rounded hover:bg-amber-500 font-bold"
+                  className="px-1.5 py-0.5 rounded-none hover:bg-amber-500 font-mono font-bold transition-colors"
                 >
                   A+
                 </button>
@@ -176,7 +176,7 @@ export const TextOverlays: FC<TextOverlaysProps> = ({
                     updateText(t.id, { isBold: !t.isBold });
                   }}
                   title="Toggle Bold"
-                  className={`px-1.5 py-0.5 rounded font-bold ${
+                  className={`px-1.5 py-0.5 rounded-none font-mono font-bold transition-colors ${
                     t.isBold ? "bg-amber-500 text-white" : "hover:bg-slate-800 text-slate-300"
                   }`}
                 >
@@ -193,7 +193,7 @@ export const TextOverlays: FC<TextOverlaysProps> = ({
                   removeText(t.id);
                 }}
                 title="Remove text box"
-                className="absolute -top-3 -right-3 hidden group-hover:flex w-5 h-5 rounded-full bg-red-500 text-white items-center justify-center text-[10px] shadow-md font-bold hover:bg-red-600 pointer-events-auto z-30 cursor-pointer"
+                className="absolute -top-3 -right-3 hidden group-hover:flex w-5 h-5 rounded-none border border-red-700 bg-red-500 text-white items-center justify-center text-[10px] font-mono shadow-xs font-bold hover:bg-red-600 pointer-events-auto z-30 cursor-pointer"
               >
                 ✕
               </button>
@@ -204,9 +204,9 @@ export const TextOverlays: FC<TextOverlaysProps> = ({
               <div
                 onMouseDown={(e) => startResizeText(e, t.id, t.fontSize)}
                 title="Drag to resize text font size"
-                className="absolute -bottom-2 -right-2 w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow-md cursor-nwse-resize hover:scale-125 transition-transform flex items-center justify-center pointer-events-auto z-30"
+                className="absolute -bottom-2 -right-2 w-3.5 h-3.5 rounded-none bg-amber-500 border border-white shadow-xs cursor-nwse-resize hover:scale-125 transition-transform flex items-center justify-center pointer-events-auto z-30"
               >
-                <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                <div className="w-1.5 h-1.5 bg-white rounded-none" />
               </div>
             )}
           </div>

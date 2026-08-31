@@ -46,12 +46,12 @@ export const ThemeDropdown: FC<{
       <button
         onClick={() => setOpen((o) => !o)}
         title={`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}
-        className={`flex items-center justify-center rounded-md border p-1.5 transition-colors ${
+        className={`flex items-center justify-center rounded-none border p-1.5 transition-colors cursor-pointer ${
           isAmoled
             ? "border-zinc-800 bg-black text-gray-300 hover:bg-zinc-900 hover:text-white"
             : dk(
-                "border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                "border-gray-700 bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-gray-100",
+                "border-slate-300 bg-white text-gray-700 hover:bg-slate-100 hover:text-gray-900",
+                "border-slate-800 bg-slate-900 text-gray-300 hover:bg-slate-800 hover:text-gray-100",
                 d
               )
         }`}
@@ -60,10 +60,10 @@ export const ThemeDropdown: FC<{
       </button>
       {open && (
         <div
-          className={`absolute right-0 top-full mt-1.5 w-44 rounded-xl border shadow-2xl z-50 overflow-hidden ${
+          className={`absolute right-0 top-full mt-1 w-44 rounded-none border shadow-xl z-50 overflow-hidden ${
             isAmoled
               ? "border-zinc-800 bg-black/95 backdrop-blur-md"
-              : dk("border-gray-200 bg-white", "border-gray-700 bg-gray-900/95 backdrop-blur-md", d)
+              : dk("border-slate-300 bg-white shadow-md", "border-slate-800 bg-slate-900/95 backdrop-blur-md", d)
           }`}
         >
           {opts.map(({ value, label, Icon }) => (
@@ -73,7 +73,7 @@ export const ThemeDropdown: FC<{
                 setTheme(value);
                 setOpen(false);
               }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors cursor-pointer ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors cursor-pointer rounded-none ${
                 theme === value
                   ? "text-amber-500 font-semibold"
                   : isAmoled

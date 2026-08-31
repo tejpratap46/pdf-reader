@@ -73,10 +73,10 @@ export const SearchBar: FC<SearchBarProps> = ({
 
   return (
     <div
-      className="absolute top-3 right-4 z-40 flex items-center gap-1.5 p-1.5 rounded-xl shadow-2xl border backdrop-blur-md transition-all duration-200 select-none animate-in fade-in slide-in-from-top-2"
+      className="absolute top-3 right-4 z-40 flex items-center gap-1.5 p-1.5 rounded-none shadow-2xl border backdrop-blur-md transition-colors select-none animate-in fade-in slide-in-from-top-2"
       style={{
         background: isAmoled ? "rgba(0, 0, 0, 0.95)" : d ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.96)",
-        borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : d ? "rgba(245, 158, 11, 0.35)" : "#fde68a",
+        borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : d ? "rgba(245, 158, 11, 0.35)" : "#deded9",
         boxShadow: isAmoled
           ? "0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.7)"
           : d
@@ -99,7 +99,7 @@ export const SearchBar: FC<SearchBarProps> = ({
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Find in document..."
-          className="w-48 sm:w-56 text-xs pl-8 pr-7 py-1.5 rounded-lg focus:outline-none transition-all"
+          className="w-48 sm:w-56 text-xs pl-8 pr-7 py-1.5 rounded-none font-mono focus:outline-none transition-colors"
           style={{
             background: isAmoled ? "#09090b" : d ? "#1e293b" : "#f1f5f9",
             color: isAmoled ? "#ffffff" : d ? "#f8fafc" : "#0f172a",
@@ -113,7 +113,7 @@ export const SearchBar: FC<SearchBarProps> = ({
               inputRef.current?.focus();
             }}
             title="Clear search"
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-slate-500/20 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-none hover:bg-slate-500/20 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
           >
             <IcoX size={12} />
           </button>
@@ -142,7 +142,7 @@ export const SearchBar: FC<SearchBarProps> = ({
               <span>{totalMatches}</span>
             </span>
           ) : (
-            <span className="text-red-500 font-medium text-[10px]">No results</span>
+            <span className="text-red-500 font-medium text-[10px]">[ NO MATCHES ]</span>
           )}
         </div>
       )}
@@ -153,7 +153,7 @@ export const SearchBar: FC<SearchBarProps> = ({
           onClick={onPrevMatch}
           disabled={totalMatches === 0}
           title="Previous match (Shift+Enter)"
-          className="p-1 rounded-md transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-1 rounded-none transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           style={{
             color: d ? "#cbd5e1" : "#475569",
           }}
@@ -171,7 +171,7 @@ export const SearchBar: FC<SearchBarProps> = ({
           onClick={onNextMatch}
           disabled={totalMatches === 0}
           title="Next match (Enter)"
-          className="p-1 rounded-md transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-1 rounded-none transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           style={{
             color: d ? "#cbd5e1" : "#475569",
           }}
@@ -192,7 +192,7 @@ export const SearchBar: FC<SearchBarProps> = ({
         <button
           onClick={onToggleMatchCase}
           title="Match Case (Case Sensitive)"
-          className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-all cursor-pointer border"
+          className="px-1.5 py-0.5 rounded-none text-[10px] font-mono font-bold transition-all cursor-pointer border"
           style={{
             background: options.matchCase
               ? "rgba(245, 158, 11, 0.2)"
@@ -214,7 +214,7 @@ export const SearchBar: FC<SearchBarProps> = ({
         <button
           onClick={onToggleWholeWord}
           title="Match Whole Word"
-          className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-all cursor-pointer border"
+          className="px-1.5 py-0.5 rounded-none text-[10px] font-mono font-bold transition-all cursor-pointer border"
           style={{
             background: options.wholeWord
               ? "rgba(245, 158, 11, 0.2)"
@@ -240,7 +240,7 @@ export const SearchBar: FC<SearchBarProps> = ({
         <button
           onClick={onClose}
           title="Close search (Esc)"
-          className="p-1 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-500/20 transition-colors cursor-pointer"
+          className="p-1 rounded-none text-slate-400 hover:text-slate-200 hover:bg-slate-500/20 transition-colors cursor-pointer"
         >
           <IcoX size={15} />
         </button>

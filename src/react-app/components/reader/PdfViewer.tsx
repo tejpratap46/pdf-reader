@@ -173,7 +173,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                 min={1}
                 max={totalPages}
                 value={pageNum}
-                className="w-11 rounded-lg text-center text-xs py-1 font-bold focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all"
+                className="w-12 rounded-none text-center text-xs py-1 font-mono font-bold focus:outline-none focus:border-amber-500 transition-colors"
                 style={{
                   border: `1px solid ${border}`,
                   background: bgInput,
@@ -184,8 +184,8 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                   if (v >= 1 && v <= totalPages) changePage(v);
                 }}
               />
-              <span className="opacity-60">/</span>
-              <span className="font-semibold" style={{ color: textMut }}>{totalPages}</span>
+              <span className="opacity-60 font-mono">/</span>
+              <span className="font-semibold font-mono" style={{ color: textMut }}>{totalPages}</span>
             </div>
             <IconBtn onClick={nextPage} disabled={pageNum >= totalPages} title="Next page">
               <IcoChevR size={15} />
@@ -196,16 +196,16 @@ export const PdfViewer: FC<PdfViewerProps> = ({
 
           {/* View Mode Switch */}
           <div
-            className="flex items-center gap-0.5 border rounded-xl p-0.5 shadow-2xs"
+            className="flex items-center gap-0.5 border rounded-none p-0.5"
             style={{ borderColor: border, background: bgInput }}
           >
             <button
               onClick={() => setViewMode("scroll")}
               title="Continuous Scroll Mode"
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-none transition-colors cursor-pointer border ${
                 viewMode === "scroll"
-                  ? "bg-amber-500 text-white shadow-xs"
-                  : dk("text-slate-500 hover:text-slate-800", "text-slate-400 hover:text-slate-200", d)
+                  ? "bg-amber-500 text-white border-amber-600 shadow-xs"
+                  : dk("text-slate-600 border-transparent hover:text-slate-900 hover:bg-slate-500/10", "text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-500/10", d)
               }`}
             >
               <IcoScrollMode />
@@ -214,10 +214,10 @@ export const PdfViewer: FC<PdfViewerProps> = ({
             <button
               onClick={() => setViewMode("single")}
               title="Single Page Mode"
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-none transition-colors cursor-pointer border ${
                 viewMode === "single"
-                  ? "bg-amber-500 text-white shadow-xs"
-                  : dk("text-slate-500 hover:text-slate-800", "text-slate-400 hover:text-slate-200", d)
+                  ? "bg-amber-500 text-white border-amber-600 shadow-xs"
+                  : dk("text-slate-600 border-transparent hover:text-slate-900 hover:bg-slate-500/10", "text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-500/10", d)
               }`}
             >
               <IcoSingleMode />
@@ -247,7 +247,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                 })
               }
               title="Reset Zoom (Fit to width)"
-              className="text-xs font-mono font-bold px-2 py-1 rounded-lg transition-colors cursor-pointer"
+              className="text-xs font-mono font-bold px-2 py-1 rounded-none transition-colors cursor-pointer"
               style={{ background: bgInput, color: textMain, border: `1px solid ${border}` }}
             >
               {Math.round(scale * 100)}%
@@ -281,22 +281,22 @@ export const PdfViewer: FC<PdfViewerProps> = ({
           <button
             onClick={() => (isSearchOpen ? onCloseSearch?.() : onOpenSearch?.())}
             title="Find in document (Ctrl+F)"
-            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-xl border transition-all duration-150 active:scale-95 cursor-pointer shadow-xs ${
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-none border transition-colors cursor-pointer shadow-xs ${
               isSearchOpen
-                ? "bg-amber-500 text-white border-amber-500"
+                ? "bg-amber-500 text-white border-amber-600"
                 : isAmoled
                 ? "bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-800 hover:text-white"
                 : d
                 ? "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-slate-900"
             }`}
           >
             <IcoSearch size={13} />
             <span>Find</span>
             {totalMatches > 0 && searchQuery && (
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
-                  isSearchOpen ? "bg-white text-amber-600" : "bg-amber-500 text-white"
+                className={`px-1.5 py-0.2 rounded-none text-[10px] font-mono font-bold border ${
+                  isSearchOpen ? "bg-white text-amber-600 border-white" : "bg-amber-500 text-white border-amber-600"
                 }`}
               >
                 {totalMatches}
@@ -309,10 +309,10 @@ export const PdfViewer: FC<PdfViewerProps> = ({
             <button
               onClick={() => setIsEditorOpen(true)}
               title="Open Fullscreen PDF Editor & Markup Studio"
-              className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-xs transition-all duration-150 active:scale-95 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-none bg-amber-500 hover:bg-amber-600 border border-amber-600 text-white shadow-xs transition-colors cursor-pointer"
             >
               <IcoEdit size={13} />
-              <span>Edit PDF</span>
+              <span>[ EDIT PDF ]</span>
             </button>
           )}
 
@@ -321,16 +321,16 @@ export const PdfViewer: FC<PdfViewerProps> = ({
             <button
               onClick={onExportMarkdown}
               title="Export to Clean Markdown (AI & LLM-Ready)"
-              className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-xl border transition-all duration-150 active:scale-95 cursor-pointer shadow-2xs hover:border-amber-500/50"
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-none border transition-colors cursor-pointer shadow-2xs hover:border-amber-500"
               style={{
-                borderColor: d ? "rgba(245,158,11,0.4)" : "rgba(245,158,11,0.5)",
+                borderColor: d ? "rgba(245,158,11,0.5)" : "rgba(245,158,11,0.6)",
                 background: d ? "rgba(245,158,11,0.1)" : "rgba(254,243,199,0.7)",
                 color: "#f59e0b",
               }}
             >
               <IcoMarkdown size={13} />
               <span>Export MD</span>
-              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[9px] font-bold bg-amber-500 text-white uppercase tracking-wider">
+              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded-none text-[9px] font-mono font-bold bg-amber-500 text-white uppercase tracking-wider">
                 <IcoSparkles size={8} /> AI
               </span>
             </button>
@@ -338,7 +338,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
 
           {autoNextPage && (
             <span
-              className="ml-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border"
+              className="ml-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[11px] font-mono font-semibold border"
               style={{
                 color: "#818cf8",
                 borderColor: "rgba(129,140,248,0.3)",
@@ -438,23 +438,23 @@ export const PdfViewer: FC<PdfViewerProps> = ({
         {!pdfLoading && showPdfView && viewMode === "scroll" && totalPages > 1 && (
           <div className="sticky bottom-6 flex justify-end px-4 sm:px-8 pointer-events-none z-20">
             <div
-              className="pointer-events-auto flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border backdrop-blur-md transition-all duration-200 shadow-lg"
+              className="pointer-events-auto flex items-center gap-2.5 px-3 py-1.5 rounded-none border backdrop-blur-md transition-colors shadow-lg"
               style={{
                 background: isAmoled ? "rgba(0,0,0,0.92)" : d ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.94)",
-                borderColor: isAmoled ? "rgba(245,158,11,0.5)" : d ? "rgba(245,158,11,0.4)" : "#fde68a",
+                borderColor: isAmoled ? "rgba(245,158,11,0.5)" : d ? "rgba(245,158,11,0.4)" : "#deded9",
               }}
             >
               <span className="text-xs font-mono font-bold text-amber-500">
-                Page {pageNum} <span className="opacity-50">/</span> {totalPages}
+                [ PAGE {pageNum} / {totalPages} ]
               </span>
-              <div className="w-px h-3.5" style={{ background: isAmoled ? "#27272a" : d ? "#334155" : "#e2e8f0" }} />
+              <div className="w-px h-3.5" style={{ background: isAmoled ? "#27272a" : d ? "#334155" : "#deded9" }} />
               <button
                 onClick={() => changePage(1)}
                 title="Scroll to first page"
-                className="text-xs font-semibold flex items-center gap-1 transition-colors hover:text-amber-500 cursor-pointer"
+                className="text-xs font-mono font-semibold flex items-center gap-1 transition-colors hover:text-amber-500 cursor-pointer"
                 style={{ color: textMut }}
               >
-                ↑ Top
+                ↑ TOP
               </button>
             </div>
           </div>
@@ -464,7 +464,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
         {!pdfLoading && showPdfView && viewMode === "single" && (
           <div className="flex justify-center p-3 sm:p-6 md:p-8 min-h-full items-center min-w-full w-max mx-auto">
             <div
-              className={`relative shadow-2xl transition-opacity duration-150 rounded-xl overflow-hidden max-w-full ${rendering ? "opacity-50" : "opacity-100"}`}
+              className={`relative shadow-2xl transition-opacity duration-150 rounded-none overflow-hidden max-w-full ${rendering ? "opacity-50" : "opacity-100"}`}
               style={{
                 background: isAmoled ? "#000000" : d ? "#1e293b" : "#ffffff",
                 border: `1px solid ${isAmoled ? "#27272a" : border}`,
@@ -472,7 +472,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
             >
               <canvas
                 ref={canvasRef}
-                className="block rounded-xl overflow-hidden max-w-full h-auto object-contain"
+                className="block rounded-none overflow-hidden max-w-full h-auto object-contain"
                 style={{
                   maxWidth: "100%",
                   height: "auto",
@@ -482,7 +482,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
               />
               {/* Search Highlights Overlay for Current Page */}
               {getPageMatches && getPageMatches(pageNum).length > 0 && (
-                <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-xl">
+                <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-none">
                   {getPageMatches(pageNum).map((match) => {
                     const isActiveMatch = match.globalIndex === activeMatchIndex;
                     return match.rects.map((rect, rIdx) => (
@@ -491,8 +491,8 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                         id={isActiveMatch && rIdx === 0 ? `search-match-${match.globalIndex}` : undefined}
                         className={`absolute transition-all duration-150 ${
                           isActiveMatch
-                            ? "bg-amber-500/80 ring-2 ring-amber-400 shadow-md rounded-[2px] z-20 animate-pulse"
-                            : "bg-yellow-300/45 dark:bg-yellow-400/35 border border-yellow-500/50 rounded-[2px] z-10"
+                            ? "bg-amber-500/80 ring-2 ring-amber-400 shadow-md rounded-none z-20 animate-pulse"
+                            : "bg-yellow-300/45 dark:bg-yellow-400/35 border border-yellow-500/50 rounded-none z-10"
                         }`}
                         style={{
                           left: `${rect.x}%`,
@@ -515,7 +515,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
             {/* Web Mode: Article Reader View */}
             {sourceMode === "web" && webLoaded && (
               <div className="w-full max-w-3xl flex flex-col gap-2 py-4">
-                <div className="mb-6 p-5 rounded-2xl border backdrop-blur-md" style={{ borderColor: border, background: bgCard }}>
+                <div className="mb-6 p-5 rounded-none border backdrop-blur-md" style={{ borderColor: border, background: bgCard }}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-amber-500">
                       <IcoGlobe size={16} />
@@ -524,7 +524,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                       href={webUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs truncate underline underline-offset-4 hover:text-amber-500 transition-colors"
+                      className="text-xs truncate underline underline-offset-4 hover:text-amber-500 transition-colors font-mono"
                       style={{ color: textMut }}
                     >
                       {webUrl}
@@ -548,11 +548,14 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                       <div
                         key={i}
                         id={`web-para-${i}`}
-                        className={`py-3.5 px-5 rounded-xl mb-1 text-sm leading-relaxed transition-all duration-150 cursor-pointer border-l-3 ${
+                        className={`py-3.5 px-5 rounded-none mb-1 text-sm leading-relaxed transition-colors cursor-pointer border-l-2 border-r border-t border-b ${
                           isMatchingPara ? "ring-2 ring-amber-400 shadow-md" : ""
                         }`}
                         style={{
-                          borderLeftColor: active || isMatchingPara ? "#f59e0b" : "transparent",
+                          borderLeftColor: active || isMatchingPara ? "#f59e0b" : border,
+                          borderTopColor: border,
+                          borderRightColor: border,
+                          borderBottomColor: border,
                           background: isMatchingPara
                             ? d ? "rgba(245,158,11,0.18)" : "rgba(254,243,199,0.8)"
                             : active
@@ -575,8 +578,8 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                         {active && (
                           <span className="flex items-center gap-2 mb-2">
                             <Waveform paused={ttsState === "paused"} />
-                            <span className="text-[9px] text-amber-500 font-extrabold tracking-widest uppercase">
-                              {ttsState === "paused" ? "Paused" : "Now Reading"}
+                            <span className="text-[9px] font-mono text-amber-500 font-bold tracking-widest uppercase">
+                              {ttsState === "paused" ? "[ PAUSED ]" : "[ NOW READING ]"}
                             </span>
                           </span>
                         )}
@@ -595,7 +598,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                 <div className="text-amber-500 animate-spin">
                   <IcoLoader size={28} />
                 </div>
-                <p className="text-sm font-bold text-amber-500">Fetching and parsing article...</p>
+                <p className="text-sm font-bold text-amber-500 font-mono">[ FETCHING ARTICLE... ]</p>
                 <p className="text-xs font-mono" style={{ color: textMut }}>
                   {webUrl}
                 </p>
@@ -607,7 +610,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
               <div className="flex flex-col items-center justify-center max-w-3xl w-full my-auto py-8 px-4 text-center">
                 {/* Editorial Badge */}
                 <div
-                  className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold tracking-wider uppercase border mb-4 shadow-2xs"
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-none text-xs font-mono font-bold tracking-wider uppercase border mb-4 shadow-2xs"
                   style={{
                     background: isAmoled ? "rgba(245,158,11,0.12)" : d ? "rgba(245,158,11,0.1)" : "rgba(254,243,199,0.8)",
                     borderColor: isAmoled ? "rgba(245,158,11,0.4)" : d ? "rgba(245,158,11,0.3)" : "#fde68a",
@@ -615,7 +618,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                   }}
                 >
                   <IcoSparkles size={13} />
-                  <span>Privacy-First Document Studio</span>
+                  <span>[ PRIVACY-FIRST DOCUMENT STUDIO ]</span>
                 </div>
 
                 {/* Hero Title */}
@@ -633,7 +636,7 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                 {/* Interactive Dropzone Desk */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full max-w-xl p-8 rounded-2xl border-2 border-dashed transition-all duration-200 hover:border-amber-500 cursor-pointer group shadow-sm hover:shadow-md mb-8"
+                  className="w-full max-w-xl p-8 rounded-none border-2 border-dashed transition-colors hover:border-amber-500 cursor-pointer group shadow-sm hover:shadow-md mb-8"
                   style={{
                     borderColor: isAmoled ? "#27272a" : d ? "#374151" : "#d1d5db",
                     background: isAmoled
@@ -643,14 +646,14 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                       : "rgba(255,255,255,0.8)",
                   }}
                 >
-                  <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-gradient-to-tr from-amber-500/20 to-amber-400/20 text-amber-500 group-hover:scale-110 transition-transform shadow-inner">
+                  <div className="w-14 h-14 rounded-none border mx-auto mb-4 flex items-center justify-center bg-amber-500/10 text-amber-500 group-hover:scale-105 transition-transform" style={{ borderColor: border }}>
                     <IcoUpload size={26} />
                   </div>
 
-                  <p className="text-base font-bold mb-1" style={{ color: textMain }}>
-                    Drop your document here
+                  <p className="text-base font-bold mb-1 font-mono uppercase tracking-wider" style={{ color: textMain }}>
+                    [ DROP YOUR DOCUMENT HERE ]
                   </p>
-                  <p className="text-xs mb-4" style={{ color: textMut }}>
+                  <p className="text-xs mb-4 font-mono" style={{ color: textMut }}>
                     Supports PDF, DOCX, EPUB, XLSX, CSV, RTF &amp; ODT
                   </p>
 
@@ -661,10 +664,10 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                         e.stopPropagation();
                         fileInputRef.current?.click();
                       }}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                      style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
+                      className="px-4 py-2 rounded-none text-xs font-bold text-white border border-amber-600 shadow-xs transition-colors cursor-pointer"
+                      style={{ background: "#f59e0b" }}
                     >
-                      Browse Document
+                      [ BROWSE DOCUMENT ]
                     </button>
 
                     {onLoadSample && (
@@ -674,14 +677,14 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                           e.stopPropagation();
                           onLoadSample();
                         }}
-                        className="px-4 py-2 rounded-xl text-xs font-bold border transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                        className="px-4 py-2 rounded-none text-xs font-bold border transition-colors cursor-pointer"
                         style={{
                           borderColor: border,
                           background: bgInput,
                           color: textMain,
                         }}
                       >
-                        Explore Demo Document ✨
+                        [ EXPLORE DEMO DOC ✨ ]
                       </button>
                     )}
                   </div>
@@ -690,13 +693,13 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                 {/* 4 Feature Spotlight Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl text-left">
                   <div
-                    className="p-3.5 rounded-xl border transition-all"
+                    className="p-3.5 rounded-none border transition-colors"
                     style={{ borderColor: border, background: isAmoled ? "#09090b" : bgCard }}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-amber-500 font-bold text-sm">🎙️</span>
-                      <h4 className="text-xs font-bold" style={{ color: textMain }}>
-                        Natural Voice Narration
+                      <h4 className="text-xs font-bold font-mono uppercase" style={{ color: textMain }}>
+                        Voice Narration
                       </h4>
                     </div>
                     <p className="text-[11px] leading-relaxed" style={{ color: textMut }}>
@@ -705,12 +708,12 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                   </div>
 
                   <div
-                    className="p-3.5 rounded-xl border transition-all"
+                    className="p-3.5 rounded-none border transition-colors"
                     style={{ borderColor: border, background: isAmoled ? "#09090b" : bgCard }}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-blue-500 font-bold text-sm">🧠</span>
-                      <h4 className="text-xs font-bold" style={{ color: textMain }}>
+                      <h4 className="text-xs font-bold font-mono uppercase" style={{ color: textMain }}>
                         Local &amp; Cloud AI
                       </h4>
                     </div>
@@ -720,13 +723,13 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                   </div>
 
                   <div
-                    className="p-3.5 rounded-xl border transition-all"
+                    className="p-3.5 rounded-none border transition-colors"
                     style={{ borderColor: border, background: isAmoled ? "#09090b" : bgCard }}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-emerald-500 font-bold text-sm">✍️</span>
-                      <h4 className="text-xs font-bold" style={{ color: textMain }}>
-                        Markup &amp; Sign Studio
+                      <h4 className="text-xs font-bold font-mono uppercase" style={{ color: textMain }}>
+                        Markup Studio
                       </h4>
                     </div>
                     <p className="text-[11px] leading-relaxed" style={{ color: textMut }}>
@@ -735,12 +738,12 @@ export const PdfViewer: FC<PdfViewerProps> = ({
                   </div>
 
                   <div
-                    className="p-3.5 rounded-xl border transition-all"
+                    className="p-3.5 rounded-none border transition-colors"
                     style={{ borderColor: border, background: isAmoled ? "#09090b" : bgCard }}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-violet-500 font-bold text-sm">🔒</span>
-                      <h4 className="text-xs font-bold" style={{ color: textMain }}>
+                      <h4 className="text-xs font-bold font-mono uppercase" style={{ color: textMain }}>
                         Zero-Upload Privacy
                       </h4>
                     </div>

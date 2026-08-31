@@ -68,7 +68,7 @@ export const TextSelectionToolbar: FC<TextSelectionToolbarProps> = ({
 
   return (
     <div
-      className="absolute z-40 flex items-center gap-1.5 px-2 py-1.5 rounded-xl shadow-2xl border backdrop-blur-md transition-all duration-150 animate-in fade-in zoom-in-95 select-none"
+      className="absolute z-40 flex items-center gap-1.5 px-2 py-1.5 rounded-none shadow-2xl border backdrop-blur-md transition-all duration-150 animate-in fade-in select-none"
       style={{
         left: `${coords.x}px`,
         top: `${coords.y}px`,
@@ -82,16 +82,17 @@ export const TextSelectionToolbar: FC<TextSelectionToolbarProps> = ({
       }}
     >
       {/* Detected format info badge */}
-      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] font-mono font-semibold text-amber-500">
-        <span>{selectionInfo.fontSize}pt</span>
+      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-none border border-amber-500/30 bg-amber-500/15 text-[10px] font-mono font-semibold text-amber-500">
+        <span>[{selectionInfo.fontSize}pt</span>
         <span className="capitalize">{selectionInfo.fontFamily || "sans"}</span>
         {selectionInfo.isBold && <span className="font-bold">B</span>}
         {selectionInfo.isItalic && <span className="italic">I</span>}
         <span
-          className="w-2.5 h-2.5 rounded-full border border-black/20 inline-block ml-0.5"
+          className="w-2.5 h-2.5 rounded-none border border-black/30 inline-block ml-0.5"
           style={{ background: selectionInfo.color }}
           title={`Color: ${selectionInfo.color}`}
         />
+        <span>]</span>
       </div>
 
       <div className="w-px h-4 bg-slate-500/30" />
@@ -100,20 +101,20 @@ export const TextSelectionToolbar: FC<TextSelectionToolbarProps> = ({
       <button
         onClick={handleEdit}
         title="Edit this original text (replaces in-place with matching formatting)"
-        className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold shadow-md transition-all duration-150 cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1 rounded-none border border-amber-600 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-mono font-bold shadow-xs transition-colors cursor-pointer"
       >
         <IcoEdit size={13} />
-        <span>Edit Text</span>
+        <span>[ EDIT TEXT ]</span>
       </button>
 
       {/* Copy Button */}
       <button
         onClick={handleCopy}
         title="Copy selected text"
-        className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-500/20 active:scale-95 text-xs font-medium transition-colors cursor-pointer"
+        className="flex items-center gap-1 px-2 py-1 rounded-none border border-transparent hover:border-slate-600 hover:bg-slate-500/20 active:scale-95 text-xs font-mono font-medium transition-colors cursor-pointer"
       >
         {copied ? (
-          <span className="text-emerald-400 font-bold">✓ Copied</span>
+          <span className="text-emerald-400 font-bold font-mono">✓ Copied</span>
         ) : (
           <span>📋 Copy</span>
         )}
@@ -126,7 +127,7 @@ export const TextSelectionToolbar: FC<TextSelectionToolbarProps> = ({
           onClearSelection();
         }}
         title="Close selection menu"
-        className="p-1 rounded-md hover:bg-red-500/20 hover:text-red-400 text-slate-400 transition-colors text-xs cursor-pointer ml-0.5"
+        className="p-1 rounded-none border border-transparent hover:border-red-500/30 hover:bg-red-500/20 hover:text-red-400 text-slate-400 transition-colors text-xs cursor-pointer ml-0.5"
       >
         ✕
       </button>

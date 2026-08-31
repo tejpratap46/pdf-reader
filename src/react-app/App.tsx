@@ -1463,20 +1463,20 @@ export default function PDFReader(): ReactElement {
             .wb3{animation:bar3 0.6s ease-in-out infinite .2s}.wb4{animation:bar4 0.8s ease-in-out infinite .05s}
             .wb5{animation:bar5 .55s ease-in-out infinite .15s}
             input[type=range]{height:6px}
-            input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#f59e0b;cursor:pointer;margin-top:-4px}
-            input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#f59e0b;cursor:pointer;border:none}
-            ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}
-            ::-webkit-scrollbar-thumb{background:${isAmoled ? "#27272a" : d ? "#374151" : "#d1d5db"};border-radius:2px}
+            input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:16px;border-radius:0;background:#f59e0b;cursor:pointer;margin-top:-5px;border:1px solid #d97706}
+            input[type=range]::-moz-range-thumb{width:10px;height:16px;border-radius:0;background:#f59e0b;cursor:pointer;border:1px solid #d97706}
+            ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}
+            ::-webkit-scrollbar-thumb{background:${isAmoled ? "#27272a" : d ? "#374151" : "#d1d5db"};border-radius:0}
           `}</style>
 
           {/* Global drag overlay */}
           {globalDrag && (
             <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
-              <div className="rounded-2xl border-2 border-dashed border-amber-400 px-16 py-12 flex flex-col items-center gap-4 shadow-2xl animate-pulse" style={{ background: "rgba(245,158,11,0.08)" }}>
+              <div className="rounded-none border-2 border-dashed border-amber-400 px-16 py-12 flex flex-col items-center gap-4 shadow-2xl animate-pulse" style={{ background: "rgba(245,158,11,0.08)" }}>
                 <div className="text-amber-400">📖</div>
-                <p className="text-xl font-semibold text-amber-400">Drop your PDF here</p>
-                <p className="text-sm" style={{ color: textMut }}>
-                  Release to open the document
+                <p className="text-xl font-bold font-mono tracking-wider text-amber-400 uppercase">[ DROP PDF HERE ]</p>
+                <p className="text-xs font-mono" style={{ color: textMut }}>
+                  Release to open document into studio
                 </p>
               </div>
             </div>
@@ -1519,8 +1519,8 @@ export default function PDFReader(): ReactElement {
               <Suspense
                 fallback={
                   <div className="flex-1 flex items-center justify-center gap-3" style={{ background: bgCanvas }}>
-                    <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm font-semibold text-amber-500">Loading PDF Studio Editor...</span>
+                    <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-none animate-spin" />
+                    <span className="text-xs font-mono font-bold text-amber-500 uppercase tracking-wider">[ LOADING PDF STUDIO ]</span>
                   </div>
                 }
               >
@@ -1539,8 +1539,8 @@ export default function PDFReader(): ReactElement {
               <Suspense
                 fallback={
                   <div className="flex-1 flex items-center justify-center gap-3" style={{ background: bgCanvas }}>
-                    <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm font-semibold text-amber-500">Preparing Reader View...</span>
+                    <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-none animate-spin" />
+                    <span className="text-xs font-mono font-bold text-amber-500 uppercase tracking-wider">[ PREPARING READER VIEW ]</span>
                   </div>
                 }
               >
@@ -1605,7 +1605,7 @@ export default function PDFReader(): ReactElement {
                 <button
                   onClick={() => setSidebarOpen(true)}
                   title="Expand left sidebar (Ctrl+B)"
-                  className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 group cursor-pointer"
+                  className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-none shadow-md border backdrop-blur-md transition-colors cursor-pointer group"
                   style={{
                     background: isAmoled ? "rgba(0, 0, 0, 0.95)" : isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.94)",
                     borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
@@ -1615,7 +1615,7 @@ export default function PDFReader(): ReactElement {
                   <span className="text-amber-500 transition-transform duration-150 group-hover:translate-x-0.5">
                     <IcoChevR size={13} />
                   </span>
-                  <span className="text-xs font-bold text-amber-500">Sidebar</span>
+                  <span className="text-xs font-mono font-bold text-amber-500">[ SIDEBAR ]</span>
                 </button>
               )}
 

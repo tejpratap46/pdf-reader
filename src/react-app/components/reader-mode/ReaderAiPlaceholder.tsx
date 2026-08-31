@@ -21,7 +21,7 @@ export const ReaderAiPlaceholder: FC<ReaderAiProps> = ({
   return (
     <div
       data-testid="reader-ai-container"
-      className="hidden flex-col gap-4 p-4 rounded-2xl border bg-card text-card-foreground shadow-sm transition-all"
+      className="hidden flex-col gap-4 p-4 rounded-none border bg-card text-card-foreground shadow-xs transition-colors"
       data-doc-title={docTitle}
       data-doc-length={markdown.length}
       data-page-length={currentPageMarkdown?.length ?? 0}

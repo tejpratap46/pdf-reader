@@ -21,7 +21,7 @@ export const EditorAiPlaceholder: FC<EditorAiProps> = ({
   return (
     <div
       data-testid="editor-ai-container"
-      className="hidden flex-col gap-3 p-3 rounded-xl border bg-card text-card-foreground"
+      className="hidden flex-col gap-3 p-3 rounded-none border bg-card text-card-foreground"
       data-file-name={fileName}
       data-has-bytes={Boolean(pdfBytes)}
       data-active-page={activePageIndex}

@@ -46,9 +46,9 @@ export const WebPanel: FC<WebPanelProps> = ({ onLoad, loading, loaded, title, er
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && submit()}
-            className="w-full rounded-xl text-xs pl-8 pr-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all border shadow-2xs"
+            className="w-full rounded-none text-xs pl-8 pr-2.5 py-2 font-mono focus:outline-none focus:border-amber-500 transition-colors border shadow-2xs"
             style={{
-              borderColor: isAmoled ? "#27272a" : d ? "#374151" : "#e2e8f0",
+              borderColor: isAmoled ? "#27272a" : d ? "#374151" : "#deded9",
               background: isAmoled ? "#09090b" : d ? "#1e293b" : "#ffffff",
               color: d ? "#f1f5f9" : "#0f172a",
             }}
@@ -57,17 +57,14 @@ export const WebPanel: FC<WebPanelProps> = ({ onLoad, loading, loaded, title, er
         <button
           onClick={submit}
           disabled={loading || !url.trim()}
-          className="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-white transition-all duration-150 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap shadow-xs cursor-pointer"
-          style={{
-            background: "linear-gradient(135deg, #f59e0b, #d97706)",
-          }}
+          className="flex items-center gap-1.5 rounded-none px-3.5 py-2 text-xs font-mono font-bold text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap shadow-xs cursor-pointer border border-amber-600 bg-amber-500 hover:bg-amber-600"
         >
           {loading ? (
             <span className="animate-spin inline-block">
               <IcoLoader size={13} />
             </span>
           ) : (
-            "Fetch"
+            "[ FETCH ]"
           )}
         </button>
       </div>
@@ -75,7 +72,7 @@ export const WebPanel: FC<WebPanelProps> = ({ onLoad, loading, loaded, title, er
       {/* Error Feedback */}
       {error && (
         <div
-          className="rounded-xl px-3 py-2 text-xs flex items-start gap-2 border animate-fadeIn"
+          className="rounded-none px-3 py-2 text-xs flex items-start gap-2 border animate-fadeIn"
           style={{
             background: isAmoled ? "rgba(239,68,68,0.1)" : d ? "rgba(239,68,68,0.12)" : "#fef2f2",
             color: d ? "#fca5a5" : "#dc2626",
@@ -83,14 +80,14 @@ export const WebPanel: FC<WebPanelProps> = ({ onLoad, loading, loaded, title, er
           }}
         >
           <span className="shrink-0 mt-0.5 text-red-500">⚠</span>
-          <span className="text-[11px] leading-relaxed">{error}</span>
+          <span className="text-[11px] font-mono leading-relaxed">{error}</span>
         </div>
       )}
 
       {/* Loaded page card */}
       {loaded && !error && (
         <div
-          className="rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 border shadow-2xs transition-all"
+          className="rounded-none px-3 py-2.5 flex items-center justify-between gap-2 border shadow-2xs transition-colors"
           style={{
             background: isAmoled ? "rgba(245,158,11,0.1)" : d ? "rgba(245,158,11,0.08)" : "rgba(254,243,199,0.7)",
             borderColor: isAmoled ? "rgba(245,158,11,0.3)" : d ? "rgba(245,158,11,0.25)" : "#fde68a",
@@ -109,7 +106,7 @@ export const WebPanel: FC<WebPanelProps> = ({ onLoad, loading, loaded, title, er
           </div>
           <button
             onClick={onClear}
-            className="p-1 rounded-lg hover:bg-amber-500/20 text-amber-500 hover:text-amber-600 transition-colors cursor-pointer shrink-0"
+            className="p-1 rounded-none hover:bg-amber-500/20 text-amber-500 hover:text-amber-600 transition-colors cursor-pointer shrink-0"
             title="Clear loaded article"
           >
             <IcoX size={13} />

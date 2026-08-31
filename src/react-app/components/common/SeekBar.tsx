@@ -28,8 +28,9 @@ export const SeekBar: FC<SeekBarProps> = ({ progress, ttsState, onSeek }) => {
     <div className="flex items-center gap-2 mt-2 select-none" onClick={(e) => e.stopPropagation()}>
       <div
         ref={trackRef}
-        className="relative flex-1 h-2 rounded-full cursor-pointer group"
+        className="relative flex-1 h-2 rounded-none cursor-pointer border group"
         style={{
+          borderColor: isAmoled ? "#27272a" : d ? "#273142" : "#deded9",
           background: isAmoled
             ? "#1c1c21"
             : dk("#e2e8f0", "#1e293b", d),
@@ -49,7 +50,7 @@ export const SeekBar: FC<SeekBarProps> = ({ progress, ttsState, onSeek }) => {
         }}
       >
         <div
-          className="absolute inset-y-0 left-0 rounded-full transition-all duration-75"
+          className="absolute inset-y-0 left-0 rounded-none transition-all duration-75"
           style={{
             width: pct,
             background:
@@ -59,13 +60,13 @@ export const SeekBar: FC<SeekBarProps> = ({ progress, ttsState, onSeek }) => {
           }}
         />
         <div
-          className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-amber-500 shadow-md border-2 border-white dark:border-slate-900 transition-all duration-75 group-hover:scale-125"
+          className="absolute top-1/2 w-2 h-3.5 rounded-none bg-amber-500 border border-amber-600 dark:border-white shadow-xs transition-all duration-75"
           style={{
             left: pct,
             transform: "translateX(-50%) translateY(-50%)",
             boxShadow: dragging
-              ? "0 0 0 4px rgba(245,158,11,0.35)"
-              : "0 1px 3px rgba(0,0,0,0.3)",
+              ? "0 0 0 2px rgba(245,158,11,0.4)"
+              : "0 1px 2px rgba(0,0,0,0.3)",
           }}
         />
       </div>

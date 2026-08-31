@@ -712,23 +712,24 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
         >
           <div className="flex items-center gap-2">
             <div
-              className="w-6 h-6 rounded-lg flex items-center justify-center text-white shadow-sm"
+              className="w-6 h-6 rounded-none border flex items-center justify-center text-white shadow-xs"
               style={{
+                borderColor: provider === "chrome-builtin" ? "#059669" : "#2563eb",
                 background:
                   provider === "chrome-builtin"
-                    ? "linear-gradient(135deg, #10B981, #059669)"
-                    : "linear-gradient(135deg, #4285F4, #9333EA)",
+                    ? "#10B981"
+                    : "#4285F4",
               }}
             >
               {provider === "chrome-builtin" ? <IcoCpu size={14} /> : <IcoSparklesFilled size={13} />}
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold tracking-wide" style={{ color: textMain }}>
-                  Pdf Reader AI
+                <span className="text-xs font-mono font-bold tracking-wide uppercase" style={{ color: textMain }}>
+                  [ PDF READER AI ]
                 </span>
                 <span
-                  className="px-1.5 py-0.2 text-[9px] font-semibold rounded-full border"
+                  className="px-1.5 py-0.2 text-[8.5px] font-mono font-semibold rounded-none border uppercase"
                   style={{
                     backgroundColor:
                       provider === "chrome-builtin"
@@ -756,10 +757,10 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                         : "#2563eb",
                   }}
                 >
-                  {provider === "chrome-builtin" ? "In-Browser (Nano)" : "Cloud (Flash)"}
+                  {provider === "chrome-builtin" ? "NANO" : "FLASH"}
                 </span>
               </div>
-              <p className="text-[10px]" style={{ color: textMut }}>
+              <p className="text-[10px] font-mono" style={{ color: textMut }}>
                 {provider === "chrome-builtin" ? "100% On-Device AI" : "Gemini 3.7 Flash"}
               </p>
             </div>
@@ -770,7 +771,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
               <button
                 onClick={resetChatSession}
                 title="Clear chat history"
-                className="p-1.5 rounded-lg hover:bg-slate-500/15 transition-colors cursor-pointer"
+                className="p-1.5 rounded-none border border-transparent hover:border-slate-700 hover:bg-slate-500/15 transition-colors cursor-pointer"
                 style={{ color: textMut }}
               >
                 <IcoRefresh size={14} />
@@ -779,7 +780,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
             <button
               onClick={() => setSidebarOpen(false)}
               title="Collapse AI sidebar (Ctrl+J)"
-              className="p-1.5 rounded-lg hover:bg-slate-500/15 transition-colors cursor-pointer"
+              className="p-1.5 rounded-none border border-transparent hover:border-slate-700 hover:bg-slate-500/15 transition-colors cursor-pointer"
               style={{ color: textMut }}
             >
               <IcoChevR size={16} />
@@ -796,21 +797,21 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
           }}
         >
           <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider pl-1" style={{ color: textMut }}>
-              AI Engine:
+            <span className="text-[10px] font-mono font-semibold uppercase tracking-wider pl-1" style={{ color: textMut }}>
+              ENGINE:
             </span>
 
             {/* Provider Segmented Toggle */}
             <div
-              className="flex rounded-lg p-0.5 border"
+              className="flex rounded-none p-0.5 border"
               style={{ borderColor: border, backgroundColor: bgInput }}
             >
               <button
                 onClick={() => handleSelectProvider("chrome-builtin")}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-2 py-1 rounded-none text-[10px] font-mono font-semibold transition-colors cursor-pointer border ${
                   provider === "chrome-builtin"
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "hover:text-emerald-500"
+                    ? "bg-emerald-600 border-emerald-700 text-white shadow-xs"
+                    : "border-transparent hover:text-emerald-500"
                 }`}
                 style={{ color: provider === "chrome-builtin" ? "#ffffff" : textMut }}
                 title="In-Browser AI (Chrome Built-in Gemini Nano): 100% on-device, private, no login required."
@@ -821,10 +822,10 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
 
               <button
                 onClick={() => handleSelectProvider("firebase")}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-2 py-1 rounded-none text-[10px] font-mono font-semibold transition-colors cursor-pointer border ${
                   provider === "firebase"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "hover:text-blue-500"
+                    ? "bg-blue-600 border-blue-700 text-white shadow-xs"
+                    : "border-transparent hover:text-blue-500"
                 }`}
                 style={{ color: provider === "firebase" ? "#ffffff" : textMut }}
                 title="Cloud AI (Firebase Gemini 3.7 Flash): 1M context window, requires Google login."
@@ -838,11 +839,11 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
           {/* Context Scope & Ready State */}
           <div className="flex items-center justify-between gap-2 pt-1 border-t" style={{ borderColor: border }}>
             {/* Scope Toggle */}
-            <div className="flex rounded-md p-0.5 border" style={{ borderColor: border, backgroundColor: bgInput }}>
+            <div className="flex rounded-none p-0.5 border" style={{ borderColor: border, backgroundColor: bgInput }}>
               <button
                 onClick={() => setContextScope("full")}
-                className={`px-1.5 py-0.5 rounded text-[9px] font-medium transition-colors cursor-pointer ${
-                  contextScope === "full" ? "bg-amber-500 text-white font-bold" : ""
+                className={`px-1.5 py-0.5 rounded-none text-[9px] font-mono font-medium transition-colors cursor-pointer border ${
+                  contextScope === "full" ? "bg-amber-500 border-amber-600 text-white font-bold" : "border-transparent"
                 }`}
                 style={{ color: contextScope === "full" ? "#ffffff" : textMut }}
                 title="Include entire document markdown as context"
@@ -851,8 +852,8 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
               </button>
               <button
                 onClick={() => setContextScope("page")}
-                className={`px-1.5 py-0.5 rounded text-[9px] font-medium transition-colors cursor-pointer ${
-                  contextScope === "page" ? "bg-amber-500 text-white font-bold" : ""
+                className={`px-1.5 py-0.5 rounded-none text-[9px] font-mono font-medium transition-colors cursor-pointer border ${
+                  contextScope === "page" ? "bg-amber-500 border-amber-600 text-white font-bold" : "border-transparent"
                 }`}
                 style={{ color: contextScope === "page" ? "#ffffff" : textMut }}
                 title={`Focus specifically on page ${currentPage}`}
@@ -864,7 +865,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
             {/* Provider Privacy & Auth Status Pill */}
             {provider === "chrome-builtin" ? (
               <span
-                className="inline-flex items-center gap-1 text-[9.5px] font-medium px-1.5 py-0.5 rounded-full border"
+                className="inline-flex items-center gap-1 text-[9px] font-mono font-medium px-1.5 py-0.5 rounded-none border uppercase"
                 style={{
                   backgroundColor:
                     chromeAiStatus?.isSupported
@@ -892,18 +893,18 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                       : "#d97706",
                 }}
               >
-                <span>{chromeAiStatus?.isSupported ? "🔒 100% Private" : "⚠️ Setup Needed"}</span>
+                <span>{chromeAiStatus?.isSupported ? "🔒 [ 100% PRIVATE ]" : "⚠️ [ SETUP NEEDED ]"}</span>
               </span>
             ) : (
               <span
-                className="inline-flex items-center gap-1 text-[9.5px] font-medium px-1.5 py-0.5 rounded-full border"
+                className="inline-flex items-center gap-1 text-[9px] font-mono font-medium px-1.5 py-0.5 rounded-none border uppercase"
                 style={{
                   backgroundColor: user ? (isDark ? "rgba(59, 130, 246, 0.1)" : "#eff6ff") : (isDark ? "rgba(239, 68, 68, 0.1)" : "#fef2f2"),
                   borderColor: user ? (isDark ? "rgba(59, 130, 246, 0.3)" : "#bfdbfe") : (isDark ? "rgba(239, 68, 68, 0.3)" : "#fecaca"),
                   color: user ? (isDark ? "#93c5fd" : "#2563eb") : (isDark ? "#fca5a5" : "#dc2626"),
                 }}
               >
-                <span>{user ? `👤 ${user.displayName?.split(" ")[0] || "Logged In"}` : "🔒 Sign-in required"}</span>
+                <span>{user ? `👤 [ ${user.displayName?.split(" ")[0] || "LOGGED IN"} ]` : "🔒 [ SIGN-IN REQUIRED ]"}</span>
               </span>
             )}
           </div>
@@ -946,7 +947,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
         {/* Speed Tip Banner for In-Browser AI when on Full Doc with long text */}
         {provider === "chrome-builtin" && contextScope === "full" && activeMarkdown.length > 3500 && (
           <div
-            className="mx-3 mt-2 p-2 rounded-xl border flex items-center justify-between text-[10px] gap-2 shrink-0 animate-in fade-in duration-150"
+            className="mx-3 mt-2 p-2 rounded-none border flex items-center justify-between text-[10px] font-mono gap-2 shrink-0 animate-in fade-in duration-150"
             style={{
               backgroundColor: isDark ? "rgba(16, 185, 129, 0.08)" : "#ecfdf5",
               borderColor: isDark ? "rgba(16, 185, 129, 0.25)" : "#a7f3d0",
@@ -958,14 +959,14 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                 <IcoZap size={13} />
               </span>
               <span className="truncate">
-                <strong>Speed Tip:</strong> Page Scope ({currentPage}) runs up to 10× faster on-device.
+                <strong>[ SPEED TIP ]:</strong> Page Scope ({currentPage}) runs up to 10× faster.
               </span>
             </div>
             <button
               onClick={() => setContextScope("page")}
-              className="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[9px] shrink-0 cursor-pointer transition-transform hover:scale-105"
+              className="px-2 py-0.5 rounded-none border border-emerald-700 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[9px] shrink-0 cursor-pointer transition-colors"
             >
-              Use Page {currentPage}
+              [ USE PAGE {currentPage} ]
             </button>
           </div>
         )}
@@ -1000,73 +1001,73 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
           /* Chrome Built-in AI Unsupported / Flag Setup Card */
           <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-start items-center text-center">
             <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 text-white shadow-md"
-              style={{ background: "linear-gradient(135deg, #10B981, #059669)" }}
+              className="w-12 h-12 rounded-none border border-emerald-700 flex items-center justify-center mb-3 text-white shadow-xs"
+              style={{ background: "#10B981" }}
             >
               <IcoCpu size={24} />
             </div>
 
-            <h3 className="text-sm font-bold mb-1 tracking-tight" style={{ color: textMain }}>
-              Enable In-Browser AI (Gemini Nano)
+            <h3 className="text-sm font-mono font-bold mb-1 tracking-tight uppercase" style={{ color: textMain }}>
+              [ ENABLE IN-BROWSER AI ]
             </h3>
-            <p className="text-[11px] leading-relaxed max-w-[270px] mb-4" style={{ color: textMut }}>
+            <p className="text-[11px] leading-relaxed max-w-[270px] mb-4 font-mono" style={{ color: textMut }}>
               Run Google Gemini Nano 100% locally in your browser. Complete privacy, zero latency, and no API keys or login required.
             </p>
 
             {/* Setup Instructions Card */}
             <div
-              className="w-full rounded-xl p-3 mb-4 text-left flex flex-col gap-2.5 border text-xs"
+              className="w-full rounded-none p-3 mb-4 text-left flex flex-col gap-2.5 border text-xs"
               style={{
                 backgroundColor: isDark ? "rgba(30, 41, 59, 0.4)" : "rgba(241, 245, 249, 0.9)",
                 borderColor: border,
               }}
             >
-              <div className="font-semibold text-[11px] text-amber-500 flex items-center gap-1">
+              <div className="font-mono font-semibold text-[11px] text-amber-500 flex items-center gap-1 uppercase">
                 <IcoAlertCircle size={13} />
-                <span>How to enable in Google Chrome:</span>
+                <span>[ SETUP CHROME FLAGS ]:</span>
               </div>
 
               <div className="space-y-2 text-[11px]" style={{ color: textMut }}>
                 <div>
-                  <div className="font-medium text-[11px]" style={{ color: textMain }}>
+                  <div className="font-mono font-medium text-[11px]" style={{ color: textMain }}>
                     1. Enable Prompt API Flag:
                   </div>
-                  <div className="flex items-center gap-1 mt-1 bg-black/20 p-1.5 rounded-lg border font-mono text-[10px]" style={{ borderColor: border }}>
+                  <div className="flex items-center gap-1 mt-1 bg-black/20 p-1.5 rounded-none border font-mono text-[10px]" style={{ borderColor: border }}>
                     <span className="flex-1 truncate select-all text-amber-400">
                       chrome://flags/#prompt-api-for-gemini-nano
                     </span>
                     <button
                       onClick={() => copyToClipboard("chrome://flags/#prompt-api-for-gemini-nano", "flag1")}
-                      className="p-1 hover:bg-white/10 rounded text-[9px] cursor-pointer"
+                      className="p-1 hover:bg-white/10 rounded-none text-[9px] cursor-pointer"
                       title="Copy flag link"
                     >
                       {copiedFlagUrl === "flag1" ? <IcoCheck size={11} /> : <IcoCopy size={11} />}
                     </button>
                   </div>
-                  <span className="text-[10px] opacity-75">Set to &quot;Enabled&quot; in Chrome flags.</span>
+                  <span className="text-[10px] opacity-75 font-mono">Set to &quot;Enabled&quot; in Chrome flags.</span>
                 </div>
 
                 <div>
-                  <div className="font-medium text-[11px]" style={{ color: textMain }}>
+                  <div className="font-mono font-medium text-[11px]" style={{ color: textMain }}>
                     2. Enable Optimization Guide:
                   </div>
-                  <div className="flex items-center gap-1 mt-1 bg-black/20 p-1.5 rounded-lg border font-mono text-[10px]" style={{ borderColor: border }}>
+                  <div className="flex items-center gap-1 mt-1 bg-black/20 p-1.5 rounded-none border font-mono text-[10px]" style={{ borderColor: border }}>
                     <span className="flex-1 truncate select-all text-amber-400">
                       chrome://flags/#optimization-guide-on-device-model
                     </span>
                     <button
                       onClick={() => copyToClipboard("chrome://flags/#optimization-guide-on-device-model", "flag2")}
-                      className="p-1 hover:bg-white/10 rounded text-[9px] cursor-pointer"
+                      className="p-1 hover:bg-white/10 rounded-none text-[9px] cursor-pointer"
                       title="Copy flag link"
                     >
                       {copiedFlagUrl === "flag2" ? <IcoCheck size={11} /> : <IcoCopy size={11} />}
                     </button>
                   </div>
-                  <span className="text-[10px] opacity-75">Set to &quot;Enabled BypassPerfRequirement&quot;.</span>
+                  <span className="text-[10px] opacity-75 font-mono">Set to &quot;Enabled BypassPerfRequirement&quot;.</span>
                 </div>
 
                 <div>
-                  <div className="font-medium text-[11px]" style={{ color: textMain }}>
+                  <div className="font-mono font-medium text-[11px]" style={{ color: textMain }}>
                     3. Restart Chrome browser.
                   </div>
                 </div>
@@ -1078,31 +1079,31 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
               <button
                 onClick={refreshChromeAiAvailability}
                 disabled={isCheckingChromeAi}
-                className="w-full py-2 px-3 rounded-xl text-xs font-bold text-white shadow-sm flex items-center justify-center gap-1.5 transition-transform hover:scale-101 cursor-pointer disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg, #10B981, #059669)" }}
+                className="w-full py-2 px-3 rounded-none border border-emerald-700 text-xs font-mono font-bold text-white shadow-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                style={{ background: "#10B981" }}
               >
                 {isCheckingChromeAi ? (
                   <span className="animate-spin"><IcoLoader size={14} /></span>
                 ) : (
                   <IcoRefresh size={14} />
                 )}
-                <span>Check Availability Again</span>
+                <span>[ CHECK AVAILABILITY ]</span>
               </button>
 
               <button
                 onClick={() => handleSelectProvider("firebase")}
-                className="w-full py-2 px-3 rounded-xl text-xs font-semibold border transition-colors hover:bg-blue-500/10 cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full py-2 px-3 rounded-none text-xs font-mono font-semibold border transition-colors hover:bg-blue-500/10 cursor-pointer flex items-center justify-center gap-1.5"
                 style={{ borderColor: border, color: isDark ? "#93c5fd" : "#2563eb" }}
               >
                 <IcoCloud size={14} />
-                <span>Switch to Cloud Gemini 3.7 Flash</span>
+                <span>[ SWITCH TO CLOUD GEMINI ]</span>
               </button>
 
               <a
                 href="https://developer.chrome.com/docs/ai/built-in/overview"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[10px] flex items-center justify-center gap-1 hover:underline mt-1"
+                className="text-[10px] font-mono flex items-center justify-center gap-1 hover:underline mt-1"
                 style={{ color: textMut }}
               >
                 <span>Read Chrome Built-in AI Documentation</span>
@@ -1114,19 +1115,18 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
           /* Firebase Sign-in Gateway */
           <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-center items-center text-center">
             <div
-              className="w-14 h-14 rounded-3xl flex items-center justify-center mb-3 text-white shadow-xl animate-bounce"
+              className="w-14 h-14 rounded-none border border-blue-600 flex items-center justify-center mb-3 text-white shadow-xs"
               style={{
-                background: "linear-gradient(135deg, #4285F4 0%, #9333EA 50%, #F59E0B 100%)",
-                boxShadow: "0 10px 25px -5px rgba(66, 133, 244, 0.4)",
+                background: "#4285F4",
               }}
             >
               <IcoSparklesFilled size={26} />
             </div>
 
-            <h2 className="text-base font-bold mb-1 tracking-tight" style={{ color: textMain }}>
-              Cloud Document Intelligence
+            <h2 className="text-base font-mono font-bold mb-1 tracking-tight uppercase" style={{ color: textMain }}>
+              [ CLOUD INTELLIGENCE ]
             </h2>
-            <p className="text-xs leading-relaxed max-w-[270px] mb-4" style={{ color: textMut }}>
+            <p className="text-xs leading-relaxed max-w-[270px] mb-4 font-mono" style={{ color: textMut }}>
               Sign in with Google to use <strong>Gemini 3.7 Flash</strong> with a 1,000,000+ token context window.
             </p>
 
@@ -1134,33 +1134,33 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
             <button
               onClick={signInWithGoogle}
               disabled={actionLoading}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-white shadow-lg transition-all duration-200 hover:scale-102 hover:shadow-xl cursor-pointer disabled:opacity-50 mb-3"
-              style={{ background: "linear-gradient(135deg, #4285F4, #34A853)" }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-none border border-blue-700 text-xs font-mono font-bold text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50 mb-3"
+              style={{ background: "#4285F4" }}
             >
               {actionLoading ? (
                 <span className="animate-spin"><IcoLoader size={16} /></span>
               ) : (
                 <IcoGoogle size={16} />
               )}
-              <span>{actionLoading ? "Connecting..." : "Sign in with Google"}</span>
+              <span>{actionLoading ? "CONNECTING..." : "[ SIGN IN WITH GOOGLE ]"}</span>
             </button>
 
             {/* Alternative: Switch to In-Browser AI */}
             <button
               onClick={() => handleSelectProvider("chrome-builtin")}
-              className="w-full py-2 px-3 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-colors hover:bg-emerald-500/10 cursor-pointer"
+              className="w-full py-2 px-3 rounded-none text-xs font-mono font-semibold border flex items-center justify-center gap-1.5 transition-colors hover:bg-emerald-500/10 cursor-pointer"
               style={{ borderColor: border, color: isDark ? "#6ee7b7" : "#059669" }}
             >
               <IcoCpu size={14} />
-              <span>Or use In-Browser AI (No sign-in required)</span>
+              <span>[ USE IN-BROWSER AI (NO SIGN-IN) ]</span>
             </button>
 
             {authError && (
               <div
-                className="mt-3 p-2.5 rounded-xl text-[11px] flex items-start gap-2 text-left"
+                className="mt-3 p-2.5 rounded-none border text-[11px] font-mono flex items-start gap-2 text-left"
                 style={{
                   backgroundColor: isDark ? "rgba(239, 68, 68, 0.1)" : "#fef2f2",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  borderColor: "rgba(239, 68, 68, 0.3)",
                   color: isDark ? "#fca5a5" : "#b91c1c",
                 }}
               >
@@ -1177,18 +1177,19 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
               {messages.length === 0 ? (
                 <div className="py-5 px-2 flex flex-col items-center text-center">
                   <div
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center mb-2.5 text-white shadow-sm"
+                    className="w-10 h-10 rounded-none border flex items-center justify-center mb-2.5 text-white shadow-xs"
                     style={{
+                      borderColor: provider === "chrome-builtin" ? "#059669" : "#2563eb",
                       background:
                         provider === "chrome-builtin"
-                          ? "linear-gradient(135deg, #10B981, #059669)"
-                          : "linear-gradient(135deg, #4285F4, #9333EA)",
+                          ? "#10B981"
+                          : "#4285F4",
                     }}
                   >
                     {provider === "chrome-builtin" ? <IcoCpu size={18} /> : <IcoSparkles size={18} />}
                   </div>
-                  <h3 className="text-xs font-bold mb-1" style={{ color: textMain }}>
-                    {provider === "chrome-builtin" ? "In-Browser AI Assistant" : "Ask anything about this document"}
+                  <h3 className="text-xs font-mono font-bold mb-1 uppercase" style={{ color: textMain }}>
+                    {provider === "chrome-builtin" ? "[ IN-BROWSER AI ASSISTANT ]" : "[ ASK THIS DOCUMENT ]"}
                   </h3>
                   <p className="text-[11px] leading-relaxed mb-3.5 max-w-[260px]" style={{ color: textMut }}>
                     {provider === "chrome-builtin"
@@ -1198,14 +1199,14 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
 
                   {/* Quick Starter Chips */}
                   <div className="w-full flex flex-col gap-1.5 text-left">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider pl-1" style={{ color: textMut }}>
-                      Suggested Prompts
+                    <span className="text-[10px] font-mono font-semibold uppercase tracking-wider pl-1" style={{ color: textMut }}>
+                      [ SUGGESTED PROMPTS ]
                     </span>
                     {QUICK_PROMPTS.map((qp) => (
                       <button
                         key={qp.id}
                         onClick={() => handleSendMessage(qp.prompt)}
-                        className="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-medium border text-left transition-all duration-150 hover:scale-[1.01] cursor-pointer"
+                        className="w-full flex items-center gap-2 p-2 rounded-none text-xs font-mono font-medium border text-left transition-colors cursor-pointer"
                         style={{
                           backgroundColor: isDark ? "rgba(30, 41, 59, 0.4)" : "#ffffff",
                           borderColor: border,
@@ -1257,7 +1258,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
               }}
             >
               <div
-                className="flex items-end gap-2 p-1.5 rounded-2xl border transition-all"
+                className="flex items-end gap-2 p-1.5 rounded-none border transition-colors"
                 style={{
                   backgroundColor: bgInput,
                   borderColor: isGenerating
@@ -1279,7 +1280,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                   }
                   rows={1}
                   disabled={isGenerating}
-                  className="flex-1 max-h-28 bg-transparent text-xs p-1.5 resize-none focus:outline-none placeholder:text-slate-400 leading-relaxed"
+                  className="flex-1 max-h-28 bg-transparent text-xs p-1.5 resize-none focus:outline-none placeholder:text-slate-400 font-mono leading-relaxed"
                   style={{ color: textMain }}
                 />
 
@@ -1287,7 +1288,7 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                   <button
                     onClick={handleStopGenerating}
                     title="Stop generation"
-                    className="p-2 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-transform hover:scale-105 cursor-pointer shrink-0"
+                    className="p-2 rounded-none bg-red-500 hover:bg-red-600 border border-red-600 text-white transition-colors cursor-pointer shrink-0"
                   >
                     <IcoStopCircle size={15} />
                   </button>
@@ -1296,15 +1297,20 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                     onClick={() => handleSendMessage()}
                     disabled={!inputValue.trim()}
                     title="Send message (Enter)"
-                    className="p-2 rounded-xl transition-all duration-150 cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="p-2 rounded-none border transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{
                       background: inputValue.trim()
                         ? provider === "chrome-builtin"
-                          ? "linear-gradient(135deg, #10B981, #059669)"
-                          : "linear-gradient(135deg, #f59e0b, #d97706)"
+                          ? "#10B981"
+                          : "#f59e0b"
                         : isDark
                         ? bgInput
                         : "#e2e8f0",
+                      borderColor: inputValue.trim()
+                        ? provider === "chrome-builtin"
+                          ? "#059669"
+                          : "#d97706"
+                        : border,
                       color: inputValue.trim() ? "#ffffff" : textMut,
                     }}
                   >
@@ -1313,17 +1319,17 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                 )}
               </div>
 
-              {/* Input Footer with tokenx Total Input Token counter & Breakdown */}
+              {/* Input Footer with token Total Input Token counter & Breakdown */}
               <div className="flex items-center justify-between text-[10px] px-1" style={{ color: textMut }}>
                 <div className="flex items-center gap-2">
                   <div className="relative" ref={tokenDetailsRef}>
                     <button
                       type="button"
                       onClick={() => setShowTokenDetails((prev) => !prev)}
-                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border font-mono text-[9px] font-semibold transition-all cursor-pointer ${
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none border font-mono text-[9px] font-semibold transition-colors cursor-pointer ${
                         queryTokens > 0
                           ? isDark
-                            ? "bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-[0_0_8px_rgba(245,158,11,0.15)]"
+                            ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
                             : "bg-amber-50 text-amber-600 border-amber-200"
                           : isDark
                           ? "bg-slate-800/60 text-slate-300 border-slate-700/60 hover:bg-slate-700/50"
@@ -1345,18 +1351,15 @@ export const AiChatSidebar: FC<AiChatSidebarProps> = ({
                     {/* Interactive Token Breakdown Popover */}
                     {showTokenDetails && (
                       <div
-                        className="absolute left-0 bottom-full mb-2 w-64 p-3 rounded-xl shadow-2xl z-50 text-xs flex flex-col gap-2 border animate-in fade-in zoom-in-95 duration-100"
+                        className="absolute left-0 bottom-full mb-2 w-64 p-3 rounded-none shadow-2xl z-50 text-xs flex flex-col gap-2 border animate-in fade-in duration-100"
                         style={{
                           backgroundColor: bgSide,
                           borderColor: border,
-                          boxShadow: isDark
-                            ? "0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6)"
-                            : "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
                         }}
                       >
                         <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: border }}>
-                          <span className="font-bold text-[11px] flex items-center gap-1.5" style={{ color: textMain }}>
-                            <span>{provider === "chrome-builtin" ? "⚡" : "✨"}</span> Context Breakdown
+                          <span className="font-mono font-bold text-[11px] flex items-center gap-1.5 uppercase" style={{ color: textMain }}>
+                            <span>{provider === "chrome-builtin" ? "⚡" : "✨"}</span> [ CONTEXT BREAKDOWN ]
                           </span>
                           <span className="text-[10px] font-mono font-bold text-amber-500">
                             {totalInputTokens.toLocaleString()}

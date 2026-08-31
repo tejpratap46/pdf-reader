@@ -213,7 +213,7 @@ export const ImageOverlays: FC<ImageOverlaysProps> = ({
                 {/* 4. Quick Action Floating Toolbar (Upright) */}
                 {!isRotating && !isResizing && (
                   <div
-                    className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-slate-900/95 backdrop-blur-md px-2 py-1 rounded-lg border border-amber-500/50 text-[11px] text-white shadow-2xl pointer-events-auto z-50 whitespace-nowrap"
+                    className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-slate-900/95 backdrop-blur-md px-2 py-1 rounded-none border border-amber-500/50 text-[11px] font-mono text-white shadow-2xl pointer-events-auto z-50 whitespace-nowrap"
                     style={{ transform: `rotate(${-rotation}deg)` }}
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -224,7 +224,7 @@ export const ImageOverlays: FC<ImageOverlaysProps> = ({
                         updateImage(img.id, { rotation: nextRot });
                       }}
                       title="Rotate 90° counter-clockwise"
-                      className="p-1 rounded hover:bg-slate-700 active:bg-amber-500 transition-colors text-amber-400"
+                      className="p-1 rounded-none hover:bg-slate-700 active:bg-amber-500 transition-colors text-amber-400"
                     >
                       <IcoRotateCcw size={13} />
                     </button>
@@ -236,7 +236,7 @@ export const ImageOverlays: FC<ImageOverlaysProps> = ({
                         updateImage(img.id, { rotation: nextRot });
                       }}
                       title="Rotate 90° clockwise"
-                      className="p-1 rounded hover:bg-slate-700 active:bg-amber-500 transition-colors text-amber-400"
+                      className="p-1 rounded-none hover:bg-slate-700 active:bg-amber-500 transition-colors text-amber-400"
                     >
                       <IcoRotateCw size={13} />
                     </button>
@@ -246,7 +246,7 @@ export const ImageOverlays: FC<ImageOverlaysProps> = ({
                       <button
                         onClick={() => updateImage(img.id, { rotation: 0 })}
                         title="Reset rotation to 0°"
-                        className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white font-mono text-[10px] font-bold"
+                        className="px-1.5 py-0.5 rounded-none bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white font-mono text-[10px] font-bold"
                       >
                         0°
                       </button>
@@ -258,7 +258,7 @@ export const ImageOverlays: FC<ImageOverlaysProps> = ({
                     <button
                       onClick={() => updateImage(img.id, { lockAspectRatio: !lockAspect })}
                       title={lockAspect ? "Aspect ratio locked (click to unlock)" : "Aspect ratio unlocked (click to lock)"}
-                      className={`p-1 rounded transition-colors ${
+                      className={`p-1 rounded-none transition-colors ${
                         lockAspect ? "text-amber-400 hover:bg-amber-500/20" : "text-slate-400 hover:bg-slate-700"
                       }`}
                     >
@@ -269,7 +269,7 @@ export const ImageOverlays: FC<ImageOverlaysProps> = ({
                     <button
                       onClick={() => duplicateImage(img.id)}
                       title="Duplicate image"
-                      className="p-1 rounded hover:bg-slate-700 active:bg-amber-500 transition-colors text-slate-300"
+                      className="p-1 rounded-none hover:bg-slate-700 active:bg-amber-500 transition-colors text-slate-300"
                     >
                       <IcoCopy size={13} />
                     </button>
@@ -280,7 +280,7 @@ export const ImageOverlays: FC<ImageOverlaysProps> = ({
                     <button
                       onClick={() => removeImage(img.id)}
                       title="Remove image"
-                      className="p-1 rounded hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors font-bold"
+                      className="p-1 rounded-none hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors font-bold"
                     >
                       <IcoTrash />
                     </button>
@@ -297,7 +297,7 @@ export const ImageOverlays: FC<ImageOverlaysProps> = ({
                   removeImage(img.id);
                 }}
                 title="Remove image"
-                className="absolute -top-2.5 -right-2.5 hidden group-hover:flex w-5 h-5 rounded-full bg-red-500 text-white items-center justify-center text-[10px] shadow-lg font-bold hover:bg-red-600 z-30"
+                className="absolute -top-2.5 -right-2.5 hidden group-hover:flex w-5 h-5 rounded-none border border-red-700 bg-red-500 text-white items-center justify-center text-[10px] font-mono shadow-xs font-bold hover:bg-red-600 z-30"
               >
                 ✕
               </button>

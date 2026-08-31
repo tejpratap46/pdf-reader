@@ -178,22 +178,22 @@ export const Sidebar: FC<SidebarProps> = ({
           {/* Source tabs & Collapse Button */}
           <div className="flex items-center gap-2">
             <div
-              className="flex-1 flex rounded-xl p-1 gap-1 border shadow-2xs"
+              className="flex-1 flex rounded-none p-0.5 gap-0.5 border"
               style={{ background: bgInput, borderColor: border }}
             >
               {(["pdf", "web"] as SourceMode[]).map((m) => (
                 <button
                   key={m}
                   onClick={() => setSourceMode(m)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-none text-xs font-semibold transition-colors cursor-pointer border"
                   style={
                     sourceMode === m
                       ? {
                           background: d ? "#27272a" : "#ffffff",
                           color: "#f59e0b",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+                          borderColor: border,
                         }
-                      : { background: "transparent", color: textMut }
+                      : { background: "transparent", color: textMut, borderColor: "transparent" }
                   }
                 >
                   {m === "pdf" ? (
@@ -212,7 +212,7 @@ export const Sidebar: FC<SidebarProps> = ({
               <button
                 onClick={() => setSidebarOpen(false)}
                 title="Collapse sidebar (Ctrl+B)"
-                className="p-1.5 rounded-lg transition-all active:scale-95 cursor-pointer shrink-0 border"
+                className="p-1.5 rounded-none transition-colors cursor-pointer shrink-0 border"
                 style={{ color: textMut, borderColor: border, background: bgInput }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.background = bgHover;
@@ -233,9 +233,9 @@ export const Sidebar: FC<SidebarProps> = ({
             <div className="flex flex-col gap-2.5">
               <SectionTitle>Document File</SectionTitle>
               <div
-                className="rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all duration-200 hover:border-amber-500/70 group"
+                className="rounded-none border-2 border-dashed p-4 text-center cursor-pointer transition-colors group"
                 style={{
-                  borderColor: localDrag ? "#f59e0b" : d ? "#374151" : "#e2e8f0",
+                  borderColor: localDrag ? "#f59e0b" : d ? "#374151" : "#d1d5db",
                   background: localDrag
                     ? d
                       ? "rgba(245,158,11,0.08)"
@@ -257,8 +257,9 @@ export const Sidebar: FC<SidebarProps> = ({
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center transition-transform group-hover:scale-110"
+                  className="w-10 h-10 rounded-none border mx-auto mb-2 flex items-center justify-center transition-colors"
                   style={{
+                    borderColor: border,
                     background: d ? "rgba(245,158,11,0.12)" : "rgba(254,243,199,0.8)",
                     color: "#f59e0b",
                   }}
@@ -272,9 +273,10 @@ export const Sidebar: FC<SidebarProps> = ({
                   {["PDF", "DOCX", "EPUB", "XLSX", "CSV"].map((tag) => (
                     <span
                       key={tag}
-                      className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded"
+                      className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-none border"
                       style={{
                         background: d ? "#1f2937" : "#f1f5f9",
+                        borderColor: border,
                         color: textMut,
                       }}
                     >
@@ -287,10 +289,10 @@ export const Sidebar: FC<SidebarProps> = ({
               {pdfBytes && pdfDoc && (
                 <button
                   onClick={() => setIsEditorOpen(true)}
-                  className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-sm transition-all duration-150 active:scale-98 cursor-pointer"
+                  className="flex items-center justify-center gap-2 py-2 px-3 rounded-none bg-amber-500 hover:bg-amber-600 border border-amber-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
                 >
                   <IcoEdit size={13} />
-                  <span>Open PDF Markup Studio</span>
+                  <span>[ OPEN PDF STUDIO ]</span>
                 </button>
               )}
 
@@ -334,14 +336,18 @@ export const Sidebar: FC<SidebarProps> = ({
                     ? "Resume Reading (Space)"
                     : "Start Reading (Space)"
                 }
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2 px-4 text-xs font-bold tracking-wide transition-all duration-150 active:scale-98 disabled:opacity-40 disabled:cursor-not-allowed text-white shadow-sm cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2 rounded-none py-2 px-4 text-xs font-bold tracking-wide transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-white border shadow-xs cursor-pointer"
                 style={{
                   background:
                     ttsState === "playing"
-                      ? "linear-gradient(135deg, #10b981, #059669)"
+                      ? "#059669"
                       : ttsState === "paused"
-                      ? "linear-gradient(135deg, #f59e0b, #d97706)"
-                      : "linear-gradient(135deg, #f59e0b, #d97706)",
+                      ? "#f59e0b"
+                      : "#f59e0b",
+                  borderColor:
+                    ttsState === "playing"
+                      ? "#047857"
+                      : "#d97706",
                 }}
               >
                 {ttsState === "paused" ? (
@@ -473,8 +479,8 @@ export const Sidebar: FC<SidebarProps> = ({
                     {sourceMode === "web" ? "Article" : "Page"} Content
                   </SectionTitle>
                   <span
-                    className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded"
-                    style={{ background: bgInput, color: textMut }}
+                    className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-none border"
+                    style={{ background: bgInput, borderColor: border, color: textMut }}
                   >
                     {paragraphs.length} paragraphs
                   </span>
@@ -487,11 +493,14 @@ export const Sidebar: FC<SidebarProps> = ({
                       <div
                         key={i}
                         data-para={i}
-                        className={`w-full text-left px-3 py-2.5 rounded-xl text-xs leading-relaxed transition-all duration-150 cursor-pointer border-l-3 ${
+                        className={`w-full text-left px-3 py-2.5 rounded-none text-xs leading-relaxed transition-colors cursor-pointer border-l-2 border-r border-t border-b ${
                           active ? "shadow-xs" : ""
                         }`}
                         style={{
                           borderLeftColor: active ? "#f59e0b" : "transparent",
+                          borderTopColor: active ? (d ? "#374151" : "#e2e8f0") : "transparent",
+                          borderRightColor: active ? (d ? "#374151" : "#e2e8f0") : "transparent",
+                          borderBottomColor: active ? (d ? "#374151" : "#e2e8f0") : "transparent",
                           color: active ? textMain : textMut,
                           background: active
                             ? d
@@ -510,8 +519,8 @@ export const Sidebar: FC<SidebarProps> = ({
                         {active && (
                           <span className="flex items-center gap-2 mb-1.5">
                             <Waveform paused={ttsState === "paused"} />
-                            <span className="text-[9px] text-amber-500 font-extrabold tracking-widest uppercase">
-                              {ttsState === "paused" ? "Paused" : "Now Reading"}
+                            <span className="text-[9px] font-mono text-amber-500 font-bold tracking-widest uppercase">
+                              {ttsState === "paused" ? "[ PAUSED ]" : "[ NOW READING ]"}
                             </span>
                           </span>
                         )}

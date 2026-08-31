@@ -19,21 +19,21 @@ export const HFCard: FC<HFCardProps> = ({ zone, text, checked, onCheckedChange, 
 
   return (
     <div
-      className="rounded-xl border p-3 flex flex-col gap-2.5 transition-all"
+      className="rounded-none border p-3 flex flex-col gap-2.5 transition-colors"
       style={{
         background: isAmoled
           ? "#09090b"
           : dk("#fbfbfa", "#161b22", d),
         borderColor: isAmoled
           ? "#27272a"
-          : dk("#e2e8f0", "#1e293b", d),
+          : dk("#deded9", "#273142", d),
       }}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Switch checked={checked} onCheckedChange={onCheckedChange} />
           <span
-            className={`text-[9px] font-mono font-bold uppercase tracking-widest border rounded-md px-2 py-0.5 ${
+            className={`text-[9px] font-mono font-bold uppercase tracking-widest border rounded-none px-2 py-0.5 ${
               isH ? "text-amber-500 border-amber-500/40 bg-amber-500/10" : "text-slate-400 border-slate-400/40 bg-slate-400/10"
             }`}
           >

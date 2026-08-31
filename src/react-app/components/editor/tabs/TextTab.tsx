@@ -44,34 +44,34 @@ export const TextTab: FC<TextTabProps> = ({
   return (
     <div className="flex flex-col gap-4">
       {/* Help banner for selecting original text */}
-      <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs flex flex-col gap-1">
-        <span className="font-bold text-amber-500 flex items-center gap-1">
-          💡 Select & Edit Original Text
+      <div className="p-3 rounded-none border border-amber-500/30 bg-amber-500/10 text-xs flex flex-col gap-1">
+        <span className="font-bold font-mono text-amber-500 flex items-center gap-1 uppercase">
+          💡 [ SELECT &amp; EDIT ORIGINAL TEXT ]
         </span>
         <p className="text-[11px] leading-relaxed" style={{ color: textMut }}>
           Highlight any text on the page canvas to quickly edit it with matching font size, color, and formatting!
         </p>
       </div>
 
-      <span className="text-xs font-bold uppercase tracking-wider text-amber-500">Add Text Box</span>
+      <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-500">[ ADD TEXT BOX ]</span>
 
-      <div className="flex flex-col gap-3 p-3 rounded-lg border" style={{ borderColor: border, background: bgInput }}>
+      <div className="flex flex-col gap-3 p-3 rounded-none border" style={{ borderColor: border, background: bgInput }}>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold" style={{ color: textMut }}>
+          <label className="text-xs font-mono font-semibold" style={{ color: textMut }}>
             Text Content
           </label>
           <textarea
             rows={3}
             value={newText}
             onChange={(e) => setNewText(e.target.value)}
-            className="w-full p-2 rounded text-xs border focus:outline-none focus:border-amber-500"
+            className="w-full p-2 rounded-none text-xs font-mono border focus:outline-none focus:border-amber-500"
             style={{ background: bgSide, color: textMain, borderColor: border }}
             placeholder="Type text here..."
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-xs" style={{ color: textMut }}>
+          <span className="text-xs font-mono" style={{ color: textMut }}>
             Font Size
           </span>
           <input
@@ -80,13 +80,13 @@ export const TextTab: FC<TextTabProps> = ({
             max={140}
             value={textFontSize}
             onChange={(e) => setTextFontSize(parseInt(e.target.value) || 16)}
-            className="w-16 p-1 rounded text-xs border text-center font-mono"
+            className="w-16 p-1 rounded-none text-xs border text-center font-mono"
             style={{ background: bgSide, color: textMain, borderColor: border }}
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-xs" style={{ color: textMut }}>
+          <span className="text-xs font-mono" style={{ color: textMut }}>
             Text Color
           </span>
           <div className="flex items-center gap-2">
@@ -97,43 +97,43 @@ export const TextTab: FC<TextTabProps> = ({
               type="color"
               value={textColor}
               onChange={(e) => setTextColor(e.target.value)}
-              className="w-8 h-8 rounded border cursor-pointer bg-transparent"
+              className="w-8 h-8 rounded-none border cursor-pointer bg-transparent"
             />
           </div>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-xs" style={{ color: textMut }}>
+          <span className="text-xs font-mono" style={{ color: textMut }}>
             Style
           </span>
           <button
             onClick={() => setTextBold(!textBold)}
-            className={`px-3 py-1 rounded text-xs font-bold border transition-colors ${
-              textBold ? "bg-amber-500 text-white border-amber-500" : "bg-slate-800 text-slate-400 border-slate-700"
+            className={`px-3 py-1 rounded-none text-xs font-mono font-bold border transition-colors cursor-pointer ${
+              textBold ? "bg-amber-500 text-white border-amber-600" : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
             }`}
           >
-            Bold
+            BOLD
           </button>
         </div>
 
         <button
           onClick={addTextToPage}
-          className="w-full py-2 rounded-lg bg-amber-500 text-white text-xs font-bold shadow hover:bg-amber-600 transition-all mt-1 cursor-pointer"
+          className="w-full py-2 rounded-none border border-amber-600 bg-amber-500 text-white text-xs font-mono font-bold shadow-xs hover:bg-amber-600 transition-colors mt-1 cursor-pointer"
         >
-          + Place Text on Page
+          + [ PLACE TEXT ON PAGE ]
         </button>
       </div>
 
       {/* Placed / Edited Texts List */}
       {activePage && activePage.texts.length > 0 && (
         <div className="flex flex-col gap-2 mt-2">
-          <span className="text-xs font-semibold" style={{ color: textMut }}>
-            Page Texts & Edits ({activePage.texts.length})
+          <span className="text-xs font-mono font-semibold" style={{ color: textMut }}>
+            Page Texts &amp; Edits ({activePage.texts.length})
           </span>
           {activePage.texts.map((t) => (
             <div
               key={t.id}
-              className="flex flex-col gap-2 p-2.5 rounded-lg border text-xs transition-all"
+              className="flex flex-col gap-2 p-2.5 rounded-none border text-xs transition-colors"
               style={{
                 background: bgInput,
                 borderColor: t.isOriginalEdit ? "rgba(245, 158, 11, 0.4)" : border,
@@ -141,15 +141,15 @@ export const TextTab: FC<TextTabProps> = ({
             >
               <div className="flex items-center justify-between gap-1.5">
                 {t.isOriginalEdit && (
-                  <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500 text-white shrink-0">
-                    Original Edit
+                  <span className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-none bg-amber-500 text-white shrink-0">
+                    [ ORIGINAL EDIT ]
                   </span>
                 )}
                 <input
                   type="text"
                   value={t.text}
                   onChange={(e) => updateText(t.id, { text: e.target.value })}
-                  className="px-2 py-1 rounded text-xs border font-medium focus:outline-none focus:border-amber-500 flex-1 min-w-0"
+                  className="px-2 py-1 rounded-none text-xs border font-mono font-medium focus:outline-none focus:border-amber-500 flex-1 min-w-0"
                   style={{ background: bgSide, color: textMain, borderColor: border }}
                 />
                 <button

@@ -7,22 +7,22 @@ export const Divider: FC = () => {
   const isAmoled = themeMode === "amoled";
   return (
     <div
-      className="h-px my-1.5 w-full transition-colors"
+      className="h-px my-2 w-full transition-colors"
       style={{
         background: isAmoled
-          ? "linear-gradient(90deg, transparent, #27272a 20%, #27272a 80%, transparent)"
+          ? "#27272a"
           : d
-          ? "linear-gradient(90deg, transparent, #1f2937 20%, #1f2937 80%, transparent)"
-          : "linear-gradient(90deg, transparent, #e5e5e7 20%, #e5e5e7 80%, transparent)",
+          ? "#273142"
+          : "#deded9",
       }}
     />
   );
 };
 
 export const SectionTitle: FC<{ children: ReactNode }> = ({ children }) => (
-  <div className="flex items-center gap-1.5 mb-1">
-    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-500/90 leading-none">
+  <div className="flex items-center gap-1.5 mb-1.5 select-none">
+    <span className="w-1.5 h-1.5 rounded-none bg-amber-500 shrink-0" />
+    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-amber-500 leading-none">
       {children}
     </p>
   </div>
@@ -44,13 +44,13 @@ export const IconBtn: FC<{
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`flex items-center justify-center rounded-lg border p-1.5 transition-all duration-150 active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer ${
+      className={`flex items-center justify-center rounded-none border p-1.5 transition-colors duration-100 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer ${
         active
-          ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+          ? "bg-amber-500 text-white border-amber-500"
           : isAmoled
           ? "border-zinc-800 bg-zinc-950 text-zinc-300 hover:bg-zinc-900 hover:text-white hover:border-zinc-700"
           : dk(
-              "border-slate-200/90 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 shadow-xs",
+              "border-slate-300/90 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-950 hover:border-slate-400",
               "border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 hover:border-slate-700",
               d
             )
@@ -70,11 +70,14 @@ export const Switch: FC<{ checked: boolean; onCheckedChange: (v: boolean) => voi
     role="switch"
     aria-checked={checked}
     onClick={() => onCheckedChange(!checked)}
-    className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none shadow-inner"
-    style={{ background: checked ? "#f59e0b" : "#9ca3af55" }}
+    className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-none border transition-colors duration-150 focus:outline-none p-[2px]"
+    style={{
+      background: checked ? "#f59e0b" : "rgba(156, 163, 175, 0.2)",
+      borderColor: checked ? "#d97706" : "rgba(156, 163, 175, 0.4)",
+    }}
   >
     <span
-      className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-out ${
+      className={`pointer-events-none inline-block h-3.5 w-3.5 rounded-none bg-white shadow-xs transform transition-transform duration-150 ease-out ${
         checked ? "translate-x-4" : "translate-x-0"
       }`}
     />
@@ -94,9 +97,14 @@ export const SwitchRow: FC<{
 
   return (
     <div
-      className="flex items-start gap-3 p-2 rounded-xl transition-colors cursor-pointer"
+      className="flex items-start gap-3 p-2 rounded-none border transition-colors cursor-pointer"
       onClick={() => onCheckedChange(!checked)}
       style={{
+        borderColor: checked
+          ? isAmoled
+            ? "rgba(245, 158, 11, 0.5)"
+            : "rgba(245, 158, 11, 0.4)"
+          : "transparent",
         background: checked
           ? isAmoled
             ? "rgba(245, 158, 11, 0.08)"
@@ -147,12 +155,12 @@ export const SliderRow: FC<{
       <div className="flex items-center justify-between text-xs">
         <span className={`font-medium ${dk("text-slate-600", "text-slate-400", d)}`}>{label}</span>
         <span
-          className={`font-mono text-[11px] px-1.5 py-0.5 rounded font-bold ${
+          className={`font-mono text-[11px] px-1.5 py-0.5 rounded-none font-bold ${
             isAmoled
               ? "bg-zinc-900 text-amber-400 border border-zinc-800"
               : d
               ? "bg-slate-800 text-amber-400 border border-slate-700"
-              : "bg-amber-50 text-amber-700 border border-amber-200/60"
+              : "bg-amber-50 text-amber-700 border border-amber-200/80"
           }`}
         >
           {display}
@@ -166,7 +174,7 @@ export const SliderRow: FC<{
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className={`w-full h-1.5 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed accent-amber-500 ${
+        className={`w-full h-1.5 rounded-none appearance-none cursor-pointer disabled:cursor-not-allowed accent-amber-500 ${
           isAmoled ? "bg-zinc-800" : dk("bg-slate-200", "bg-slate-700", d)
         }`}
       />

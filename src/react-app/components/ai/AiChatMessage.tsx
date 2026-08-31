@@ -123,7 +123,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
 
   return (
     <div
-      className={`group flex gap-2.5 px-3 py-3 rounded-2xl transition-colors ${
+      className={`group flex gap-2.5 px-3 py-3 rounded-none transition-colors ${
         isUser
           ? "ml-6 flex-row-reverse"
           : "mr-2"
@@ -153,25 +153,26 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
               src={userPhoto}
               alt={userName || "User"}
               referrerPolicy="no-referrer"
-              className="w-6 h-6 rounded-full object-cover border"
+              className="w-6 h-6 rounded-none object-cover border"
               style={{ borderColor: border }}
             />
           ) : (
             <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm"
-              style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
+              className="w-6 h-6 rounded-none border border-amber-600 flex items-center justify-center text-[10px] font-mono font-bold text-white shadow-xs"
+              style={{ background: "#f59e0b" }}
             >
               {(userName?.[0] || "U").toUpperCase()}
             </div>
           )
         ) : (
           <div
-            className="w-6 h-6 rounded-full flex items-center justify-center shadow-sm text-white"
+            className="w-6 h-6 rounded-none border flex items-center justify-center text-white shadow-xs"
             style={{
+              borderColor: message.provider === "chrome-builtin" ? "#059669" : "#2563eb",
               background:
                 message.provider === "chrome-builtin"
-                  ? "linear-gradient(135deg, #10B981, #059669)"
-                  : "linear-gradient(135deg, #4285F4, #9333EA)",
+                  ? "#10B981"
+                  : "#4285F4",
             }}
           >
             {message.provider === "chrome-builtin" ? <IcoCpu size={13} /> : <IcoSparkles size={13} />}
@@ -184,7 +185,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
         <div className="flex items-center justify-between gap-2 mb-1">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
-              className="text-[11px] font-semibold tracking-wide"
+              className="text-[11px] font-mono font-semibold tracking-wide uppercase"
               style={{
                 color: isUser
                   ? isDark
@@ -200,7 +201,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
 
             {isAssistant && message.provider === "chrome-builtin" && (
               <span
-                className="px-1.5 py-0.2 text-[8.5px] font-semibold rounded-full border flex items-center gap-1"
+                className="px-1.5 py-0.2 text-[8.5px] font-mono font-semibold rounded-none border flex items-center gap-1 uppercase"
                 style={{
                   backgroundColor: isDark ? "rgba(16, 185, 129, 0.12)" : "rgba(16, 185, 129, 0.08)",
                   borderColor: isDark ? "rgba(16, 185, 129, 0.3)" : "rgba(16, 185, 129, 0.25)",
@@ -209,12 +210,12 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
                 title="Generated 100% on-device in browser via Chrome Gemini Nano"
               >
                 <span>⚡</span>
-                <span>Nano</span>
+                <span>[ NANO ]</span>
               </span>
             )}
             {isAssistant && message.provider === "firebase" && (
               <span
-                className="px-1.5 py-0.2 text-[8.5px] font-semibold rounded-full border flex items-center gap-1"
+                className="px-1.5 py-0.2 text-[8.5px] font-mono font-semibold rounded-none border flex items-center gap-1 uppercase"
                 style={{
                   backgroundColor: isDark ? "rgba(66, 133, 244, 0.12)" : "rgba(66, 133, 244, 0.08)",
                   borderColor: isDark ? "rgba(66, 133, 244, 0.3)" : "rgba(66, 133, 244, 0.25)",
@@ -223,17 +224,17 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
                 title="Generated via Cloud Gemini 3.7 Flash"
               >
                 <span>☁️</span>
-                <span>Flash</span>
+                <span>[ FLASH ]</span>
               </span>
             )}
 
             {/* Live speed telemetry tag while streaming */}
             {isAssistant && message.isStreaming && message.stageInfo?.speed && (
               <span
-                className="px-1.5 py-0.2 text-[8px] font-mono rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                className="px-1.5 py-0.2 text-[8px] font-mono rounded-none bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
                 title="Live generation throughput"
               >
-                {message.stageInfo.speed} tok/s
+                [{message.stageInfo.speed} tok/s]
               </span>
             )}
           </div>
@@ -251,15 +252,15 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
                     ? "Stop reading aloud"
                     : `Read response aloud (${ttsVoiceName || "Selected Voice"})`
                 }
-                className={`p-1 rounded text-xs transition-all cursor-pointer flex items-center gap-1 ${
+                className={`p-1 rounded-none border text-xs transition-colors cursor-pointer flex items-center gap-1 ${
                   isSpeaking
-                    ? "bg-amber-500/20 text-amber-500 border border-amber-500/40"
-                    : "hover:bg-slate-500/20"
+                    ? "bg-amber-500/20 text-amber-500 border-amber-500"
+                    : "border-transparent hover:border-slate-700 hover:bg-slate-500/10"
                 }`}
                 style={{ color: isSpeaking ? "#f59e0b" : textMut }}
               >
                 {isSpeaking ? (
-                  <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-500">
+                  <span className="flex items-center gap-1 text-[10px] font-mono font-semibold text-amber-500">
                     <IcoVolumeX size={12} />
                     <span>Stop</span>
                   </span>
@@ -273,11 +274,11 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
               <button
                 onClick={handleCopy}
                 title="Copy response"
-                className="p-1 rounded hover:bg-slate-500/20 text-xs transition-colors cursor-pointer"
+                className="p-1 rounded-none border border-transparent hover:border-slate-700 hover:bg-slate-500/10 text-xs transition-colors cursor-pointer"
                 style={{ color: textMut }}
               >
                 {copied ? (
-                  <span className="flex items-center gap-1 text-[10px] text-emerald-500 font-medium">
+                  <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-500 font-medium">
                     <IcoCheck size={11} /> Copied
                   </span>
                 ) : (
@@ -285,7 +286,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
                 )}
               </button>
             )}
-            <span className="text-[9px]" style={{ color: textMut }}>
+            <span className="text-[9px] font-mono" style={{ color: textMut }}>
               {new Date(message.timestamp).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -296,10 +297,10 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
 
         {message.isError ? (
           <div
-            className="flex items-start gap-2 p-2.5 rounded-xl text-xs"
+            className="flex items-start gap-2 p-2.5 rounded-none border text-xs font-mono"
             style={{
               backgroundColor: isDark ? "rgba(239, 68, 68, 0.1)" : "#fef2f2",
-              border: "1px solid rgba(239, 68, 68, 0.3)",
+              borderColor: "rgba(239, 68, 68, 0.3)",
               color: isDark ? "#fca5a5" : "#b91c1c",
             }}
           >
@@ -313,7 +314,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
         ) : isAssistant && message.isStreaming && !message.content ? (
           /* Real-time Thinking & Inference Progress Card */
           <div
-            className="my-1 p-3 rounded-xl border flex flex-col gap-2 animate-in fade-in duration-200"
+            className="my-1 p-3 rounded-none border flex flex-col gap-2 animate-in fade-in duration-200"
             style={{
               backgroundColor: isDark ? "rgba(15, 23, 42, 0.6)" : "rgba(241, 245, 249, 0.8)",
               borderColor: message.provider === "chrome-builtin" ? "rgba(16, 185, 129, 0.3)" : "rgba(66, 133, 244, 0.3)",
@@ -322,22 +323,22 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span
-                  className="w-4 h-4 rounded-full flex items-center justify-center text-white animate-spin shrink-0"
+                  className="w-4 h-4 rounded-none flex items-center justify-center text-white animate-spin shrink-0"
                   style={{
                     background:
                       message.provider === "chrome-builtin"
-                        ? "linear-gradient(135deg, #10B981, #059669)"
-                        : "linear-gradient(135deg, #4285F4, #9333EA)",
+                        ? "#10B981"
+                        : "#4285F4",
                   }}
                 >
                   <IcoLoader size={11} />
                 </span>
-                <span className="text-[11px] font-semibold tracking-tight" style={{ color: textMain }}>
+                <span className="text-[11px] font-mono font-semibold tracking-tight uppercase" style={{ color: textMain }}>
                   {dynamicStageLabel}
                 </span>
               </div>
 
-              <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-black/20 shrink-0" style={{ color: textMut }}>
+              <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded-none border border-slate-700 bg-black/20 shrink-0" style={{ color: textMut }}>
                 {(liveElapsedMs / 1000).toFixed(1)}s
               </span>
             </div>
@@ -348,9 +349,9 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
             </p>
 
             {/* Shimmering Progress Bar */}
-            <div className="w-full h-1 bg-slate-500/20 rounded-full overflow-hidden relative">
+            <div className="w-full h-1 bg-slate-500/20 rounded-none overflow-hidden relative">
               <div
-                className="h-full rounded-full animate-pulse"
+                className="h-full rounded-none animate-pulse"
                 style={{
                   width: "100%",
                   background:
@@ -371,7 +372,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({
               dangerouslySetInnerHTML={{ __html: parsedHtml }}
             />
             {message.isStreaming && (
-              <span className="inline-block w-1.5 h-3.5 ml-1 bg-emerald-500 animate-pulse align-middle rounded-sm" />
+              <span className="inline-block w-1.5 h-3.5 ml-1 bg-emerald-500 animate-pulse align-middle rounded-none" />
             )}
           </div>
         )}

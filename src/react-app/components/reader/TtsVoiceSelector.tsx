@@ -101,7 +101,7 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
   if (voices.length === 0) {
     return (
       <div
-        className="w-full rounded-lg px-3 py-2.5 text-xs flex items-center gap-2 border opacity-75"
+        className="w-full rounded-none px-3 py-2.5 text-xs flex items-center gap-2 border opacity-75"
         style={{ borderColor: cardBorder, background: inputBg, color: mutText }}
       >
         <IcoVolume size={15} />
@@ -114,7 +114,7 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
     <>
       {/* Sleek, Non-cramped Sidebar Trigger Card */}
       <div
-        className="w-full rounded-xl border p-3 flex flex-col gap-2.5 transition-all duration-150 cursor-pointer group hover:border-amber-500/50"
+        className="w-full rounded-none border p-3 flex flex-col gap-2.5 transition-colors cursor-pointer group hover:border-amber-500/50"
         style={{
           borderColor: cardBorder,
           background: inputBg,
@@ -125,17 +125,18 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+              className="w-8 h-8 rounded-none border flex items-center justify-center shrink-0 transition-colors"
               style={{
+                borderColor: cardBorder,
                 background: previewVoice === currentVoiceObj?.name ? "rgba(245,158,11,0.2)" : d ? "#374151" : "#f3f4f6",
                 color: previewVoice === currentVoiceObj?.name ? "#f59e0b" : mutText,
               }}
             >
               {previewVoice === currentVoiceObj?.name ? (
                 <span className="flex items-center gap-0.5">
-                  <span className="w-1 h-3 bg-amber-500 rounded-full animate-bounce" />
-                  <span className="w-1 h-4 bg-amber-500 rounded-full animate-bounce [animation-delay:0.15s]" />
-                  <span className="w-1 h-2 bg-amber-500 rounded-full animate-bounce [animation-delay:0.3s]" />
+                  <span className="w-1 h-3 bg-amber-500 rounded-none animate-bounce" />
+                  <span className="w-1 h-4 bg-amber-500 rounded-none animate-bounce [animation-delay:0.15s]" />
+                  <span className="w-1 h-2 bg-amber-500 rounded-none animate-bounce [animation-delay:0.3s]" />
                 </span>
               ) : (
                 <IcoVolume size={16} />
@@ -160,8 +161,9 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
               type="button"
               onClick={(e) => togglePreview(currentVoiceObj, e)}
               title={previewVoice === currentVoiceObj.name ? "Stop preview" : "Listen to sample preview"}
-              className="p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-amber-500/10 text-amber-500 shrink-0"
+              className="p-1.5 rounded-none border transition-colors cursor-pointer hover:bg-amber-500/10 text-amber-500 shrink-0"
               style={{
+                borderColor: cardBorder,
                 background: previewVoice === currentVoiceObj.name ? "rgba(245,158,11,0.15)" : "transparent",
               }}
             >
@@ -175,15 +177,15 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
           <div className="flex items-center gap-1.5">
             {currentVoiceObj?.localService ? (
               <span
-                className="text-[9px] px-1.5 py-0.5 rounded font-medium flex items-center gap-1"
-                style={{ background: d ? "#064e3b" : "#d1fae5", color: d ? "#34d399" : "#065f46" }}
+                className="text-[9px] font-mono px-1.5 py-0.5 rounded-none border font-medium flex items-center gap-1"
+                style={{ background: d ? "#064e3b" : "#d1fae5", borderColor: d ? "#047857" : "#a7f3d0", color: d ? "#34d399" : "#065f46" }}
               >
                 <IcoWifiOff size={10} /> Local
               </span>
             ) : (
               <span
-                className="text-[9px] px-1.5 py-0.5 rounded font-medium flex items-center gap-1"
-                style={{ background: d ? "#1e3a5f" : "#e0f2fe", color: d ? "#38bdf8" : "#0369a1" }}
+                className="text-[9px] font-mono px-1.5 py-0.5 rounded-none border font-medium flex items-center gap-1"
+                style={{ background: d ? "#1e3a5f" : "#e0f2fe", borderColor: d ? "#0369a1" : "#bae6fd", color: d ? "#38bdf8" : "#0369a1" }}
               >
                 <IcoGlobe size={10} /> Online
               </span>
@@ -191,10 +193,10 @@ export const TtsVoiceSelector: FC<TtsVoiceSelectorProps> = ({
           </div>
 
           <div
-            className="flex items-center gap-1 font-semibold text-amber-500 hover:text-amber-400 transition-colors"
+            className="flex items-center gap-1 font-mono text-[11px] font-bold text-amber-500 hover:text-amber-400 transition-colors"
           >
             <IcoEdit size={12} />
-            <span>Change Voice</span>
+            <span>[ CHANGE ]</span>
           </div>
         </div>
       </div>

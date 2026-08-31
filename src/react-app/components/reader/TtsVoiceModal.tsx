@@ -248,7 +248,7 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
       }}
     >
       <div
-        className="w-full max-w-4xl max-h-[90vh] h-[640px] rounded-2xl shadow-2xl flex flex-col overflow-hidden border transition-all animate-in zoom-in-95 duration-200"
+        className="w-full max-w-4xl max-h-[90vh] h-[640px] rounded-none shadow-2xl flex flex-col overflow-hidden border transition-all animate-in duration-200"
         style={{ background: bgModal, borderColor: borderCol, color: textMain }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -258,14 +258,14 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
           style={{ borderColor: borderCol, background: bgCard }}
         >
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 text-white shadow-md">
+            <div className="p-2.5 rounded-none border border-amber-600 bg-amber-500 text-white shadow-xs">
               <IcoVolume size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold leading-tight">Text-to-Speech Voice &amp; Language</h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                  {voices.length} voices · {availableLanguages.length} languages
+                <h3 className="text-base font-bold font-mono uppercase leading-tight">[ VOICE &amp; LANGUAGE SELECTOR ]</h3>
+                <span className="px-2 py-0.5 rounded-none text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                  {voices.length} VOICES • {availableLanguages.length} LANGUAGES
                 </span>
               </div>
               <p className="text-xs mt-0.5" style={{ color: textMut }}>
@@ -279,7 +279,7 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
               stopPreview();
               onClose();
             }}
-            className="p-2 rounded-lg hover:opacity-80 transition-colors cursor-pointer"
+            className="p-1.5 rounded-none border border-transparent hover:border-slate-700 hover:bg-slate-500/10 transition-colors cursor-pointer"
             style={{ color: textMut }}
             title="Close dialog (Escape)"
           >
@@ -295,24 +295,24 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
             style={{ borderColor: borderCol, background: d ? "#111827" : "#f8fafc" }}
           >
             <div
-              className="p-3 border-b flex items-center justify-between text-xs font-semibold uppercase tracking-wider"
+              className="p-3 border-b flex items-center justify-between text-xs font-mono font-semibold uppercase tracking-wider"
               style={{ borderColor: borderCol, color: textMut }}
             >
-              <span>Languages</span>
-              <span className="text-[11px] font-normal text-amber-500">
+              <span>[ LANGUAGES ]</span>
+              <span className="text-[11px] font-mono font-bold text-amber-500">
                 {filteredLanguages.length}
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
+            <div className="flex-1 overflow-y-auto p-1.5 flex flex-col gap-1">
               {/* All Languages button */}
               <button
                 type="button"
                 onClick={() => setSelectedLangKey("ALL")}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer text-left ${
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-none border text-xs font-mono font-medium transition-colors cursor-pointer text-left ${
                   selectedLangKey === "ALL"
-                    ? "bg-amber-500 text-white shadow-xs"
-                    : dk("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:bg-gray-800", d)
+                    ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                    : dk("border-transparent text-gray-700 hover:border-gray-300 hover:bg-gray-100", "border-transparent text-gray-300 hover:border-gray-700 hover:bg-gray-800", d)
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -320,12 +320,12 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                   <span>All Languages</span>
                 </span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded-none border ${
                     selectedLangKey === "ALL"
-                      ? "bg-white/20 text-white"
+                      ? "bg-white/20 border-white/40 text-white"
                       : d
-                      ? "bg-gray-800 text-gray-400"
-                      : "bg-gray-200 text-gray-600"
+                      ? "bg-gray-800 border-gray-700 text-gray-400"
+                      : "bg-gray-200 border-gray-300 text-gray-600"
                   }`}
                 >
                   {voices.length}
@@ -343,10 +343,10 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                       setSelectedLangKey(lang.langCode);
                       saveTtsLanguagePreference(lang.langCode);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer text-left ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-none border text-xs font-mono font-medium transition-colors cursor-pointer text-left ${
                       isSelected
-                        ? "bg-amber-500 text-white shadow-xs"
-                        : dk("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:bg-gray-800", d)
+                        ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold"
+                        : dk("border-transparent text-gray-700 hover:border-gray-300 hover:bg-gray-100", "border-transparent text-gray-300 hover:border-gray-700 hover:bg-gray-800", d)
                     }`}
                   >
                     <span className="flex items-center gap-2 truncate">
@@ -354,12 +354,12 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                       <span className="truncate">{lang.displayName}</span>
                     </span>
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-1.5 ${
+                      className={`text-[10px] font-mono px-1.5 py-0.5 rounded-none border shrink-0 ml-1.5 ${
                         isSelected
-                          ? "bg-white/20 text-white"
+                          ? "bg-white/20 border-white/40 text-white"
                           : d
-                          ? "bg-gray-800 text-gray-400"
-                          : "bg-gray-200 text-gray-600"
+                          ? "bg-gray-800 border-gray-700 text-gray-400"
+                          : "bg-gray-200 border-gray-300 text-gray-600"
                       }`}
                     >
                       {lang.count}
@@ -388,7 +388,7 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search voices by name, dialect, country…"
-                  className="w-full rounded-xl pl-9 pr-8 py-2 text-xs outline-none border transition-colors focus:ring-2 focus:ring-amber-500/50"
+                  className="w-full rounded-none pl-9 pr-8 py-2 text-xs outline-none border font-mono transition-colors focus:border-amber-500"
                   style={{
                     background: d ? "#0f172a" : "#ffffff",
                     borderColor: borderCol,
@@ -399,7 +399,7 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded cursor-pointer transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-none cursor-pointer transition-colors"
                     style={{ color: textMut }}
                     title="Clear search"
                   >
@@ -409,12 +409,12 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
               </div>
 
               {/* Connection Filter Pills */}
-              <div className="flex rounded-lg p-1 gap-1 text-xs" style={{ background: d ? "#0f172a" : "#e2e8f0" }}>
+              <div className="flex rounded-none border p-0.5 gap-0.5 text-xs font-mono" style={{ borderColor: borderCol, background: d ? "#0f172a" : "#e2e8f0" }}>
                 <button
                   type="button"
                   onClick={() => setConnectionFilter("all")}
-                  className={`px-2.5 py-1 rounded-md cursor-pointer font-medium transition-colors ${
-                    connectionFilter === "all" ? "bg-amber-500 text-white shadow-xs" : ""
+                  className={`px-2.5 py-1 rounded-none border cursor-pointer font-medium transition-colors ${
+                    connectionFilter === "all" ? "bg-amber-500 border-amber-600 text-white shadow-xs font-bold" : "border-transparent"
                   }`}
                   style={connectionFilter === "all" ? {} : { color: textMut }}
                 >
@@ -423,8 +423,8 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setConnectionFilter("offline")}
-                  className={`px-2.5 py-1 rounded-md cursor-pointer font-medium transition-colors flex items-center gap-1 ${
-                    connectionFilter === "offline" ? "bg-emerald-600 text-white shadow-xs" : ""
+                  className={`px-2.5 py-1 rounded-none border cursor-pointer font-medium transition-colors flex items-center gap-1 ${
+                    connectionFilter === "offline" ? "bg-emerald-600 border-emerald-700 text-white shadow-xs font-bold" : "border-transparent"
                   }`}
                   style={connectionFilter === "offline" ? {} : { color: textMut }}
                   title="Show offline local voices only"
@@ -434,8 +434,8 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setConnectionFilter("online")}
-                  className={`px-2.5 py-1 rounded-md cursor-pointer font-medium transition-colors flex items-center gap-1 ${
-                    connectionFilter === "online" ? "bg-sky-600 text-white shadow-xs" : ""
+                  className={`px-2.5 py-1 rounded-none border cursor-pointer font-medium transition-colors flex items-center gap-1 ${
+                    connectionFilter === "online" ? "bg-sky-600 border-sky-700 text-white shadow-xs font-bold" : "border-transparent"
                   }`}
                   style={connectionFilter === "online" ? {} : { color: textMut }}
                   title="Show online cloud voices only"
@@ -449,10 +449,10 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
             <div className="flex-1 overflow-y-auto p-4">
               {filteredVoices.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center py-12 px-4 text-center gap-3" style={{ color: textMut }}>
-                  <div className="p-3 rounded-full bg-amber-500/10 text-amber-500">
+                  <div className="p-3 rounded-none border border-amber-500/30 bg-amber-500/10 text-amber-500">
                     <IcoSearch size={28} />
                   </div>
-                  <h4 className="text-sm font-bold" style={{ color: textMain }}>No matching voices found</h4>
+                  <h4 className="text-sm font-mono font-bold uppercase" style={{ color: textMain }}>[ NO MATCHING VOICES ]</h4>
                   <p className="text-xs max-w-sm">
                     {searchQuery
                       ? `No voices matched "${searchQuery}". Try searching for a different language name, dialect, or voice.`
@@ -466,9 +466,9 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                         setSelectedLangKey("ALL");
                         setConnectionFilter("all");
                       }}
-                      className="mt-1 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 cursor-pointer shadow-sm transition-all"
+                      className="mt-1 px-3.5 py-1.5 rounded-none border border-amber-600 text-xs font-mono font-semibold bg-amber-500 text-white hover:bg-amber-600 cursor-pointer shadow-xs transition-colors"
                     >
-                      Reset all filters
+                      [ RESET ALL FILTERS ]
                     </button>
                   )}
                 </div>
@@ -482,11 +482,11 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                       <div
                         key={voice.name}
                         onClick={() => handleSelect(voice)}
-                        className={`p-3.5 rounded-xl border transition-all duration-150 cursor-pointer flex flex-col justify-between gap-3 group relative ${
+                        className={`p-3.5 rounded-none border transition-colors cursor-pointer flex flex-col justify-between gap-3 group relative ${
                           isSelected
                             ? d
-                              ? "bg-amber-500/10 border-amber-500 shadow-md shadow-amber-500/10"
-                              : "bg-amber-50 border-amber-500 shadow-md shadow-amber-500/10"
+                              ? "bg-amber-500/10 border-amber-500 shadow-xs"
+                              : "bg-amber-50 border-amber-500 shadow-xs"
                             : dk("bg-white border-gray-200 hover:border-gray-300", "bg-gray-800/60 border-gray-700/80 hover:border-gray-600", d)
                         }`}
                         onMouseEnter={(e) => {
@@ -504,15 +504,15 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex flex-col min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-xs font-bold leading-tight" style={{ color: isSelected ? "#f59e0b" : textMain }}>
+                              <span className="text-xs font-bold leading-tight font-mono" style={{ color: isSelected ? "#f59e0b" : textMain }}>
                                 {voice.name}
                               </span>
                               {voice.default && (
                                 <span
-                                  className="text-[9px] px-1.5 py-0.2 rounded font-medium"
+                                  className="text-[9px] font-mono px-1.5 py-0.2 rounded-none border border-slate-600 font-medium"
                                   style={{ background: d ? "#334155" : "#e2e8f0", color: textMut }}
                                 >
-                                  Default
+                                  DEFAULT
                                 </span>
                               )}
                             </div>
@@ -525,15 +525,15 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
 
                           {/* Selected Checkmark Badge */}
                           {isSelected ? (
-                            <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                              <IcoCheck size={14} />
+                            <div className="w-5 h-5 rounded-none bg-amber-500 border border-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                              <IcoCheck size={13} />
                             </div>
                           ) : (
                             <div
-                              className="w-6 h-6 rounded-full border flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="w-5 h-5 rounded-none border flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                               style={{ borderColor: borderCol, color: textMut }}
                             >
-                              <span className="w-2 h-2 rounded-full bg-current opacity-40" />
+                              <span className="w-1.5 h-1.5 rounded-none bg-current opacity-40" />
                             </div>
                           )}
                         </div>
@@ -543,17 +543,17 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                           <div className="flex items-center gap-1.5">
                             {voice.localService ? (
                               <span
-                                className="text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1"
-                                style={{ background: d ? "#064e3b" : "#d1fae5", color: d ? "#34d399" : "#065f46" }}
+                                className="text-[10px] font-mono px-2 py-0.5 rounded-none border font-medium flex items-center gap-1"
+                                style={{ background: d ? "#064e3b" : "#d1fae5", borderColor: d ? "#047857" : "#a7f3d0", color: d ? "#34d399" : "#065f46" }}
                               >
-                                <IcoWifiOff size={11} /> Local Offline
+                                <IcoWifiOff size={11} /> OFFLINE
                               </span>
                             ) : (
                               <span
-                                className="text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1"
-                                style={{ background: d ? "#1e3a5f" : "#e0f2fe", color: d ? "#38bdf8" : "#0369a1" }}
+                                className="text-[10px] font-mono px-2 py-0.5 rounded-none border font-medium flex items-center gap-1"
+                                style={{ background: d ? "#1e3a5f" : "#e0f2fe", borderColor: d ? "#0369a1" : "#bae6fd", color: d ? "#38bdf8" : "#0369a1" }}
                               >
-                                <IcoGlobe size={11} /> Cloud Voice
+                                <IcoGlobe size={11} /> CLOUD
                               </span>
                             )}
                           </div>
@@ -562,20 +562,20 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
                             type="button"
                             onClick={(e) => togglePreview(voice, e)}
                             title={isPlaying ? "Stop sample preview" : `Listen to ${voice.name}`}
-                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-none border text-xs font-mono font-semibold transition-colors cursor-pointer ${
                               isPlaying
-                                ? "bg-amber-500 text-white shadow-sm"
-                                : "hover:bg-amber-500/10 hover:text-amber-500"
+                                ? "bg-amber-500 border-amber-600 text-white shadow-xs"
+                                : "border-transparent hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-500"
                             }`}
                             style={!isPlaying ? { color: textMut } : {}}
                           >
                             {isPlaying ? (
                               <>
-                                <IcoStop size={12} /> Playing…
+                                <IcoStop size={12} /> STOP
                               </>
                             ) : (
                               <>
-                                <IcoPlay size={12} /> Preview
+                                <IcoPlay size={12} /> PREVIEW
                               </>
                             )}
                           </button>
@@ -594,13 +594,13 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
           className="flex items-center justify-between px-6 py-3.5 border-t shrink-0 flex-wrap gap-3"
           style={{ borderColor: borderCol, background: bgCard }}
         >
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2 text-xs font-mono">
             <span style={{ color: textMut }}>Selected Voice:</span>
             <span className="font-semibold" style={{ color: textMain }}>
               {currentVoiceObj?.name || "None"}
             </span>
             {currentParsedLang && (
-              <span className="text-[11px] px-2 py-0.5 rounded-md font-mono" style={{ background: d ? "#334155" : "#e2e8f0", color: textMut }}>
+              <span className="text-[11px] px-2 py-0.5 rounded-none border font-mono" style={{ background: d ? "#334155" : "#e2e8f0", borderColor: borderCol, color: textMut }}>
                 {currentParsedLang.flag} {currentParsedLang.displayName} ({currentParsedLang.langCode})
               </span>
             )}
@@ -612,9 +612,9 @@ export const TtsVoiceModal: FC<TtsVoiceModalProps> = ({
               stopPreview();
               onClose();
             }}
-            className="px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md bg-amber-500 hover:bg-amber-600 transition-all cursor-pointer"
+            className="px-5 py-2 rounded-none text-xs font-mono font-bold text-white shadow-xs border border-amber-600 bg-amber-500 hover:bg-amber-600 transition-colors cursor-pointer"
           >
-            Done
+            [ DONE ]
           </button>
         </div>
       </div>

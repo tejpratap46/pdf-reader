@@ -1097,7 +1097,7 @@ export const PdfEditor: FC<PdfEditorProps> = ({
           <button
             onClick={() => setSidebarOpen(true)}
             title="Expand tools (Ctrl+B)"
-            className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-md border backdrop-blur-md transition-all duration-200 hover:scale-105 hover:shadow-lg group cursor-pointer"
+            className="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-none shadow-xs border backdrop-blur-md transition-colors group cursor-pointer"
             style={{
               background: isAmoled ? "rgba(0, 0, 0, 0.95)" : isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.92)",
               borderColor: isAmoled ? "rgba(245, 158, 11, 0.5)" : isDark ? "rgba(245, 158, 11, 0.4)" : "#fbbf24",
@@ -1107,7 +1107,7 @@ export const PdfEditor: FC<PdfEditorProps> = ({
             <span className="text-amber-500 transition-transform duration-150 group-hover:translate-x-0.5">
               <IcoChevR size={14} />
             </span>
-            <span className="text-xs font-semibold text-amber-500">Tools</span>
+            <span className="text-xs font-mono font-bold text-amber-500 uppercase">[ TOOLS ]</span>
           </button>
         )}
 
