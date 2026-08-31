@@ -5,6 +5,7 @@ import { splitParagraphs, getParagraphStarts, snapToWord, extractTextFromHtml } 
 import { usePdfJs } from "./hooks/usePdfJs";
 import { useTheme, DarkCtx, ThemeCtx } from "./hooks/useTheme";
 import { useAudioKeepAlive } from "./hooks/useAudioKeepAlive";
+import { useMediaSession } from "./hooks/useMediaSession";
 import { useResizableSidebar } from "./hooks/useResizableSidebar";
 import { useDocumentSearch } from "./hooks/useDocumentSearch";
 import { Header } from "./components/reader/Header";
@@ -1181,6 +1182,90 @@ export default function PDFReader(): ReactElement {
 
   const prevPage = () => changePage(pageNum - 1);
   const nextPage = () => changePage(pageNum + 1);
+
+  /* MediaSession PWA API Integration (Lock screen playback, background keepalive, OS media controls) */
+  const handleMediaSessionPrev = useCallback(() => {
+    const currentParas = (activeMode === "reader" && fullDocParagraphs.length > 0) ? fullDocParagraphs : paragraphs;
+    if (!currentParas.length) return;
+    if (activeMode === "reader" || sourceMode === "web") {
+      const current = activePara >= 0 ? activePara : 0;
+      const prev = Math.max(0, current - 1);
+      startReading(prev, 0);
+    } else {
+      if (activePara > 0) {
+        startReading(activePara - 1, 0);
+      } else if (pageNum > 1) {
+        changePage(pageNum - 1);
+        pendingAutoPlay.current = true;
+      } else {
+        startReading(0, 0);
+      }
+    }
+  }, [activeMode, fullDocParagraphs, paragraphs, sourceMode, activePara, pageNum, startReading, changePage]);
+
+  const handleMediaSessionNext = useCallback(() => {
+    const currentParas = (activeMode === "reader" && fullDocParagraphs.length > 0) ? fullDocParagraphs : paragraphs;
+    if (!currentParas.length) return;
+    if (activeMode === "reader" || sourceMode === "web") {
+      const current = activePara >= 0 ? activePara : -1;
+      const next = Math.min(currentParas.length - 1, current + 1);
+      startReading(next, 0);
+    } else {
+      if (activePara >= 0 && activePara < currentParas.length - 1) {
+        startReading(activePara + 1, 0);
+      } else if (pageNum < totalPages) {
+        changePage(pageNum + 1);
+        pendingAutoPlay.current = true;
+      }
+    }
+  }, [activeMode, fullDocParagraphs, paragraphs, sourceMode, activePara, pageNum, totalPages, startReading, changePage]);
+
+  const handleMediaSessionPlay = useCallback(() => {
+    if (ttsState === "paused" || ttsState === "idle") {
+      pauseTts();
+    }
+  }, [ttsState, pauseTts]);
+
+  const handleMediaSessionPause = useCallback(() => {
+    if (ttsState === "playing") {
+      pauseTts();
+    }
+  }, [ttsState, pauseTts]);
+
+  const handleMediaSessionStop = useCallback(() => {
+    stopTts(true);
+  }, [stopTts]);
+
+  const docName = sourceMode === "web" ? (webTitle || "Web Article") : (fileName || "PDF Document");
+  const totalParas = (activeMode === "reader" && fullDocParagraphs.length > 0) ? fullDocParagraphs.length : paragraphs.length;
+  const currentParaDisplay = activePara >= 0 ? activePara + 1 : 1;
+
+  let mediaSubtitle = "";
+  if (activeMode === "reader") {
+    mediaSubtitle = totalParas > 0 ? `Paragraph ${currentParaDisplay} of ${totalParas}` : "Reader Mode";
+  } else if (sourceMode === "pdf" && totalPages > 1) {
+    mediaSubtitle = `Page ${pageNum} of ${totalPages}${totalParas > 0 ? ` • Para ${currentParaDisplay} of ${totalParas}` : ""}`;
+  } else {
+    mediaSubtitle = totalParas > 0 ? `Paragraph ${currentParaDisplay} of ${totalParas}` : "PDF Reader";
+  }
+
+  useMediaSession({
+    title: docName,
+    artist: mediaSubtitle,
+    album: "PDF Reader",
+    ttsState,
+    playbackRate: ttsRate,
+    activePara: activePara >= 0 ? activePara : 0,
+    totalParagraphs: totalParas,
+    paraProgress,
+    onPlay: handleMediaSessionPlay,
+    onPause: handleMediaSessionPause,
+    onPrev: handleMediaSessionPrev,
+    onNext: handleMediaSessionNext,
+    onSeekBackward: handleMediaSessionPrev,
+    onSeekForward: handleMediaSessionNext,
+    onStop: handleMediaSessionStop,
+  });
 
   /* Global Keyboard shortcuts: Space (Play/Pause TTS), ArrowLeft/Right (Page navigation), Ctrl+F (Search), Ctrl+B, Ctrl+J, Alt+1/2/3 */
   useEffect(() => {
